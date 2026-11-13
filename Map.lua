@@ -62,13 +62,14 @@ local function Blob()
     f:SetAllPoints(canvas)
     blobFrame, blobOK = f, true
   end
-  local alpha = math.floor((ns.db.areaAlpha or 0.35) * 255 + 0.5)
+  -- Subtle on purpose: a light fill and a thin, soft edge.
+  local alpha = math.floor((ns.db.areaAlpha or 0.2) * 255 + 0.5)
   pcall(function()
     blobFrame:SetFillTexture(AREA_FILL)
     blobFrame:SetBorderTexture(AREA_EDGE)
     blobFrame:SetFillAlpha(alpha)
-    blobFrame:SetBorderAlpha(255)
-    blobFrame:SetBorderScalar(1.0)
+    blobFrame:SetBorderAlpha(math.min(255, alpha * 3))
+    blobFrame:SetBorderScalar(0.5)
   end)
   blobFrame:SetFrameLevel(OVERLAY_LEVEL - 1) -- under our lines and pins, above the map tiles
   return blobFrame
@@ -247,7 +248,7 @@ local function Draw()
   if route.start then prevX, prevY = route.start[1], route.start[2] end
   local hasArea = QuestsWithAreas(cur)
   local mode = ns.db.areaMode or "next"
-  local areasLeft = (mode == "all") and 99 or (mode == "off" and 0) or 2
+  local areasLeft = (mode == "all") and 99 or (mode == "off" and 0) or 1
   local bf = areasLeft > 0 and Blob() or nil
   if bf then
     if bf.SetMapID then pcall(bf.SetMapID, bf, cur) end
@@ -280,7 +281,7 @@ local function Draw()
           a:ClearAllPoints()
           local cx, cy = P(s.cx or s.x, s.cy or s.y) -- the whole area, not just the nearest spawn
           a:SetPoint("CENTER", canvas, "TOPLEFT", cx, cy)
-          a:SetVertexColor(1, 0.78, 0.16, (ns.db.areaAlpha or 0.35) * 0.9)
+          a:SetVertexColor(1, 0.78, 0.16, (ns.db.areaAlpha or 0.2) * 0.9)
           a:Show()
         end
       end

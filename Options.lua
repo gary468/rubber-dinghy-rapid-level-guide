@@ -14,6 +14,7 @@ local function Apply(what)
   elseif what == "map" and ns.Map then ns.Map.Refresh()
   elseif what == "arrow" and ns.Arrow then ns.Arrow.Refresh()
   elseif what == "minimap" and ns.MinimapButton then ns.MinimapButton.Refresh()
+  elseif what == "route" then ns.Recompute()
   end
 end
 
@@ -104,7 +105,7 @@ end
 
 local pct = function(v) return ("%d%%"):format(math.floor(v * 100 + 0.5)) end
 local AREA_MODES = { "next", "all", "off" }
-local AREA_TEXT = { next = "Quest areas: next 2 stops", all = "Quest areas: every stop", off = "Quest areas: off" }
+local AREA_TEXT = { next = "Quest areas: next stop only", all = "Quest areas: every stop", off = "Quest areas: off" }
 
 local function Build()
   local ok, f = pcall(CreateFrame, "Frame", "RubberDinghyOptions", UIParent, "BasicFrameTemplateWithInset")
@@ -145,6 +146,15 @@ local function Build()
   nextB:SetPoint("LEFT", autoB, "RIGHT", 4, 0)
 
   local y = -92
+  Header(f, y, "Route"); y = y - 22
+  Check(f, y, "Skip dungeon quests", "Dungeon quests are never suggested. If you accept one anyway, it's still tracked.",
+    "skipDungeons", false, "route"); y = y - 30
+  f.skipText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  f.skipText:SetPoint("TOPLEFT", PAD + 4, y - 5)
+  local unskipB = Button(f, "Un-skip all", 100, function() ns.UnskipAll(); O.Refresh() end,
+    "Brings every quest you skipped (right-click a stop > Skip) back into the route.")
+  unskipB:SetPoint("TOPLEFT", PAD + 170, y)
+  y = y - 34
   Header(f, y, "Tracker"); y = y - 22
   Check(f, y, "Show the route tracker", "The step and its stops, where Blizzard's objective tracker normally sits.", "noTracker", true, "tracker"); y = y - 26
   Check(f, y, "Hide Blizzard's objective tracker", "The route tracker replaces it. Untick to get Blizzard's back.", "keepBlizzard", true, "blizzard"); y = y - 40
@@ -167,7 +177,7 @@ local function Build()
   areaB.refresh = function() areaB:SetText(AREA_TEXT[ns.db.areaMode or "next"]) end
   controls[#controls + 1] = areaB
   y = y - 40
-  Slider(f, y, "Quest area strength", "areaAlpha", 0.1, 0.8, 0.05, 0.35, pct, "map"); y = y - 34
+  Slider(f, y, "Quest area strength", "areaAlpha", 0.05, 0.6, 0.05, 0.2, pct, "map"); y = y - 34
 
   Header(f, y, "Arrow"); y = y - 22
   Check(f, y, "Show the arrow to the next stop", "Points at stop 1 with the distance in yards. Never sets a map marker.", "noArrow", true, "arrow"); y = y - 40
@@ -194,6 +204,8 @@ end
 function O.Refresh()
   if not win then return end
   for _, c in ipairs(controls) do if c.refresh then c.refresh() end end
+  local n = ns.SkipCount()
+  win.skipText:SetText(n > 0 and (n .. (n == 1 and " quest skipped" or " quests skipped")) or "No quests skipped")
   local r = ns.route
   if r and r.step then
     win.stepText:SetText(("|cffffd100Step %d/%d:|r %s (%d-%d)%s"):format(r.idx, #ns.steps, r.step.name,
@@ -231,6 +243,11 @@ ns.inits.Options = function()
   ns.Safe("OptionsPanel", RegisterBlizzardPanel)
 end
 ns.listeners.Options = function() if win and win:IsShown() then O.Refresh() end end
+ns.commands.skipdungeons = function()
+  ns.db.skipDungeons = not ns.db.skipDungeons or nil
+  ns.Print("dungeon quests " .. (ns.db.skipDungeons and "skipped" or "back in the route"))
+  ns.Recompute()
+end
 ns.commands.options = function() O.Toggle() end
 ns.commands.settings = ns.commands.options
 ns.commands.config = ns.commands.options

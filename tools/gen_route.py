@@ -18,18 +18,22 @@ DUNG = WOW + r"\Interface\AddOns\QuestieDB\support\Forever\Zones\dungeons.lua"
 STEPS = [
     dict(name="Riverglades", lv=(40, 42), zones=[16591], extra=[],
          note="Forever's own zone (Eastern Kingdoms) - the biggest 38-46 quest hub on the server."),
-    dict(name="Arathi Highlands", lv=(41, 41), zones=[45], extra=[],
-         note="Refuge Pointe. Fly from Ironforge/Menethil."),
+    dict(name="Arathi Highlands", lv=(41, 41), zones=[45, 267, 36], extra=[],
+         note="Refuge Pointe, plus the Hillsbrad and Alterac quests next door. Fly from Ironforge/Menethil."),
     dict(name="Badlands", lv=(41, 42), zones=[3], extra=[],
          note="Fly to Thelsamar, then ride east. Uldaman quests start here."),
+    dict(name="Zephras Isle", lv=(42, 42), zones=[8, 16593], extra=[],
+         note="Forever's reworked Swamp of Sorrows (Eastern Kingdoms)."),
     dict(name="Stranglethorn Vale", lv=(42, 43), zones=[33], extra=[],
          note="Booty Bay. When done, take the Booty Bay boat to Ratchet for Kalimdor."),
+    dict(name="Desolace", lv=(43, 43), zones=[405, 17], extra=[],
+         note="From Ratchet (Barrens quests on the way) to Nijel's Point. Shen'dralas and Feralas are next door."),
     dict(name="Shen'dralas", lv=(43, 44), zones=[16651], extra=[],
          note="Forever's own zone (Kalimdor)."),
     dict(name="Feralas", lv=(44, 46), zones=[357], extra=[2766],
          note="Feathermoon + the coast. Lord Shalzaru is in the cave on the Isle of Dread (28,70)."),
-    dict(name="Tanaris", lv=(46, 48), zones=[440], extra=[351],
-         note="Gadgetzan. Fly in from Feathermoon or Thalanaar."),
+    dict(name="Tanaris", lv=(46, 48), zones=[440, 400], extra=[351],
+         note="Gadgetzan, plus the Shimmering Flats quests in Thousand Needles. Fly in from Feathermoon or Thalanaar."),
     dict(name="The Hinterlands", lv=(48, 49), zones=[47], extra=[485, 3661],
          note="Aerie Peak. Fly from Ironforge. The Wildkin Feathers for Favored of Elune? are on the ground here (hand in at Rut'theran)."),
     dict(name="Blasted Lands", lv=(49, 50), zones=[4], extra=[],
@@ -40,7 +44,7 @@ STEPS = [
          note="Morgan's Vigil (85,69). Walk south from Searing Gorge through Blackrock Mountain."),
     dict(name="Un'Goro Crater", lv=(52, 53), zones=[490], extra=[3764, 3789, 3790, 3763],
          note="Marshal's Refuge (44,8). Teleport Darnassus or fly via Gadgetzan."),
-    dict(name="Felwood", lv=(53, 54), zones=[361], extra=[7066],
+    dict(name="Felwood", lv=(53, 54), zones=[361, 493], extra=[7066],
          note="Emerald Sanctuary (51,82). Moonglade is next door - hand in Seed of Life to Keeper Remulos."),
     dict(name="Azshara", lv=(54, 55), zones=[16], extra=[8250, 8251],
          note="Talrendis Point (12,78) - mostly Forever's own quests. Mages: Magecraft (Stormwind) -> Magic Dust."),
@@ -255,6 +259,33 @@ for st in STEPS:
     for qid in ids: used[qid] = st
     steps_out.append((st, sorted(ids, key=lambda i: (Q[i].get("questLevel") or 0, i))))
 
+# Second pass - quests given out somewhere that isn't a route zone (capitals, neighbouring zones):
+# attach each to the step whose zone it sends you to (its mobs/objects, else its hand-in), so
+# lead-ins like "The New Frontier" become "pick up in Ironforge" stops of the right step.
+# Everything else (item-started quests, no known giver, dungeon quests elsewhere, one-offs) goes in
+# the track pool: never suggested, but routed like any other quest once it's in your log.
+zone_step = {}
+for st, ids in steps_out:
+    for z in st["zones"]: zone_step[z] = (st, ids)
+track = {}
+for qid, q in Q.items():
+    if qid in used or not eligible(qid, q): continue
+    lvl = q.get("questLevel") or 0
+    if not (38 <= lvl <= 62): continue
+    g = givers.get(qid)
+    if g and g.get("fac") and "A" not in str(g["fac"]): continue
+    o = _objective_area(qid, None)
+    fb = get(f"X-Quest-{qid}-3")
+    t = loc_of(fb) if fb else None
+    dest = (o and o["area"]) or (t and t.get("area"))
+    target = zone_step.get(dest)
+    real_giver = g and g.get("area") and g["name"] != "(item drop)"
+    if target and real_giver and lvl >= target[0]["lv"][0] - 6:
+        target[1].append(qid)
+        used[qid] = target[0]
+    else:
+        track[qid] = dest
+
 
 def lstr(s):
     return '"' + str(s).replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ") + '"'
@@ -280,13 +311,18 @@ for st, ids in steps_out:
     m = uimap.get(st["zones"][0], 0)
     out.append(f"  {{name={lstr(st['name'])}, from={st['lv'][0]}, to={st['lv'][1]}, map={m}, note={lstr(st['note'])}, quests={{{','.join(map(str, ids))}}}}},")
 out.append("}")
+out.append("-- Quests only routed once they're in your log (never suggested for pick-up).")
+out.append("ns.track = {" + ",".join(map(str, sorted(track))) + "}")
 out.append("ns.quests = {")
 n_obj = 0
-for qid in sorted(used):
-    q = Q[qid]; st = used[qid]
+for qid in sorted(set(used) | set(track)):
+    q = Q[qid]; st = used.get(qid)
     fb = get(f"X-Quest-{qid}-3")
     t = loc_of(fb) if fb else None
-    o = objective_area(q, qid, set(st["zones"]))
+    if st: areas = set(st["zones"])
+    elif track.get(qid): areas = {track[qid]}
+    else: areas = set()
+    o = objective_area(q, qid, areas)
     if o: n_obj += 1
     parts = [f"n={lstr(q.get('name'))}", f"l={q.get('questLevel') or 0}", f"r={q.get('requiredLevel') or 0}",
              f"g={lloc(givers.get(qid))}", f"t={lloc(t)}"]
@@ -317,4 +353,4 @@ for qid in sorted(used):
 out.append("}")
 open(OUT, "w", encoding="utf-8").write("\n".join(out) + "\n")
 print("steps:", [(st["name"], len(ids)) for st, ids in steps_out])
-print("quests:", len(used), "with objective areas:", n_obj)
+print("routed quests:", len(used), "track-once-accepted:", len(track), "with objective areas:", n_obj)

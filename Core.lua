@@ -176,8 +176,13 @@ end
 ---------------------------------------------------------------------------
 -- READY = in log and complete, LOG = in log, OPEN = can pick up now, SOON = one or two levels short,
 -- LOCKED = an earlier quest is missing, DONE, LATER = too far above you, NA = not for your race/class.
-local READY, LOG, OPEN, SOON, LOCKED, DONE, LATER, NA = 1, 2, 3, 4, 5, 6, 7, 8
-ns.S = { READY = READY, LOG = LOG, OPEN = OPEN, SOON = SOON, LOCKED = LOCKED, DONE = DONE, LATER = LATER }
+-- SKIP = you chose to skip it (or it's a dungeon quest and dungeon quests are skipped).
+local READY, LOG, OPEN, SOON, LOCKED, DONE, LATER, NA, SKIP = 1, 2, 3, 4, 5, 6, 7, 8, 9
+ns.S = { READY = READY, LOG = LOG, OPEN = OPEN, SOON = SOON, LOCKED = LOCKED, DONE = DONE, LATER = LATER, SKIP = SKIP }
+
+-- Quests that are never suggested but are routed once they're in your log.
+ns.trackSet = {}
+for _, id in ipairs(ns.track or {}) do ns.trackSet[id] = true end
 
 local function ForMe(q)
   if q.ra and raceBit and band(q.ra, raceBit) == 0 then return false end
@@ -210,6 +215,10 @@ local function Status(id, level)
   local q = ns.quests[id]
   if not q or not ForMe(q) then return NA end
   local index = LogIndex(id)
+  -- Skipped: drops out of the route even if it's in your log (it stays under Other Quests).
+  local skip = ns.db and ns.db.skip
+  if skip and skip[id] then return SKIP end
+  if q.d and ns.db and ns.db.skipDungeons and index == 0 then return SKIP end
   -- Repeatable quests: only part of the route while they're in your log.
   if q.rep then
     if index > 0 then return IsReady(id, index) and READY or LOG end
@@ -226,7 +235,7 @@ local function Status(id, level)
 end
 
 local function ScanStep(step, level)
-  local rows, counts = {}, { 0, 0, 0, 0, 0, 0, 0, 0 }
+  local rows, counts = {}, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
   for _, id in ipairs(step.quests) do
     local s = Status(id, level)
     counts[s] = counts[s] + 1
@@ -425,6 +434,19 @@ function ns.Recompute()
   if idx < 1 then idx = 1 elseif idx > #ns.steps then idx = #ns.steps end
   local step = ns.steps[idx]
   local rows, counts = ScanStep(step, level)
+  -- Quests from the track pool that you've accepted and that take you to this zone join the route.
+  local logList = ns.QuestLog()
+  for _, e in ipairs(logList) do
+    if ns.trackSet[e.id] then
+      local q = ns.quests[e.id]
+      local loc = q and (q.o or q.t)
+      if loc and loc[2] == step.map then
+        local s = Status(e.id, level)
+        counts[s] = counts[s] + 1
+        if s <= SOON then rows[#rows + 1] = { id = e.id, s = s, q = q } end
+      end
+    end
+  end
   -- Which quests are started, and which one you're working on right now (its count just went up).
   -- The "current" quest is remembered across reloads and stays first until it's done.
   ns.lastProg = ns.lastProg or {}
@@ -448,7 +470,7 @@ function ns.Recompute()
   local inRoute = {}
   for _, r in ipairs(rows) do inRoute[r.id] = true end
   local other = {}
-  for _, e in ipairs(ns.QuestLog()) do
+  for _, e in ipairs(logList) do
     if not inRoute[e.id] then other[#other + 1] = e end
   end
   local pm = ns.PlayerPos()
@@ -475,6 +497,35 @@ end
 function ns.Auto()
   ns.db.step = nil
   ns.Recompute()
+end
+
+--- Skipping: skipped quests drop out of the route (and AutoStep) at once; the route re-plans.
+function ns.Skip(ids, label)
+  ns.db.skip = ns.db.skip or {}
+  local n = 0
+  for _, id in ipairs(ids) do
+    if not ns.db.skip[id] then ns.db.skip[id] = true; n = n + 1 end
+  end
+  ns.Print(("skipped %s. The route has re-planned. (/rdr unskip brings skipped quests back)"):format(
+    label or (n .. (n == 1 and " quest" or " quests"))))
+  ns.Recompute()
+end
+function ns.SkipCount()
+  local n = 0
+  for _ in pairs(ns.db.skip or {}) do n = n + 1 end
+  return n
+end
+function ns.UnskipAll()
+  local n = ns.SkipCount()
+  ns.db.skip = nil
+  ns.Print(("%d skipped %s back in the route."):format(n, n == 1 and "quest is" or "quests are"))
+  ns.Recompute()
+end
+--- The quests a stop is for (everything except plain pick-ups still counts; pick-ups are skippable too).
+function ns.StopQuestIDs(s)
+  local ids = {}
+  for _, a in ipairs(s.actions) do ids[#ids + 1] = a.row.id end
+  return ids
 end
 
 --- Move mode: the tracker and the arrow get a highlighted "drag to move" overlay; the arrow shows even
@@ -537,6 +588,10 @@ SlashCmdList.RUBBERDINGHY = function(msg)
   if msg == "" and ns.Options then ns.Options.Toggle()
   elseif msg == "next" then ns.Step(1)
   elseif msg == "prev" then ns.Step(-1)
+  elseif msg == "skip" then
+    local s = ns.route.stops and ns.route.stops[1]
+    if s then ns.Skip(ns.StopQuestIDs(s), "stop 1 (" .. ns.StopTitle(s) .. ")") else ns.Print("nothing to skip.") end
+  elseif msg == "unskip" then ns.UnskipAll()
   elseif msg == "auto" or msg == "route" then ns.Auto()
   elseif msg == "debug" then
     local any = false
@@ -546,6 +601,7 @@ SlashCmdList.RUBBERDINGHY = function(msg)
   else
     ns.Print("/rdr - settings window | /rdr unlock - move the tracker and arrow, /rdr lock when done | "
       .. "/rdr reset - default places and sizes | /rdr next, prev, auto - change step | "
+      .. "/rdr skip - skip stop 1 (or right-click a stop) | /rdr unskip - bring skipped quests back | "
       .. "/rdr map, arrow, tracker, minimap - show/hide | /rdr blizzard - Blizzard's tracker back | /rdr debug")
   end
 end

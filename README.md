@@ -49,6 +49,9 @@ Game Menu > Options > AddOns.
   `/rdr lock`, or click Lock. Shift + drag on the tracker header works at any time. `/rdr reset`
   puts both back.
 - **Minimap button:** `/rdr minimap` shows or hides it.
+- **Skipping:** right-click a stop in the tracker to skip it (or one quest at it). `/rdr skip`
+  skips stop 1, and `/rdr unskip` brings skipped quests back. Settings can also skip all dungeon
+  quests.
 - **Problems:** `/rdr debug` shows any errors.
 
 `/dinghy` works too.

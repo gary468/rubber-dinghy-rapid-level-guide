@@ -74,6 +74,8 @@ local function NewLine()
     if self.stop then
       self.text:SetTextColor(1, 1, 1)
       ns.StopTooltip(self, self.stop)
+      GameTooltip:AddLine("Click: show on the map.  Right-click: skip.", 0.4, 0.8, 1)
+      GameTooltip:Show()
     elseif self.tip then
       GameTooltip:SetOwner(self, "ANCHOR_LEFT"); GameTooltip:AddLine(self.tip, 1, 1, 1, true); GameTooltip:Show()
     end
@@ -82,7 +84,9 @@ local function NewLine()
     GameTooltip:Hide()
     if self.baseColor then self.text:SetTextColor(unpack(self.baseColor)) end
   end)
-  b:SetScript("OnClick", function(self)
+  b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+  b:SetScript("OnClick", function(self, button)
+    if button == "RightButton" and self.stop then T.SkipMenu(self.stop, self); return end
     if self.onClick then self.onClick() elseif self.stop then ns.ShowOnMap(self.stop) end
   end)
   return b
@@ -204,8 +208,9 @@ local function Render(r)
     Add(ns.ActionText(a) .. hint, { indent = 22, color = WHITE })
   end
   local c, S = r.counts, ns.S
-  Add(("%d to hand in, %d in log, %d to pick up, %d later, %d locked"):format(
-    c[S.READY], c[S.LOG], c[S.OPEN], c[S.LATER], c[S.LOCKED]), { font = SMALL_FONT, color = GREY, gap = 6 })
+  Add(("%d to hand in, %d in log, %d to pick up, %d later, %d locked%s"):format(
+    c[S.READY], c[S.LOG], c[S.OPEN], c[S.LATER], c[S.LOCKED],
+    (c[S.SKIP] or 0) > 0 and (", " .. c[S.SKIP] .. " skipped") or ""), { font = SMALL_FONT, color = GREY, gap = 6 })
 
   -- Quests in the log outside this step: Blizzard's tracker would have shown them.
   local n = #r.other
@@ -401,6 +406,63 @@ function T.SetMoveMode(on)
   Render(ns.route)
 end
 function T.Refresh() Render(ns.route) end
+
+-- Right-click menu on a stop: skip the whole stop, or one quest at it. The route re-plans at once.
+local menu
+function T.SkipMenu(stop, anchor)
+  if not menu then
+    menu = CreateFrame("Frame", "RubberDinghySkipMenu", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    menu:SetFrameStrata("DIALOG")
+    menu:SetClampedToScreen(true)
+    if menu.SetBackdrop then
+      menu:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                         tile = true, tileSize = 16, edgeSize = 14, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
+      menu:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
+    end
+    menu.title = menu:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    menu.title:SetPoint("TOPLEFT", 10, -8)
+    menu.items = {}
+    tinsert(UISpecialFrames, "RubberDinghySkipMenu")
+  end
+  for _, it in ipairs(menu.items) do it:Hide() end
+  menu.title:SetText(stop.index .. ". " .. ns.StopTitle(stop))
+  local entries = {}
+  if #stop.actions > 1 then
+    entries[#entries + 1] = { text = ("Skip this stop (%d quests)"):format(#stop.actions),
+                              ids = ns.StopQuestIDs(stop), label = "stop " .. stop.index }
+  end
+  for _, a in ipairs(stop.actions) do
+    entries[#entries + 1] = { text = "Skip: " .. a.row.q.n, ids = { a.row.id }, label = a.row.q.n }
+  end
+  entries[#entries + 1] = { text = "|cff999999Cancel|r" }
+  local y, width = -28, 200
+  for i, e in ipairs(entries) do
+    local b = menu.items[i]
+    if not b then
+      b = CreateFrame("Button", nil, menu)
+      b:SetHeight(18)
+      b.fs = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+      b.fs:SetPoint("LEFT", 4, 0)
+      b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+      menu.items[i] = b
+    end
+    b.fs:SetText(e.text)
+    width = math.max(width, (b.fs:GetStringWidth() or 150) + 24)
+    b:ClearAllPoints()
+    b:SetPoint("TOPLEFT", 8, y)
+    b:SetPoint("RIGHT", -8, 0)
+    b:SetScript("OnClick", function()
+      menu:Hide()
+      if e.ids then ns.Skip(e.ids, e.label) end
+    end)
+    b:Show()
+    y = y - 18
+  end
+  menu:SetSize(width, -y + 10)
+  menu:ClearAllPoints()
+  menu:SetPoint("TOPRIGHT", anchor, "TOPLEFT", -6, 0)
+  menu:Show()
+end
 function T.SetKeepBlizzard(keep)
   ns.db.keepBlizzard = keep and true or nil
   SetBlizzHidden(not keep)

@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.0.3
+- **Every quest covered:** all 1,570 Alliance quests at 40–60 in Questie's database are in.
+  - 1,164 are part of the route.
+  - The rest (item-started, no known giver, dungeon quests elsewhere) are routed as soon as you
+    accept them.
+- **New steps and zones:**
+  - Zephras Isle (Forever's reworked Swamp of Sorrows) and Desolace (with Ratchet's Barrens quests).
+  - Hillsbrad and Alterac are now part of Arathi, Thousand Needles part of Tanaris, and Moonglade
+    part of Felwood.
+- **Quests from capitals** (lead-ins, breadcrumbs) join the step they send you to, as
+  "pick up in Ironforge" stops.
+- **Skipping:**
+  - Right-click a stop in the tracker to skip it, or one quest at it. The route re-plans at once.
+  - `/rdr skip` skips stop 1, and `/rdr unskip` (or "Un-skip all" in settings) brings them back.
+  - New option: skip dungeon quests.
+- **Quest areas:** much subtler. Only the stop you're heading to, with a lighter fill and a thin edge.
+- **New icon:** a rubber duck.
+- **Note when updating:** quit and restart WoW (not just `/reload`) the first time, so it picks up
+  the new image files.
+
 ## v1.0.2
 - **Stays in your zone:** the zone you're standing in stays the current step while you have its
   quests in your log, even after a level-up. Before, handing in quests could jump you to the next zone.
