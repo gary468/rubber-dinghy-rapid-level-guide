@@ -20,6 +20,8 @@ Data.lua
 Core.lua
 Prep.lua
 Learn.lua
+XPBar.lua
+Auto.lua
 Map.lua
 Tracker.lua
 Items.lua

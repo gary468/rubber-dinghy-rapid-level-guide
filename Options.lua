@@ -161,6 +161,8 @@ local function Build()
     "Brings every quest you skipped (right-click a stop > Skip) back into the route.")
   unskipB:SetPoint("TOPLEFT", PAD + 170, y)
   y = y - 30
+  Check(f, y, "Accept and hand in route quests automatically", "Accepts only quests on your route (never ones you skipped) and hands in quests the guide knows. A choice of rewards is left to you. Hold Shift at the quest giver to do it yourself. Stays off if Questie or Leatrix already automate quests.",
+    "noAuto", true, "route"); y = y - 26
   Check(f, y, "Learn quest counts and flight times", "Notes each quest's real objective counts and how long flights take, so the route planner uses real numbers instead of averages. Only facts about the game - never your pace. Stays on your PC.",
     "noLearn", true, "route"); y = y - 22
   f.learnText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -168,6 +170,7 @@ local function Build()
   y = y - 22
   Header(f, y, "Tracker"); y = y - 22
   Check(f, y, "Show the route tracker", "The step and its stops, where Blizzard's objective tracker normally sits.", "noTracker", true, "tracker"); y = y - 26
+  Check(f, y, "XP bar in the tracker", "Your XP, the XP waiting in finished quests, XP per hour and time to your next level.", "noXPBar", true, "tracker"); y = y - 26
   Check(f, y, "Hide Blizzard's objective tracker", "The route tracker replaces it. Untick to get Blizzard's back.", "keepBlizzard", true, "blizzard"); y = y - 40
   Slider(f, y, "Tracker size", "trackerScale", 0.7, 1.5, 0.05, 1, pct, "trackerScale"); y = y - 34
 

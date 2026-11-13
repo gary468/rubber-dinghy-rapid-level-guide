@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.18
+- **Accepts and hands in route quests automatically** (settings > Route, on by default).
+  - Only quests on your route (or your get-ready side route), never ones you skipped. Hands in quests
+    the guide knows, and leaves a choice of rewards to you.
+  - Picks the right quest from a quest giver's chat menu or list. Hold **Shift** at the NPC to do it
+    yourself.
+  - Stays off (and says so once) if Questie or Leatrix Plus already accept quests for you.
+- **XP bar in the tracker** (settings > Tracker): your XP, a lighter part for the XP waiting in finished
+  quests ("+18% to hand in"), XP per hour over the last 30 minutes and time to your next level - or
+  "hand-ins level you up!" when they will.
 ## v1.0.17 - fixes from a full review
 - **Fixes:**
   - The tracker failed to start after a /reload while it was unlocked for moving.

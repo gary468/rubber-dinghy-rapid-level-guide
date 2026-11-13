@@ -17,6 +17,8 @@ local CIRCLE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 local T = {}
 ns.Tracker = T
 local frame, header, titleFS, collapseBtn, body, mover
+local xpwrap, xpbar
+local XP_H = 22
 local pool, used = {}, 0
 local HEADER_FONT, TITLE_FONT, LINE_FONT, SMALL_FONT
 
@@ -147,6 +149,33 @@ end
 ---------------------------------------------------------------------------
 local GOLD, WHITE, GREY, GREEN = { 1, 0.82, 0 }, { 1, 1, 1 }, { 0.6, 0.6, 0.6 }, { 0.2, 1, 0.2 }
 
+--- The XP bar (fills it in; shows or hides it). Returns the height it takes.
+function T.RefreshXP()
+  if not xpwrap then return 0 end
+  local st = (not ns.db.noXPBar) and ns.XP and ns.XP.State()
+  if not st then
+    xpwrap:Hide(); xpwrap:SetHeight(0.1)
+    return 0
+  end
+  xpwrap:Show(); xpwrap:SetHeight(XP_H)
+  xpbar:SetValue(st.cur / st.max)
+  local w = xpbar:GetWidth() or (WIDTH - 8)
+  local from = st.cur / st.max
+  local to = math.min(1, (st.cur + st.banked) / st.max)
+  if to > from then
+    xpbar.banked:ClearAllPoints()
+    xpbar.banked:SetPoint("TOPLEFT", xpbar, "TOPLEFT", from * w, 0)
+    xpbar.banked:SetPoint("BOTTOMLEFT", xpbar, "BOTTOMLEFT", from * w, 0)
+    xpbar.banked:SetWidth(math.max(1, (to - from) * w))
+    xpbar.banked:Show()
+  else
+    xpbar.banked:Hide()
+  end
+  xpwrap.text:SetText(ns.XP.Text(st))
+  return XP_H
+end
+local function TopH() return header:GetHeight() + 4 + ((xpwrap and xpwrap:IsShown()) and (XP_H + 2) or 0) end
+
 local blizzHidden
 local function Render(r)
   if not frame or not r or not r.step then return end   -- nothing to show yet (e.g. during start-up)
@@ -158,10 +187,12 @@ local function Render(r)
   if wantHidden ~= blizzHidden then blizzHidden = wantHidden; SetBlizzHidden(wantHidden) end
   collapseBtn:SetCollapsed(db.collapsed)
   local slots = {} -- where quest item buttons go: {qid=, y=pixels below the tracker top}
-  local function Slot(qid) slots[#slots + 1] = { qid = qid, y = header:GetHeight() + 4 + y } end
+  T.RefreshXP()
+  local function Slot(qid) slots[#slots + 1] = { qid = qid, y = TopH() + y } end
   if db.collapsed or (db.noTracker and not db.unlocked) then
     for i = 1, #pool do pool[i]:Hide() end
     body:SetHeight(1); frame:SetHeight(header:GetHeight())
+    if xpwrap then xpwrap:Hide() end
     if ns.Items then ns.Safe("Items", ns.Items.Place, slots, frame) end
     return
   end
@@ -333,7 +364,7 @@ local function Render(r)
   end
   if T.MenuStale then T.MenuStale(r) end
   body:SetHeight(math.max(1, y))
-  frame:SetHeight(header:GetHeight() + y + 4)
+  frame:SetHeight(TopH() + y + 4)
   if ns.Items then ns.Safe("Items", ns.Items.Place, slots, frame) end
 end
 
@@ -451,8 +482,42 @@ local function Init()
   local prevB = SmallButton("<", "Previous step", function() ns.Step(-1) end)
   prevB:SetPoint("RIGHT", autoB, "LEFT", -2, 0)
 
+  -- XP bar under the header: your XP, a lighter part for XP waiting in finished quests, and a line
+  -- with XP/hour and time to level (or "hand-ins level you up!").
+  xpwrap = CreateFrame("Frame", nil, frame)
+  xpwrap:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 4, -2)
+  xpwrap:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", -4, -2)
+  xpwrap:SetHeight(XP_H)
+  xpbar = CreateFrame("StatusBar", nil, xpwrap)
+  xpbar:SetPoint("TOPLEFT"); xpbar:SetPoint("TOPRIGHT")
+  xpbar:SetHeight(8)
+  xpbar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+  xpbar:SetStatusBarColor(0.58, 0.0, 0.55)
+  xpbar:SetMinMaxValues(0, 1)
+  local xbg = xpbar:CreateTexture(nil, "BACKGROUND")
+  xbg:SetAllPoints(); xbg:SetColorTexture(0, 0, 0, 0.55)
+  xpbar.banked = xpbar:CreateTexture(nil, "ARTWORK", nil, -1)
+  xpbar.banked:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
+  xpbar.banked:SetVertexColor(0.45, 0.75, 1, 0.55)
+  xpbar.banked:SetPoint("TOP"); xpbar.banked:SetPoint("BOTTOM")
+  xpwrap.text = xpwrap:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  xpwrap.text:SetPoint("TOPLEFT", xpbar, "BOTTOMLEFT", 0, -2)
+  xpwrap.text:SetPoint("RIGHT", xpwrap, "RIGHT", 0, 0)
+  xpwrap.text:SetJustifyH("LEFT")
+  xpwrap:EnableMouse(true)
+  xpwrap:SetScript("OnEnter", function(self)
+    local st = ns.XP and ns.XP.State()
+    if not st then return end
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:AddLine(("Level %d: %d / %d XP"):format(st.level, st.cur, st.max))
+    GameTooltip:AddLine(("Waiting in finished quests: %d XP"):format(st.banked), 0.56, 0.84, 1)
+    if st.rate then GameTooltip:AddLine(("%d XP an hour over the last 30 minutes"):format(st.rate), 1, 1, 1) end
+    GameTooltip:Show()
+  end)
+  xpwrap:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
   body = CreateFrame("Frame", nil, frame)
-  body:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -4)
+  body:SetPoint("TOPLEFT", xpwrap, "BOTTOMLEFT", -4, -4)
   body:SetSize(WIDTH, 1)
 
   -- Move mode overlay: a highlighted box over the whole tracker that you drag, with a Lock button.
