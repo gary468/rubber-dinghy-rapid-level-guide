@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.9
+- **Settings window in two columns**, about half as tall, so it fits on screen.
+- **Choose dungeons** opens beside the settings window (or on the left of the screen), not on top of
+  your UI. Drag it and it opens there next time.
+
 ## v1.0.8
 - **Choose your dungeons and the route updates.** Every 40-60 dungeon is in the route at the level
   where it costs least time.

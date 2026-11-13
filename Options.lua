@@ -6,6 +6,7 @@ ns.Options = O
 
 local win, controls = nil, {}
 local W, PAD = 360, 16
+local COLX = 0   -- x offset of the column being built (the settings window has two)
 
 local function Apply(what)
   if what == "tracker" and ns.Tracker then ns.Tracker.Refresh()
@@ -22,7 +23,7 @@ end
 -- A checkbox bound to a saved setting. invert = the setting stores "off" (e.g. noMap).
 local function Check(parent, y, label, tip, key, invert, apply)
   local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
-  cb:SetPoint("TOPLEFT", PAD, y)
+  cb:SetPoint("TOPLEFT", PAD + COLX, y)
   cb:SetSize(26, 26)
   local fs = (type(cb.Text) == "table" and cb.Text) or (type(cb.text) == "table" and cb.text) or nil
   if not fs then fs = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlight"); fs:SetPoint("LEFT", cb, "RIGHT", 2, 0) end
@@ -50,7 +51,7 @@ end
 local function Slider(parent, y, label, key, min, max, step, default, fmt, apply)
   local s = CreateFrame("Slider", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
   s:SetOrientation("HORIZONTAL")
-  s:SetPoint("TOPLEFT", PAD + 6, y)
+  s:SetPoint("TOPLEFT", PAD + 6 + COLX, y)
   s:SetSize(W - 2 * PAD - 70, 16)
   if s.SetBackdrop then
     s:SetBackdrop({ bgFile = "Interface\\Buttons\\UI-SliderBar-Background", edgeFile = "Interface\\Buttons\\UI-SliderBar-Border",
@@ -96,7 +97,7 @@ end
 
 local function Header(parent, y, text)
   local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fs:SetPoint("TOPLEFT", PAD, y)
+  fs:SetPoint("TOPLEFT", PAD + COLX, y)
   fs:SetText(text)
   local line = parent:CreateTexture(nil, "ARTWORK")
   line:SetColorTexture(1, 0.82, 0, 0.35)
@@ -112,7 +113,7 @@ local function Build()
   local ok, f = pcall(CreateFrame, "Frame", "RubberDinghyOptions", UIParent, "BasicFrameTemplateWithInset")
   if not ok or not f then f = CreateFrame("Frame", "RubberDinghyOptions", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil) end
   win = f
-  f:SetSize(W, 600)
+  f:SetSize(2 * W, 600)
   f:SetPoint("CENTER")
   f:SetFrameStrata("DIALOG")
   f:SetClampedToScreen(true)
@@ -146,6 +147,7 @@ local function Build()
   local nextB = Button(f, ">", 30, function() ns.Step(1) end, "Next step")
   nextB:SetPoint("LEFT", autoB, "RIGHT", 4, 0)
 
+  COLX = 0
   local y = -92
   Header(f, y, "Route"); y = y - 22
   Check(f, y, "Skip all dungeons", "No dungeon steps or dungeon quests in the route. If you accept one anyway, it's still tracked.",
@@ -184,6 +186,9 @@ local function Build()
   y = y - 40
   Slider(f, y, "Quest area strength", "areaAlpha", 0.05, 0.6, 0.05, 0.2, pct, "map"); y = y - 34
 
+  -- Second column: arrow, rare alerts, minimap button, positions.
+  local leftY = y
+  COLX, y = W, -92
   Header(f, y, "Arrow"); y = y - 22
   Check(f, y, "Show the arrow to the next stop", "Points at stop 1 with the distance in yards. Never sets a map marker.", "noArrow", true, "arrow"); y = y - 40
   Slider(f, y, "Arrow size", "arrowScale", 0.6, 2, 0.05, 1, pct, "arrow"); y = y - 34
@@ -194,7 +199,7 @@ local function Build()
   Check(f, y, "Play a sound", "The raid warning sound.", "noRareSound", true, "rares"); y = y - 30
   local testB = Button(f, "Test alert", 110, function() if ns.commands.raretest then ns.commands.raretest() end end,
     "Shows a sample alert and the Target button. Shift + drag the button to move it. Bind a key to it under Key Bindings > Rubber Dinghy.")
-  testB:SetPoint("TOPLEFT", PAD, y)
+  testB:SetPoint("TOPLEFT", PAD + COLX, y)
   y = y - 34
 
   Header(f, y, "Minimap button"); y = y - 22
@@ -203,14 +208,15 @@ local function Build()
 
   local moveB = Button(f, "", 150, function() ns.SetMoveMode(not ns.db.unlocked) end,
     "Move the tracker and the arrow: drag them, then click Lock. Shift + drag on the tracker header also works any time.")
-  moveB:SetPoint("TOPLEFT", PAD, y)
+  moveB:SetPoint("TOPLEFT", PAD + COLX, y)
   moveB.refresh = function() moveB:SetText(ns.db.unlocked and "Lock positions" or "Move tracker & arrow") end
   controls[#controls + 1] = moveB
   local resetB = Button(f, "Reset positions", 150, function() ns.commands.reset() end,
     "Puts the tracker and arrow back in their default places and sizes.")
   resetB:SetPoint("LEFT", moveB, "RIGHT", 10, 0)
 
-  f:SetHeight(-y + 42)
+  f:SetHeight(math.max(-leftY, -y) + 42)
+  COLX = 0
   f:SetScript("OnShow", function() O.Refresh() end)
   f:Hide()
 end
@@ -274,14 +280,17 @@ local function BuildDungeons()
   if not ok or not f then f = CreateFrame("Frame", "RubberDinghyDungeons", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil) end
   dwin = f
   f:SetSize(W, 200)
-  f:SetPoint("CENTER", 40, -20)
   f:SetFrameStrata("DIALOG")
   f:SetClampedToScreen(true)
   f:SetMovable(true)
   f:EnableMouse(true)
   f:RegisterForDrag("LeftButton")
   f:SetScript("OnDragStart", f.StartMoving)
-  f:SetScript("OnDragStop", f.StopMovingOrSizing)
+  f:SetScript("OnDragStop", function(self)
+    self:StopMovingOrSizing()
+    local x, y = self:GetLeft(), self:GetTop()
+    if x and y then ns.db.dungeonsPos = { x, y } end
+  end)
   local templTitle = (type(f.TitleText) == "table" and f.TitleText) or nil
   if f.SetBackdrop and not templTitle then
     f:SetBackdrop({ bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background", edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
@@ -332,9 +341,23 @@ local function BuildDungeons()
   f:Hide()
 end
 
+-- Where it opens: where you last dragged it; else beside the settings window when that's open;
+-- else on the left of the screen, clear of the tracker, chat and action bars.
+local function PlaceDungeons()
+  dwin:ClearAllPoints()
+  local p = ns.db.dungeonsPos
+  if p then
+    dwin:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", p[1], p[2])
+  elseif win and win:IsShown() then
+    dwin:SetPoint("TOPLEFT", win, "TOPRIGHT", 6, 0)
+  else
+    dwin:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 40, -140)
+  end
+end
+
 function O.ToggleDungeons()
   if not dwin then BuildDungeons() end
-  if dwin:IsShown() then dwin:Hide() else dwin:Show() end
+  if dwin:IsShown() then dwin:Hide() else PlaceDungeons(); dwin:Show() end
 end
 function O.RefreshDungeons()
   if dwin and dwin:IsShown() then for _, c in ipairs(dcontrols) do c.refresh() end end
