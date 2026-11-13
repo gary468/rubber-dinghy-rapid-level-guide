@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.5
+- **A faster route, planned from Questie's database.**
+  - Every Alliance quest at 40–60 was scored by XP against travel. The route is the fastest order
+    of zone visits: 48 visits, and you come back to a zone when its next quests open up.
+  - In simulation it reaches 60 on quests alone, with no grinding. That's about 8 hours of travel
+    against about 18 for the old route, which left 28% of the XP to grinding.
+  - Return visits are labelled, e.g. "Tanaris (return visit)".
+- A visit stays current for one level past its planned range, so a little extra XP doesn't skip it.
+- **Note when updating:** quit and restart WoW (not just `/reload`).
+
 ## v1.0.4
 - **Click a numbered stop on the world map** to show its kill area and highlight it, like clicking a
   Blizzard quest marker. Click it again to turn the highlight off. It works even with quest areas

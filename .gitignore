@@ -6,3 +6,5 @@ tools/data.json
 dist/
 *.zip
 __pycache__/
+# Intermediate zone-mode data for the planner (tools/build_route.ps1)
+tools/Data_zones.lua

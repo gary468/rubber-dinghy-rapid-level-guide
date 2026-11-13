@@ -265,7 +265,9 @@ local function AutoStep(level)
     if level <= step.to + STAY_LEVELS then
       local _, c = ScanStep(step, level)
       if c[READY] + c[LOG] > 0 then return i end
-      if level <= step.to and c[OPEN] + c[SOON] > 0 then return i end
+      -- Planned visits have tight level windows; allow one level of slack so a little extra XP
+      -- doesn't skip a visit you haven't done yet.
+      if level <= step.to + 1 and c[OPEN] + c[SOON] > 0 then return i end
     end
   end
   return #ns.steps

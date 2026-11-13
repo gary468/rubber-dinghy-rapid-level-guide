@@ -18,9 +18,11 @@ what order, and keeps track of your progress as you play.
 - **Automatic progress.** It reads your progress from the game, finds the right zone for your level,
   and moves on when you've done a zone.
 
-The route: Riverglades, Arathi Highlands, Badlands, Stranglethorn Vale, Shen'dralas, Feralas, Tanaris,
-The Hinterlands, Blasted Lands, Searing Gorge, Burning Steppes, Un'Goro Crater, Felwood, Azshara,
-Western and Eastern Plaguelands, Silithus, Winterspring and Mount Hyjal.
+**The route is planned from Questie's database for speed.** Every Alliance quest at 40–60 was
+scored by XP against travel time. The planner then picked the fastest order of zone visits, coming
+back to a zone when its next batch of quests opens up. In simulation it reaches 60 on quests alone,
+with no grinding, in 48 visits. It starts in Riverglades, Badlands, Stranglethorn Vale, Tanaris and
+Feralas, and finishes in Mount Hyjal, the Plaguelands, Silithus and Winterspring.
 
 **Alliance only for now.** A Horde route is planned. On Horde characters the addon stays switched
 off and changes nothing.
@@ -65,11 +67,13 @@ Game Menu > Options > AddOns.
 - **Licence:** GNU GPL v3 or later (see `LICENSE.md`).
 
 ## Rebuilding the route data
-`Data.lua` is generated, so don't edit it by hand. With Questie installed in the Forever client:
+`Data.lua` is generated, so don't edit it by hand. With Questie installed in the Forever client, and a
+Python that has the `lupa` package for the planner:
 
 ```
-python -I tools/decode.py "C:\Program Files (x86)\World of Warcraft\_forever_" tools/data.json
-python -I tools/gen_route.py tools "C:\Program Files (x86)\World of Warcraft\_forever_" Data.lua
+powershell -File tools/build_route.ps1 -LupaPython <path to python with lupa>
 ```
 
-The zone order and level ranges are in `STEPS` at the top of `tools/gen_route.py`.
+This decodes QuestieDB, builds the zone data, plans the visit order (`tools/plan_route.py`) and
+writes `Data.lua`. Planner settings (hop costs, minimum visit size) are in `tools/build_route.ps1`.
+Zone notes and the quest-to-zone rules are in `STEPS` in `tools/gen_route.py`.
