@@ -124,6 +124,101 @@
   "secs": 20290
  },
  {
+  "kind": "dungeon",
+  "map": 1420,
+  "name": "Scarlet Monastery: Armory",
+  "dj": "arm",
+  "entrance": [
+   "Scarlet Monastery Entrance",
+   1420,
+   82.6,
+   33.8
+  ],
+  "lv_in": 40,
+  "lv_out": 40,
+  "quests": [
+   6141
+  ],
+  "xp": 17290,
+  "secs": 2100,
+  "all": [
+   6141,
+   1053
+  ],
+  "optional": true,
+  "cost_min": 37
+ },
+ {
+  "kind": "dungeon",
+  "map": 1418,
+  "name": "Uldaman",
+  "dj": "ulda",
+  "entrance": [
+   "Uldaman Entrance",
+   1418,
+   44.3,
+   12.0
+  ],
+  "lv_in": 40,
+  "lv_out": 40,
+  "quests": [
+   2398,
+   2240,
+   709,
+   2418,
+   1360
+  ],
+  "xp": 47415,
+  "secs": 3749,
+  "all": [
+   2398,
+   2240,
+   721,
+   722,
+   704,
+   17,
+   709,
+   2418,
+   1360,
+   1139,
+   2200,
+   2201,
+   2204,
+   2278,
+   2279,
+   1956
+  ],
+  "optional": true,
+  "cost_min": 47
+ },
+ {
+  "kind": "dungeon",
+  "map": 2548,
+  "name": "Krol'dok Stronghold",
+  "dj": "kroldok",
+  "entrance": [
+   "Krol'dok Stronghold Entrance",
+   2548,
+   37.5,
+   37.3
+  ],
+  "lv_in": 40,
+  "lv_out": 41,
+  "quests": [],
+  "xp": 29922,
+  "secs": 3242,
+  "all": [
+   94982,
+   94983,
+   94984,
+   96771,
+   94981,
+   94998
+  ],
+  "optional": true,
+  "cost_min": 29
+ },
+ {
   "kind": "zone",
   "map": 1453,
   "name": "Stormwind City",
@@ -188,6 +283,31 @@
   ],
   "xp": 149710,
   "secs": 10122
+ },
+ {
+  "kind": "dungeon",
+  "map": 1420,
+  "name": "Scarlet Monastery: Cathedral",
+  "dj": "cath",
+  "entrance": [
+   "Scarlet Monastery Entrance",
+   1420,
+   82.6,
+   33.8
+  ],
+  "lv_in": 44,
+  "lv_out": 44,
+  "quests": [
+   6141
+  ],
+  "xp": 26027,
+  "secs": 2760,
+  "all": [
+   6141,
+   1053
+  ],
+  "optional": true,
+  "cost_min": 26
  },
  {
   "kind": "zone",
@@ -259,6 +379,30 @@
   ],
   "xp": 110450,
   "secs": 6639
+ },
+ {
+  "kind": "dungeon",
+  "map": 1413,
+  "name": "Razorfen Downs",
+  "dj": "rfd",
+  "entrance": [
+   "Razorfen Downs Entrance",
+   1413,
+   50.0,
+   92.0
+  ],
+  "lv_in": 45,
+  "lv_out": 46,
+  "quests": [
+   3636
+  ],
+  "xp": 38002,
+  "secs": 3960,
+  "all": [
+   3636
+  ],
+  "optional": true,
+  "cost_min": 36
  },
  {
   "kind": "zone",
@@ -494,6 +638,28 @@
   "secs": 4011
  },
  {
+  "kind": "dungeon",
+  "map": 1445,
+  "name": "Alcaz Prison",
+  "dj": "alcaz",
+  "entrance": [
+   "Alcaz Prison Entrance",
+   1445,
+   75.3,
+   14.1
+  ],
+  "lv_in": 49,
+  "lv_out": 49,
+  "quests": [],
+  "xp": 21048,
+  "secs": 2470,
+  "all": [
+   96772
+  ],
+  "optional": true,
+  "cost_min": 34
+ },
+ {
   "kind": "zone",
   "map": 1427,
   "name": "Searing Gorge",
@@ -657,6 +823,47 @@
   "secs": 7588
  },
  {
+  "kind": "dungeon",
+  "map": 1427,
+  "name": "Blackrock Depths",
+  "dj": "brd",
+  "entrance": [
+   "Blackrock Depths Entrance",
+   1427,
+   34.8,
+   84.0
+  ],
+  "lv_in": 52,
+  "lv_out": 53,
+  "quests": [
+   4123,
+   4324,
+   4136,
+   4201,
+   4128,
+   4126
+  ],
+  "xp": 86052,
+  "secs": 5700,
+  "all": [
+   3802,
+   4123,
+   4324,
+   4136,
+   4201,
+   4128,
+   4126,
+   4263,
+   4322,
+   4024,
+   4362,
+   4286,
+   7604
+  ],
+  "optional": true,
+  "cost_min": 73
+ },
+ {
   "kind": "zone",
   "map": 1449,
   "name": "Un'Goro Crater",
@@ -813,6 +1020,60 @@
   "secs": 5639
  },
  {
+  "kind": "dungeon",
+  "map": 1444,
+  "name": "Dire Maul: East",
+  "dj": "dme",
+  "entrance": [
+   "Dire Maul Entrance",
+   1444,
+   59.0,
+   45.0
+  ],
+  "lv_in": 55,
+  "lv_out": 56,
+  "quests": [
+   7441,
+   7494,
+   7488
+  ],
+  "xp": 52305,
+  "secs": 3420,
+  "all": [
+   7441,
+   7494,
+   7488,
+   5526,
+   7463
+  ],
+  "optional": true,
+  "cost_min": 38
+ },
+ {
+  "kind": "dungeon",
+  "map": 1447,
+  "name": "Blackmaw Hold",
+  "dj": "blackmaw",
+  "entrance": [
+   "Blackmaw Hold Entrance",
+   1447,
+   38.6,
+   33.2
+  ],
+  "lv_in": 55,
+  "lv_out": 56,
+  "quests": [],
+  "xp": 62134,
+  "secs": 4800,
+  "all": [
+   92344,
+   97173,
+   92069
+  ],
+  "optional": true,
+  "cost_min": 56
+ },
+ {
   "kind": "zone",
   "map": 1452,
   "name": "Winterspring",
@@ -880,6 +1141,79 @@
   "pick": [],
   "xp": 149030,
   "secs": 5693
+ },
+ {
+  "kind": "dungeon",
+  "map": 1444,
+  "name": "Dire Maul: West",
+  "dj": "dmw",
+  "entrance": [
+   "Dire Maul Entrance",
+   1444,
+   59.0,
+   45.0
+  ],
+  "lv_in": 57,
+  "lv_out": 57,
+  "quests": [
+   7461,
+   7482,
+   7703
+  ],
+  "xp": 72319,
+  "secs": 3780,
+  "all": [
+   7461,
+   7482,
+   5250,
+   5247,
+   7643,
+   7703,
+   7631
+  ],
+  "optional": true,
+  "cost_min": 44
+ },
+ {
+  "kind": "dungeon",
+  "map": 1444,
+  "name": "Dire Maul: North",
+  "dj": "dmn",
+  "entrance": [
+   "Dire Maul Entrance",
+   1444,
+   59.0,
+   45.0
+  ],
+  "lv_in": 57,
+  "lv_out": 57,
+  "quests": [
+   7703,
+   5525,
+   5518,
+   7482
+  ],
+  "xp": 80145,
+  "secs": 4140,
+  "all": [
+   7703,
+   5525,
+   5518,
+   7482,
+   7506,
+   7503,
+   7500,
+   7501,
+   7504,
+   7498,
+   7502,
+   7499,
+   7483,
+   7484,
+   7485
+  ],
+  "optional": true,
+  "cost_min": 50
  },
  {
   "kind": "zone",
@@ -958,6 +1292,149 @@
   "pick": [],
   "xp": 203065,
   "secs": 7746
+ },
+ {
+  "kind": "dungeon",
+  "map": 1427,
+  "name": "Lower Blackrock Spire",
+  "dj": "lbrs",
+  "entrance": [
+   "Lower Blackrock Spire Entrance",
+   1427,
+   34.8,
+   84.0
+  ],
+  "lv_in": 58,
+  "lv_out": 58,
+  "quests": [
+   4742,
+   5001,
+   4701,
+   4729,
+   4862,
+   4866,
+   4867,
+   5089
+  ],
+  "xp": 130093,
+  "secs": 6420,
+  "all": [
+   4742,
+   5001,
+   5081,
+   4701,
+   4729,
+   4862,
+   4866,
+   4867,
+   5089,
+   4788
+  ],
+  "optional": true,
+  "cost_min": 78
+ },
+ {
+  "kind": "dungeon",
+  "map": 1423,
+  "name": "Stratholme: Living",
+  "dj": "stratliving",
+  "entrance": [
+   "Stratholme Main Gate",
+   1423,
+   30.0,
+   15.0
+  ],
+  "lv_in": 58,
+  "lv_out": 58,
+  "quests": [
+   5251,
+   5262,
+   5212,
+   5243,
+   5214,
+   5281,
+   5282
+  ],
+  "xp": 108754,
+  "secs": 5220,
+  "all": [
+   5251,
+   5262,
+   5212,
+   5243,
+   5214,
+   5848,
+   5122,
+   5281,
+   5282
+  ],
+  "optional": true,
+  "cost_min": 52
+ },
+ {
+  "kind": "dungeon",
+  "map": 1422,
+  "name": "Scholomance",
+  "dj": "scholo",
+  "entrance": [
+   "Scholomance Entrance",
+   1422,
+   69.7,
+   73.2
+  ],
+  "lv_in": 58,
+  "lv_out": 59,
+  "quests": [
+   5382,
+   5343,
+   5529
+  ],
+  "xp": 89093,
+  "secs": 5280,
+  "all": [
+   5384,
+   5515,
+   5382,
+   5466,
+   5343,
+   4771,
+   5529,
+   7629,
+   7647
+  ],
+  "optional": true,
+  "cost_min": 64
+ },
+ {
+  "kind": "dungeon",
+  "map": 1423,
+  "name": "Stratholme: Undead",
+  "dj": "stratundead",
+  "entrance": [
+   "Stratholme Service Entrance",
+   1423,
+   44.0,
+   19.0
+  ],
+  "lv_in": 58,
+  "lv_out": 58,
+  "quests": [
+   5281,
+   5282
+  ],
+  "xp": 61362,
+  "secs": 4320,
+  "all": [
+   5263,
+   5213,
+   5281,
+   5282,
+   5125,
+   8945,
+   5463
+  ],
+  "optional": true,
+  "cost_min": 38
  },
  {
   "kind": "zone",

@@ -169,6 +169,11 @@ local function Render(r)
   local goTo = (r.inZone or step.dungeon or step.grind) and "" or ("Go to " .. step.name .. ". ")
   Add(goTo .. step.note, { font = SMALL_FONT, color = GREY, gap = 4 })
   if step.dungeon then
+    local on = ns.DungeonOn(step.dungeon)
+    Add(on and ("|cff33ff33Doing " .. step.dungeon .. "|r - click to skip it")
+        or ("|cffff8040Not in your route|r - click to add " .. step.dungeon), { font = SMALL_FONT, gap = 2,
+      tip = "Choose your dungeons here or in /rdr settings. Skipped dungeons and their quests drop out of the route.",
+      onClick = function() ns.SetDungeon(step.dungeon, not on) end })
     Add("|cff66ccffOpen " .. step.dungeon .. " in the Dungeon Journal|r", { font = SMALL_FONT, gap = 4,
       tip = "Where every quest for this dungeon starts, its bosses and map (DungeonJournal addon, /dj).",
       onClick = function() ns.OpenJournal(step) end })
@@ -213,6 +218,52 @@ local function Render(r)
     local hint = (a.kind == "do") and (ns.C.DIM .. " - no location in the database, see Questie's map icons|r") or ""
     Add(ns.ActionText(a) .. hint, { indent = 22, color = WHITE })
   end
+  -- Dungeon step: every quest for this dungeon and where it stands, like the Dungeon Journal shows it
+  -- (its pick-up text, notes and required chains are used when the journal addon is loaded).
+  if step.dungeon and y < maxH then
+    local S = ns.S
+    Add("Dungeon quests", { font = TITLE_FONT, color = GOLD, gap = 1 })
+    for _, id in ipairs(step.quests) do
+      if y > maxH then Add("...", { color = GREY, indent = 8 }); break end
+      local q = ns.quests[id]
+      local s = q and ns.Status(id, r.level)
+      if q and s ~= S.NA then
+        local jq = ns.JournalQuest(id, step.dungeon) or {}
+        local text, color, check = q.n, WHITE, false
+        if s == S.DONE then color, check = GREY, true
+        elseif s == S.READY then text, color = "Hand in: " .. q.n .. ((q.t and q.t[1]) and (" - " .. q.t[1]) or ""), GREEN
+        elseif s == S.LOG then
+          local have, need = ns.Progress(id)
+          text = q.n .. (need > 0 and (" " .. have .. "/" .. need) or "")
+        elseif s == S.OPEN then
+          local where = jq.pickup
+          if not where and q.g and q.g[1] then
+            if q.g[1] == "(item drop)" then where = "starts from an item that drops in there"
+            else
+              local zone = q.g[2] and ns.MapName(q.g[2])
+              where = q.g[1] .. (zone and (", " .. zone) or "")
+            end
+          end
+          text = "Get: " .. q.n .. (where and (" - " .. where) or "")
+        elseif s == S.LOCKED then
+          local need = {}
+          for _, c in ipairs(jq.chain or {}) do
+            if not ns.IsDone(c.id) and #need < 2 then need[#need + 1] = c.name end
+          end
+          if #need == 0 then
+            for _, p in ipairs(q.pg or q.ps or {}) do
+              if p > 0 and not ns.IsDone(p) and #need < 2 then need[#need + 1] = (ns.quests[p] and ns.quests[p].n) or ("quest " .. p) end
+            end
+          end
+          text, color = q.n .. (#need > 0 and (" - needs: " .. table.concat(need, ", ")) or " - needs an earlier quest"), GREY
+        elseif s == S.SKIP then text, color = q.n .. " - skipped", GREY
+        else text, color = q.n .. " - level " .. (q.r or q.l or "?"), GREY end
+        Add(text, { indent = 8, font = SMALL_FONT, color = color, check = check, tip = jq.note or jq.objective })
+      end
+    end
+    y = y + 3
+  end
+
   local c, S = r.counts, ns.S
   Add(("%d to hand in, %d in log, %d to pick up, %d later, %d locked%s"):format(
     c[S.READY], c[S.LOG], c[S.OPEN], c[S.LATER], c[S.LOCKED],

@@ -57,7 +57,8 @@ Game Menu > Options > AddOns.
 - **Skipping:** right-click a stop in the tracker to skip it (or one quest at it). `/rdr skip`
   skips stop 1, and `/rdr unskip` brings skipped quests back. Settings can also skip all dungeon
   quests.
-- **Dungeons:** `/rdr dj` opens the Dungeon Journal on the current dungeon step.
+- **Dungeons:** `/rdr dungeons` chooses which dungeons are in your route. `/rdr dj` opens the Dungeon
+  Journal on the current dungeon step.
 - **Rare alerts:** `/rdr rares` turns them on or off, and `/rdr raretest` shows a sample. Bind a key
   to the Target button under Key Bindings > Rubber Dinghy.
 - **Problems:** `/rdr debug` shows any errors.

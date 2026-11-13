@@ -232,9 +232,28 @@ for sp in SEEDS:
     results.append((h, r, sp))
 h, route, sp = min(results)
 hours, plan = simulate(route, record=True)
+# Every other dungeon becomes an optional step (off until the player ticks it), at the point in this
+# route where adding it costs least time.
+for name, d in dungeons.items():
+    if ("dungeon", name) in route or d["hi"] < 42 or not d["quests"]: continue
+    FORCE.add(name)
+    tries = [route[:j] + [("dungeon", name)] + route[j:] for j in range(len(route) + 1)]
+    best_r = min(tries, key=lambda r: simulate(r)[0])
+    h2, p2 = simulate(best_r, record=True)
+    FORCE.discard(name)
+    entry = next((v for v in p2 if v["kind"] == "dungeon" and v["name"] == name), None)
+    if not entry: continue
+    entry["optional"] = True
+    entry["cost_min"] = max(0, round((h2 - hours) * 60))
+    at = len(plan)
+    for i, v in enumerate(plan):
+        if v["lv_in"] > entry["lv_in"]: at = i; break
+    plan.insert(at, entry)
+    print(f"  optional: {name} at {entry['lv_in']} ({h2 - hours:+.2f} h if added)", flush=True)
 json.dump(plan, open(OUT, "w"), indent=1)
-kinds = {k: sum(p["secs"] for p in plan if p["kind"] == k) / 3600 for k in ("zone", "dungeon", "grind")}
+core = [p for p in plan if not p.get("optional")]
+kinds = {k: sum(p["secs"] for p in core if p["kind"] == k) / 3600 for k in ("zone", "dungeon", "grind")}
 print(f"\nBEST {hours:.2f} h (from {sp.split(chr(92))[-1]}): questing {kinds['zone']:.1f} h, "
-      f"dungeons {kinds['dungeon']:.1f} h ({sum(1 for p in plan if p['kind'] == 'dungeon')} runs: "
-      f"{', '.join(p['name'] for p in plan if p['kind'] == 'dungeon')}), grinding {kinds['grind']:.1f} h; "
+      f"dungeons {kinds['dungeon']:.1f} h ({sum(1 for p in core if p['kind'] == 'dungeon')} runs: "
+      f"{', '.join(p['name'] for p in core if p['kind'] == 'dungeon')}), grinding {kinds['grind']:.1f} h; "
       f"{sum(len(p['quests']) for p in plan)} quests, {sum(1 for p in plan if p['kind'] == 'zone')} zone visits")

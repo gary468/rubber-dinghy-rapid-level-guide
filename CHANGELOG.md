@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.0.8
+- **Choose your dungeons and the route updates.** Every 40-60 dungeon is in the route at the level
+  where it costs least time.
+  - The planner's picks (Zul'Farrak, Maraudon, Sunken Temple) start ticked. The rest are optional,
+    and each shows how much time it adds to your time to 60.
+  - Tick or untick them in **Choose dungeons** (settings, or `/rdr dungeons`), or click "Doing X -
+    click to skip it" on a dungeon step. Unticked dungeons and their quests drop out of the route
+    at once.
+- **Dungeon steps list every quest for the dungeon, like the Dungeon Journal:**
+  - done, hand in, progress (e.g. 0/1), where to get it, what it still needs (e.g. "needs: The
+    Ancient Egg"), or the level it opens at;
+  - the journal's own pick-up text, required chains and notes (in tooltips) are used when the
+    DungeonJournal addon is loaded.
 ## v1.0.7
 - **Heading to a dungeon:** while you carry a dungeon's quests, that dungeon's step stays current
   (with their progress), wherever you are on the way, e.g. flying into Blasted Lands for the Temple

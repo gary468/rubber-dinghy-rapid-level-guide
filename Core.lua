@@ -178,11 +178,58 @@ end
 -- LOCKED = an earlier quest is missing, DONE, LATER = too far above you, NA = not for your race/class.
 -- SKIP = you chose to skip it (or it's a dungeon quest and dungeon quests are skipped).
 local READY, LOG, OPEN, SOON, LOCKED, DONE, LATER, NA, SKIP = 1, 2, 3, 4, 5, 6, 7, 8, 9
-ns.S = { READY = READY, LOG = LOG, OPEN = OPEN, SOON = SOON, LOCKED = LOCKED, DONE = DONE, LATER = LATER, SKIP = SKIP }
+ns.S = { READY = READY, LOG = LOG, OPEN = OPEN, SOON = SOON, LOCKED = LOCKED, DONE = DONE, LATER = LATER, NA = NA, SKIP = SKIP }
+ns.IsDone = IsDone
 
 -- Quests that are never suggested but are routed once they're in your log.
 ns.trackSet = {}
 for _, id in ipairs(ns.track or {}) do ns.trackSet[id] = true end
+
+-- Which route dungeon each dungeon quest belongs to, and whether you've chosen to skip it.
+-- The planner's dungeons are on by default; every other 40-60 dungeon is in the data as an optional
+-- step at its best point in the route, off until you tick it.
+ns.questDungeon, ns.dungeonDefault = {}, {}
+for _, step in ipairs(ns.steps or {}) do
+  if step.dungeon then
+    ns.dungeonDefault[step.dungeon] = not step.optional
+    for _, id in ipairs(step.quests) do ns.questDungeon[id] = step.dungeon end
+  end
+end
+function ns.DungeonOn(name)
+  local db = ns.db
+  if not db or not name then return true end
+  if db.skipDungeons then return false end
+  local pick = db.dungeons and db.dungeons[name]
+  if pick ~= nil then return pick end
+  return ns.dungeonDefault[name] ~= false
+end
+function ns.DungeonOff(name) return not ns.DungeonOn(name) end
+function ns.SetDungeon(name, on)
+  ns.db.dungeons = ns.db.dungeons or {}
+  ns.db.dungeons[name] = on and true or false
+  if on and ns.db.skipDungeons then ns.db.skipDungeons = nil end
+  ns.Print(name .. (on and " is in your route now." or " is out of your route: its quests and its step drop out."))
+  ns.db.step = nil
+  ns.Recompute()
+  if ns.Options and ns.Options.Refresh then ns.Safe("Options", ns.Options.Refresh) end
+  if ns.Options and ns.Options.RefreshDungeons then ns.Safe("Options", ns.Options.RefreshDungeons) end
+end
+
+--- The dungeon journal addon's entry for a quest (pickup text, note, required chain), if it's loaded.
+function ns.JournalQuest(id, dungeon)
+  local fdj = _G.ForeverDungeonJournal_NS
+  if not fdj or not fdj.DB then return nil end
+  local out = {}
+  local d = dungeon and fdj.DB[dungeon]
+  if d and type(d.quests) == "table" then
+    for _, q in ipairs(d.quests) do
+      if q.id == id then out.pickup, out.note, out.objective = q.pickup, q.note, q.objective; break end
+    end
+  end
+  out.chain = fdj.QUEST_PREREQ_CHAINS and fdj.QUEST_PREREQ_CHAINS[id]
+  out.map = fdj.QUEST_START_MAPS and fdj.QUEST_START_MAPS[id]
+  return out
+end
 
 local function ForMe(q)
   if q.ra and raceBit and band(q.ra, raceBit) == 0 then return false end
@@ -218,7 +265,9 @@ local function Status(id, level)
   -- Skipped: drops out of the route even if it's in your log (it stays under Other Quests).
   local skip = ns.db and ns.db.skip
   if skip and skip[id] then return SKIP end
-  if q.d and ns.db and ns.db.skipDungeons and index == 0 then return SKIP end
+  if q.d and index == 0 and ns.db and (ns.db.skipDungeons or (ns.questDungeon[id] and ns.DungeonOff(ns.questDungeon[id]))) then
+    return SKIP
+  end
   -- Repeatable quests: only part of the route while they're in your log.
   if q.rep then
     if index > 0 then return IsReady(id, index) and READY or LOG end
@@ -233,6 +282,8 @@ local function Status(id, level)
   if q.l > level + 4 then return LATER end
   return OPEN
 end
+
+ns.Status = function(id, level) return Status(id, level) end
 
 local function ScanStep(step, level)
   local rows, counts = {}, { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
@@ -295,7 +346,7 @@ local function AutoStep(level)
   local pm = ns.PlayerPos()
   if pm then
     for i, step in ipairs(ns.steps) do
-      if step.map == pm and level <= step.to + STAY_LEVELS then
+      if step.map == pm and level <= step.to + STAY_LEVELS and not (step.dungeon and ns.DungeonOff(step.dungeon)) then
         local _, c = ScanStep(step, level)
         if c[READY] + c[LOG] > 0 then return i end
       end
@@ -303,7 +354,7 @@ local function AutoStep(level)
     -- Carrying a dungeon's quests: that dungeon's step (you're on your way there, e.g. flying into
     -- Blasted Lands for the Temple of Atal'Hakkar), before any zone you happen to pass through.
     for i, step in ipairs(ns.steps) do
-      if step.dungeon and level <= step.to + STAY_LEVELS then
+      if step.dungeon and not ns.DungeonOff(step.dungeon) and level <= step.to + STAY_LEVELS then
         local _, c = ScanStep(step, level)
         if c[READY] + c[LOG] > 0 then return i end
       end
@@ -320,7 +371,9 @@ local function AutoStep(level)
   for i, step in ipairs(ns.steps) do
     -- A grind step (nothing left that beats killing mobs) is current while you're in its levels.
     if step.grind and level >= step.from and level < step.to then return i end
-    if level <= step.to + STAY_LEVELS then
+    if step.dungeon and ns.DungeonOff(step.dungeon) then
+      -- skipped dungeon: never the automatic step
+    elseif level <= step.to + STAY_LEVELS then
       local _, c = ScanStep(step, level)
       if c[READY] + c[LOG] > 0 then return i end
       -- Planned visits have tight level windows; allow one level of slack so a little extra XP

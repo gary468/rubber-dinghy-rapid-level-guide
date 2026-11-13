@@ -318,7 +318,7 @@ if PLAN:
             note = (f"Dungeon run: find a group (LFG) and head to the entrance. Hand in what you finish."
                     + (f" Quest pick-ups and maps: Dungeon Journal (/dj {dj})." if dj else ""))
             st = dict(name="Dungeon: " + v["name"], lv=lv, zones=sorted(map_areas.get(m, [])) or [0], map_id=m,
-                      note=note, extra=[], dungeon=v["name"], dj=dj, ent=e)
+                      note=note, extra=[], dungeon=v["name"], dj=dj, ent=e, optional=bool(v.get("optional")), cost=v.get("cost_min"))
         elif v.get("kind") == "grind":
             # Grinding beats the quests left at this point: a step with no quests, just the advice.
             st = dict(name=f"Grind: {v['name']}", lv=lv, zones=sorted(map_areas.get(m, [])) or [0], map_id=m,
@@ -372,6 +372,8 @@ for st, ids in steps_out:
         e = st["ent"]
         extra += f", dungeon={lstr(st['dungeon'])}, ent={{{lstr(e[0])},{e[1]},{e[2]},{e[3]}}}"
         if st.get("dj"): extra += f", dj={lstr(st['dj'])}"
+        if st.get("optional"): extra += ", optional=true"
+        if st.get("cost") is not None: extra += f", cost={int(st['cost'])}"
     if st.get("grind"): extra += ", grind=true"
     out.append(f"  {{name={lstr(st['name'])}, from={st['lv'][0]}, to={st['lv'][1]}, map={m}, note={lstr(st['note'])}, quests={{{','.join(map(str, ids))}}}{extra}}},")
 out.append("}")

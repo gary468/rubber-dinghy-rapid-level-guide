@@ -148,8 +148,12 @@ local function Build()
 
   local y = -92
   Header(f, y, "Route"); y = y - 22
-  Check(f, y, "Skip dungeon quests", "Dungeon quests are never suggested. If you accept one anyway, it's still tracked.",
-    "skipDungeons", false, "route"); y = y - 30
+  Check(f, y, "Skip all dungeons", "No dungeon steps or dungeon quests in the route. If you accept one anyway, it's still tracked.",
+    "skipDungeons", false, "route"); y = y - 26
+  local pickB = Button(f, "Choose dungeons...", 150, function() O.ToggleDungeons() end,
+    "Tick the dungeons you want. The route updates straight away: unticked ones and their quests drop out.")
+  pickB:SetPoint("TOPLEFT", PAD + 4, y)
+  y = y - 32
   f.skipText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   f.skipText:SetPoint("TOPLEFT", PAD + 4, y - 5)
   local unskipB = Button(f, "Un-skip all", 100, function() ns.UnskipAll(); O.Refresh() end,
@@ -261,3 +265,78 @@ end
 ns.commands.options = function() O.Toggle() end
 ns.commands.settings = ns.commands.options
 ns.commands.config = ns.commands.options
+
+-- "Choose dungeons": one tick box per dungeon on the route. The planner's picks start ticked (*),
+-- the rest are optional steps placed where they cost least time.
+local dwin, dcontrols = nil, {}
+local function BuildDungeons()
+  local ok, f = pcall(CreateFrame, "Frame", "RubberDinghyDungeons", UIParent, "BasicFrameTemplateWithInset")
+  if not ok or not f then f = CreateFrame("Frame", "RubberDinghyDungeons", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil) end
+  dwin = f
+  f:SetSize(W, 200)
+  f:SetPoint("CENTER", 40, -20)
+  f:SetFrameStrata("DIALOG")
+  f:SetClampedToScreen(true)
+  f:SetMovable(true)
+  f:EnableMouse(true)
+  f:RegisterForDrag("LeftButton")
+  f:SetScript("OnDragStart", f.StartMoving)
+  f:SetScript("OnDragStop", f.StopMovingOrSizing)
+  local templTitle = (type(f.TitleText) == "table" and f.TitleText) or nil
+  if f.SetBackdrop and not templTitle then
+    f:SetBackdrop({ bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background", edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+                    tile = true, tileSize = 32, edgeSize = 24, insets = { left = 6, right = 6, top = 6, bottom = 6 } })
+  end
+  local title = templTitle or f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  if not templTitle then title:SetPoint("TOP", 0, -8) end
+  title:SetText("Choose your dungeons")
+  tinsert(UISpecialFrames, "RubberDinghyDungeons")
+  local help = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  help:SetPoint("TOPLEFT", PAD, -32)
+  help:SetWidth(W - 2 * PAD)
+  help:SetJustifyH("LEFT")
+  help:SetText("Ticked dungeons are in your route at the level shown. * = picked by the planner (good group). The route updates as you tick.")
+  local y = -64
+  local seen, list = {}, {}
+  for _, st in ipairs(ns.steps or {}) do
+    if st.dungeon and not seen[st.dungeon] then seen[st.dungeon] = true; list[#list + 1] = st end
+  end
+  table.sort(list, function(a, b) return a.from < b.from end)
+  local col = 0
+  for _, st in ipairs(list) do
+    local name = st.dungeon
+    local cb = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
+    cb:SetPoint("TOPLEFT", PAD + col * 165, y)
+    cb:SetSize(22, 22)
+    local fs = (type(cb.Text) == "table" and cb.Text) or (type(cb.text) == "table" and cb.text) or nil
+    if not fs then fs = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"); fs:SetPoint("LEFT", cb, "RIGHT", 1, 0) end
+    fs:SetText(("%s (%d)%s"):format(name, st.from, st.optional and "" or " *"))
+    cb:SetScript("OnClick", function(self) ns.SetDungeon(name, self:GetChecked() and true or false) end)
+    cb:SetScript("OnEnter", function(self)
+      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+      GameTooltip:AddLine(name)
+      GameTooltip:AddLine(("At about level %d in the route. %s"):format(st.from, st.optional
+        and (("Optional: adds about %d min to your time to 60 (good group), but it's fun and the gear helps."):format(st.cost or 0))
+        or "Picked by the planner for the fastest route."), 1, 1, 1, true)
+      GameTooltip:Show()
+    end)
+    cb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    cb.refresh = function() cb:SetChecked(ns.DungeonOn(name)) end
+    dcontrols[#dcontrols + 1] = cb
+    col = col + 1
+    if col == 2 then col = 0; y = y - 24 end
+  end
+  if col ~= 0 then y = y - 24 end
+  f:SetHeight(-y + 20)
+  f:SetScript("OnShow", function() for _, c in ipairs(dcontrols) do c.refresh() end end)
+  f:Hide()
+end
+
+function O.ToggleDungeons()
+  if not dwin then BuildDungeons() end
+  if dwin:IsShown() then dwin:Hide() else dwin:Show() end
+end
+function O.RefreshDungeons()
+  if dwin and dwin:IsShown() then for _, c in ipairs(dcontrols) do c.refresh() end end
+end
+ns.commands.dungeons = function() O.ToggleDungeons() end
