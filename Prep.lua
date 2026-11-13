@@ -225,8 +225,9 @@ function P.Plan(name, level)
     local s = ns.Status(id, level)
     if s ~= S.NA and s ~= S.SKIP and s ~= S.DONE and ns.quests[id] then targets[#targets + 1] = id end
   end
-  local pm, px, py = ns.PlayerPos()
-  local start = { map = pm, x = px and px * 100, y = py and py * 100 }
+  -- from where you are, or where your flight lands (PlayerPos is already in map %)
+  local pm, px, py = ns.HerePos()
+  local start = { map = pm, x = px, y = py }
   local best
   for si, w in ipairs(STRATEGIES) do
     for seed = 0, SEEDS - 1 do
@@ -248,7 +249,9 @@ end
 -- Re-plan only when something it depends on changed (quest states, level, zone).
 local cache
 local function Signature(name, level, touched)
-  local parts = { name, level, (ns.PlayerPos()) or 0 }
+  -- where you are, to ~8% of the map: moving on re-plans from your new spot
+  local m, x, y = ns.HerePos()
+  local parts = { name, level, m or 0, x and math.floor(x / 8) or -1, y and math.floor(y / 8) or -1 }
   -- skipping or un-skipping a quest re-plans
   local sk = {}
   for id in pairs((ns.db and ns.db.skip) or {}) do sk[#sk + 1] = id end

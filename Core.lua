@@ -147,6 +147,42 @@ function ns.PlayerPos()
   return m, x * 100, y * 100
 end
 
+--- Where to route from: where your flight is going while you're on one, else where you are.
+--- Returns map, x, y (0-100), onTaxi.
+function ns.HerePos()
+  if ns.taxiDest and UnitOnTaxi and UnitOnTaxi("player") then
+    return ns.taxiDest.map, ns.taxiDest.x, ns.taxiDest.y, true
+  end
+  local m, x, y = ns.PlayerPos()
+  return m, x, y, false
+end
+
+-- Taking a flight: remember where it lands, so the route plans from there straight away.
+local function OnTakeTaxi(slot)
+  local taxiMap = GetTaxiMapID and GetTaxiMapID()
+  if not (taxiMap and C_TaxiMap and C_TaxiMap.GetAllTaxiNodes) then return end
+  local ok, nodes = pcall(C_TaxiMap.GetAllTaxiNodes, taxiMap)
+  if not ok or type(nodes) ~= "table" then return end
+  for _, node in ipairs(nodes) do
+    if node.slotIndex == slot and node.position then
+      local cx, cy = node.position.x, node.position.y
+      if not cx and node.position.GetXY then cx, cy = node.position:GetXY() end
+      local info = cx and C_Map.GetMapInfoAtPosition and C_Map.GetMapInfoAtPosition(taxiMap, cx, cy)
+      local zone = info and info.mapID
+      local HBD = LibStub and LibStub("HereBeDragons-2.0", true)
+      if zone and HBD and HBD.TranslateZoneCoordinates then
+        local zx, zy = HBD:TranslateZoneCoordinates(cx, cy, taxiMap, zone)
+        if zx then
+          ns.taxiDest = { map = zone, x = zx * 100, y = zy * 100, name = node.name }
+          ns.Print(("flying to %s: the route now plans from there."):format(node.name or ns.MapName(zone) or "?"))
+          ns.Queue()
+        end
+      end
+      return
+    end
+  end
+end
+
 local raceBit, classBit
 local function ReadPlayerBits()
   local _, _, raceID = UnitRace("player")
@@ -343,7 +379,7 @@ local function AutoStep(level)
     end
   end
   -- The zone you're standing in wins if you still have its quests on the go.
-  local pm = ns.PlayerPos()
+  local pm = ns.HerePos()
   if pm then
     for i, step in ipairs(ns.steps) do
       if step.map == pm and level <= step.to + STAY_LEVELS and not (step.dungeon and ns.DungeonOff(step.dungeon)) then
@@ -444,7 +480,7 @@ local function BuildStops(rows, stepMap, current)
   for _, s in ipairs(stops) do
     if s.away then away[#away + 1] = s else here[#here + 1] = s end
   end
-  local pm, px, py = ns.PlayerPos()
+  local pm, px, py = ns.HerePos()
   local cx, cy
   if pm == stepMap then
     cx, cy = px, py
@@ -704,6 +740,7 @@ ev:SetScript("OnEvent", function(_, event, arg1)
     RubberDinghyDB = RubberDinghyDB or {}
     ns.db = RubberDinghyDB
     ReadPlayerBits()
+    if hooksecurefunc and TakeTaxiNode then hooksecurefunc("TakeTaxiNode", function(slot) ns.Safe("Taxi", OnTakeTaxi, slot) end) end
     for name, fn in pairs(ns.inits) do ns.Safe(name, fn) end
     ns.Queue()
     return
@@ -716,7 +753,27 @@ ev:SetScript("OnEvent", function(_, event, arg1)
   if event == "QUEST_TURNED_IN" then
     C_Timer.After(1.5, ns.Queue) -- the completed flag can lag the event
   end
+  if event == "PLAYER_CONTROL_GAINED" and not (UnitOnTaxi and UnitOnTaxi("player")) then
+    ns.taxiDest = nil   -- landed
+  end
   ns.Queue()
+end)
+pcall(ev.RegisterEvent, ev, "PLAYER_CONTROL_GAINED")
+
+-- Re-route as you move: when you've gone a few % of the map, or into another zone, re-plan.
+local lastM, lastX, lastY, tick = nil, nil, nil, 0
+local mover = CreateFrame("Frame")
+mover:SetScript("OnUpdate", function(_, dt)
+  tick = tick + dt
+  if tick < 2 then return end
+  tick = 0
+  if not ns.db or ns.disabled then return end
+  local m, x, y = ns.HerePos()
+  if not m then return end
+  if m ~= lastM or not lastX or ((x - lastX) ^ 2 + (y - lastY) ^ 2) > 9 then   -- moved 3% of the map
+    lastM, lastX, lastY = m, x, y
+    ns.Queue()
+  end
 end)
 
 ns.commands = {}

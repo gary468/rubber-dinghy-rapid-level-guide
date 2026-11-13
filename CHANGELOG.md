@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.14
+- **Re-routes from where you are.** As you move (a few % of the map, or into another zone), the route
+  re-plans from your spot.
+- **Flights:** when you take a flight, the route plans from where it lands (e.g. flying to Ratchet: the
+  get-ready route starts on Kalimdor at once).
+- **Fix:** the get-ready route misjudged distances inside your own zone and sent you to other zones
+  (e.g. Azshara) first.
+
 ## v1.0.13
 - **No commands needed:** the Dungeons window (settings > "Dungeons & get ready...", or the
   minimap button > settings) has a **Get ready** button next to every dungeon. Click it for the
