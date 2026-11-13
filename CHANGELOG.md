@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.10
+- **Skipping a dungeon asks first** ("Skip Sunken Temple?") when you click "click to skip it" on a
+  dungeon step.
+- **Choose dungeons** is wider, so long names no longer run into the next column.
+
 ## v1.0.9
 - **Settings window in two columns**, about half as tall, so it fits on screen.
 - **Choose dungeons** opens beside the settings window (or on the left of the screen), not on top of

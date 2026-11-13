@@ -279,7 +279,8 @@ local function BuildDungeons()
   local ok, f = pcall(CreateFrame, "Frame", "RubberDinghyDungeons", UIParent, "BasicFrameTemplateWithInset")
   if not ok or not f then f = CreateFrame("Frame", "RubberDinghyDungeons", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil) end
   dwin = f
-  f:SetSize(W, 200)
+  local DW = 500
+  f:SetSize(DW, 200)
   f:SetFrameStrata("DIALOG")
   f:SetClampedToScreen(true)
   f:SetMovable(true)
@@ -302,7 +303,7 @@ local function BuildDungeons()
   tinsert(UISpecialFrames, "RubberDinghyDungeons")
   local help = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   help:SetPoint("TOPLEFT", PAD, -32)
-  help:SetWidth(W - 2 * PAD)
+  help:SetWidth(DW - 2 * PAD)
   help:SetJustifyH("LEFT")
   help:SetText("Ticked dungeons are in your route at the level shown. * = picked by the planner (good group). The route updates as you tick.")
   local y = -64
@@ -315,11 +316,13 @@ local function BuildDungeons()
   for _, st in ipairs(list) do
     local name = st.dungeon
     local cb = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
-    cb:SetPoint("TOPLEFT", PAD + col * 165, y)
+    cb:SetPoint("TOPLEFT", PAD + col * 245, y)
     cb:SetSize(22, 22)
     local fs = (type(cb.Text) == "table" and cb.Text) or (type(cb.text) == "table" and cb.text) or nil
     if not fs then fs = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"); fs:SetPoint("LEFT", cb, "RIGHT", 1, 0) end
     fs:SetText(("%s (%d)%s"):format(name, st.from, st.optional and "" or " *"))
+    if fs.SetWidth then fs:SetWidth(215); fs:SetJustifyH("LEFT") end
+    if fs.SetWordWrap then fs:SetWordWrap(false) end
     cb:SetScript("OnClick", function(self) ns.SetDungeon(name, self:GetChecked() and true or false) end)
     cb:SetScript("OnEnter", function(self)
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")

@@ -173,7 +173,9 @@ local function Render(r)
     Add(on and ("|cff33ff33Doing " .. step.dungeon .. "|r - click to skip it")
         or ("|cffff8040Not in your route|r - click to add " .. step.dungeon), { font = SMALL_FONT, gap = 2,
       tip = "Choose your dungeons here or in /rdr settings. Skipped dungeons and their quests drop out of the route.",
-      onClick = function() ns.SetDungeon(step.dungeon, not on) end })
+      onClick = function()
+        if on then T.ConfirmSkipDungeon(step.dungeon) else ns.SetDungeon(step.dungeon, true) end
+      end })
     Add("|cff66ccffOpen " .. step.dungeon .. " in the Dungeon Journal|r", { font = SMALL_FONT, gap = 4,
       tip = "Where every quest for this dungeon starts, its bosses and map (DungeonJournal addon, /dj).",
       onClick = function() ns.OpenJournal(step) end })
@@ -466,6 +468,22 @@ function T.Refresh() Render(ns.route) end
 
 -- Right-click menu on a stop: skip the whole stop, or one quest at it. The route re-plans at once.
 local menu
+--- "Are you sure?" before a dungeon drops out of the route (Blizzard's own confirmation popup).
+function T.ConfirmSkipDungeon(name)
+  if not (StaticPopupDialogs and StaticPopup_Show) then ns.SetDungeon(name, false); return end
+  StaticPopupDialogs.RUBBERDINGHY_SKIP_DUNGEON = StaticPopupDialogs.RUBBERDINGHY_SKIP_DUNGEON or {
+    text = "Skip %s?\n\nIts step and its quests drop out of your route. You can add it back any time in Choose dungeons (/rdr dungeons).",
+    button1 = "Skip it",
+    button2 = CANCEL or "Cancel",
+    OnAccept = function(self, data) ns.SetDungeon(data, false) end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+  }
+  StaticPopup_Show("RUBBERDINGHY_SKIP_DUNGEON", name, nil, name)
+end
+
 function T.SkipMenu(stop, anchor)
   if not menu then
     menu = CreateFrame("Frame", "RubberDinghySkipMenu", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
