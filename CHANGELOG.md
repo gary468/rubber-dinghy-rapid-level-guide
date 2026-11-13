@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.4
+- **Click a numbered stop on the world map** to show its kill area and highlight it, like clicking a
+  Blizzard quest marker. Click it again to turn the highlight off. It works even with quest areas
+  switched off.
+- **Thinner quest-area outline.**
+
 ## v1.0.3
 - **Every quest covered:** all 1,570 Alliance quests at 40–60 in Questie's database are in.
   - 1,164 are part of the route.

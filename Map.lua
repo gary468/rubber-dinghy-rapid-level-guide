@@ -68,8 +68,8 @@ local function Blob()
     blobFrame:SetFillTexture(AREA_FILL)
     blobFrame:SetBorderTexture(AREA_EDGE)
     blobFrame:SetFillAlpha(alpha)
-    blobFrame:SetBorderAlpha(math.min(255, alpha * 3))
-    blobFrame:SetBorderScalar(0.5)
+    blobFrame:SetBorderAlpha(math.min(255, alpha * 2))
+    blobFrame:SetBorderScalar(0.2) -- a thin rim, not Blizzard's thick glow
   end)
   blobFrame:SetFrameLevel(OVERLAY_LEVEL - 1) -- under our lines and pins, above the map tiles
   return blobFrame
@@ -150,7 +150,17 @@ local function NewPin(parent, size)
     a:SetFromAlpha(1); a:SetToAlpha(0.2); a:SetDuration(0.6)
     p.pulse = ag
   end)
-  p:SetScript("OnEnter", function(self) if self.stop then ns.StopTooltip(self, self.stop, "ANCHOR_RIGHT") end end)
+  p:SetScript("OnEnter", function(self)
+    if not self.stop then return end
+    ns.StopTooltip(self, self.stop, "ANCHOR_RIGHT")
+    GameTooltip:AddLine(self.stop.area and "Click: show its kill area" or "Click: highlight this stop", 0.4, 0.8, 1)
+    GameTooltip:Show()
+  end)
+  -- Like clicking a Blizzard quest marker: highlight this stop and show its kill area.
+  p:SetScript("OnClick", function(self)
+    if not self.stop then return end
+    if parent == Minimap then ns.ShowOnMap(self.stop) else Map.Highlight(self.stop) end
+  end)
   p:SetScript("OnLeave", function() GameTooltip:Hide() end)
   return p
 end
@@ -264,8 +274,12 @@ local function Draw()
       end
       first = false
       prevX, prevY = s.x, s.y
-      if s.area and areasLeft > 0 then
-        areasLeft = areasLeft - 1
+      -- The next stop's area, plus the area of a stop you clicked (even if areas are off).
+      if s.area and (areasLeft > 0 or s == hlStop) then
+        if s ~= hlStop then areasLeft = areasLeft - 1 end
+        bf = bf or Blob()
+        if bf and bf.SetMapID then pcall(bf.SetMapID, bf, cur) end
+        if bf then bf:Show() end
         local blobbed = false
         if bf then
           for _, a in ipairs(s.actions) do
@@ -340,6 +354,12 @@ end
 ---------------------------------------------------------------------------
 -- Public: tracker click -> open the map on the stop's zone and highlight it. No waypoint is set.
 ---------------------------------------------------------------------------
+--- Highlight a stop on the open map (pin click) and show its kill area.
+function Map.Highlight(s)
+  hlStop = (hlStop ~= s) and s or nil -- clicking it again turns the highlight off
+  dirty = true
+end
+
 function ns.ShowOnMap(s)
   if not s or not WorldMapFrame then return end
   if not WorldMapFrame:IsShown() then
@@ -355,7 +375,14 @@ end
 
 ns.listeners.Map = function(r)
   route = r
-  hlStop = nil
+  -- Keep a highlight across route updates (the stops are rebuilt): same place, same name.
+  if hlStop then
+    local keep
+    for _, s in ipairs(r.stops) do
+      if s.map == hlStop.map and s.name == hlStop.name then keep = s; break end
+    end
+    hlStop = keep
+  end
   dirty = true
   UpdateMinimap()
 end
