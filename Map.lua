@@ -118,7 +118,9 @@ local function SuppressBlizzard()
       for pin in WorldMapFrame:EnumeratePinsByTemplate(name) do
         local qid = pin.questID or pin.questId
         local hide
-        if qid then hide = routeSet[qid] and qid ~= chosen
+        -- only the quest you picked in the quest log keeps Blizzard's marker; the route's own
+        -- quests have our numbered stops, and other quests stay out of the way
+        if qid then hide = qid ~= chosen
         else hide = (chosen == 0) end   -- areas without a quest ID belong to the chosen quest
         if hide and pin:IsShown() then pin:Hide() end
       end

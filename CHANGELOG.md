@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.22
+- **Map:** Blizzard's markers for quests that aren't on your route are hidden again. Only the quest you
+  select in your quest log (or click under Other Quests) keeps its Blizzard marker and area.
+
 ## v1.0.21
 - **Removed auto accept / hand-in.** It could leave you stuck in place when talking to NPCs. Use
   Leatrix Plus or Questie for quest automation.
