@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.12
+- **Get ready: skipping works.** Right-click > Skip on a chain quest (e.g. Muigin and Larion) takes it and the
+  rest of its chain out of the get-ready route. The dungeon quest behind it shows under "Not yet: you
+  skipped ...". Un-skip brings it back.
+
 ## v1.0.11
 - **Get ready for a dungeon.** Click "Get ready for Sunken Temple" on a dungeon step, or type
   `/rdr prep sunken`. The route becomes the quickest way, from where you are, to walk every quest

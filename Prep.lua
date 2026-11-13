@@ -120,10 +120,13 @@ local function Run(targets, level, start, weight, rnd)
     end
     return true
   end
+  local skip = (ns.db and ns.db.skip) or {}
   local function Frontier(id, depth, seen)
     if depth > 12 or seen[id] then return nil end
     seen[id] = true
     local q = ns.quests[id]
+    -- You skipped it (right-click > Skip): its chain stops here.
+    if skip[id] then why[id] = "skipped"; return nil end
     local s = St(id)
     if s == "done" or s == "held" then return nil end
     if s == "ready" then return q and { id = id, kind = "turn", loc = q.t } end
@@ -140,15 +143,25 @@ local function Run(targets, level, start, weight, rnd)
       return { id = id, kind = "get", loc = q.g }
     end
     local all, any = Prereqs(id)
+    local blocked
     for _, p in ipairs(all) do
       if St(p) ~= "done" then
         local f = Frontier(p, depth + 1, seen)
         if f then return f end
+        blocked = blocked or p
       end
     end
     for _, p in ipairs(any) do
       local f = Frontier(p, depth + 1, seen)
       if f then return f end
+      blocked = blocked or p
+    end
+    if blocked and why[blocked] then
+      local pn = ns.quests[blocked] and ns.quests[blocked].n or ("quest " .. blocked)
+      local w = why[blocked]
+      if w == "skipped" then w = "you skipped " .. pn
+      elseif not w:find("^you skipped") then w = pn .. " " .. w end
+      why[id] = why[id] or w
     end
     why[id] = why[id] or "needs an earlier quest you can't do yet"
     return nil
@@ -236,6 +249,11 @@ end
 local cache
 local function Signature(name, level, touched)
   local parts = { name, level, (ns.PlayerPos()) or 0 }
+  -- skipping or un-skipping a quest re-plans
+  local sk = {}
+  for id in pairs((ns.db and ns.db.skip) or {}) do sk[#sk + 1] = id end
+  table.sort(sk)
+  parts[#parts + 1] = "skip:" .. table.concat(sk, "/")
   local ids = {}
   for id in pairs(touched or {}) do ids[#ids + 1] = id end
   table.sort(ids)
