@@ -15,7 +15,12 @@ stop, add a zone or dungeon run anywhere. It writes the best route as a plan for
 import json, random, sys, time
 import routelib as R
 
-args = [a for i, a in enumerate(sys.argv[1:], 1) if not a.startswith("--") and sys.argv[i - 1] not in ("--minutes", "--force")]
+args = [a for i, a in enumerate(sys.argv[1:], 1) if not a.startswith("--") and sys.argv[i - 1] not in ("--minutes", "--force", "--objective")]
+# --objective travel (default): XP against location only - least riding/flying/boating to reach 60 on
+#   quest XP; how long quests and kills take is ignored (every quest that isn't grey is done).
+# --objective time: the full time model (quest objectives, kill times, dungeon runs, grinding).
+OBJECTIVE = sys.argv[sys.argv.index("--objective") + 1] if "--objective" in sys.argv else "travel"
+TRAVEL = OBJECTIVE == "travel"
 DATA, WOW, QMETA, OUT = args[:4]
 SEEDS = args[4:]
 MINUTES = float(sys.argv[sys.argv.index("--minutes") + 1]) if "--minutes" in sys.argv else 8
@@ -121,8 +126,9 @@ def simulate(route, record=False):
                     if gmap[qid] != m and qid not in held: continue   # its giver is elsewhere: not picked up
                     q = quests[qid]
                     if (q.get("l") or 0) < lv - WORTH_LEVELS or not R.available(q, done, lv, allow_class=False): continue
-                    if not worth(qid, lv): continue                     # grinding beats this quest and its chain
+                    if not TRAVEL and not worth(qid, lv): continue      # grinding beats this quest and its chain
                     s, kxp = R.quest_cost(meta.get(qid), lv)
+                    if TRAVEL: s = 0                                     # only getting there counts
                     g = R.quest_xp(base, qid, lv) + kxp
                     done.add(qid); did.append(qid); secs += s; gain += g; xp += g; progressed = True
                     pts += points[qid]
@@ -132,7 +138,7 @@ def simulate(route, record=False):
             pick = [q for q in dpick.get(m, ()) if q not in held and q not in done
                     and R.available(quests[q], done, lv, allow_class=False, dungeon=True)]
             pick += [q for q in opick.get(m, ()) if q not in held and q not in done
-                     and R.available(quests[q], done, lv, allow_class=False) and worth(q, lv)]
+                     and R.available(quests[q], done, lv, allow_class=False) and (TRAVEL or worth(q, lv))]
             if not did and not pick: continue                       # nothing to do: the stop is skipped
             held.update(pick)
             secs += R.tour(pts) / R.SPEED + 30 * len(pick)
@@ -197,7 +203,8 @@ def compact(route):
 
 def search(route, deadline, rng):
     best = simulate(route)[0]
-    stops = [("zone", m) for m in ZONES] + [("dungeon", n) for n in dungeons]
+    # travel objective: no dungeons in the route unless asked for (--force); they're optional steps
+    stops = [("zone", m) for m in ZONES] + [("dungeon", n) for n in dungeons if not TRAVEL or n in FORCE]
     improved = True
     while improved and time.time() < deadline:
         improved = False
@@ -225,7 +232,9 @@ def search(route, deadline, rng):
 rng = random.Random(7)
 results = []
 for sp in SEEDS:
-    seed = compact(route_of(json.load(open(sp))))
+    seed = route_of(json.load(open(sp)))
+    if TRAVEL: seed = [x for x in seed if x[0] != "dungeon" or x[1] in FORCE]
+    seed = compact(seed)
     for name in FORCE:                       # put each required dungeon where it costs least
         if ("dungeon", name) in seed: continue
         seed = min((seed[:j] + [("dungeon", name)] + seed[j:] for j in range(len(seed) + 1)), key=lambda r: simulate(r)[0])

@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.16
+- **The route is planned on XP against location only**: every quest that isn't grey, in the order that
+  needs the least riding, flying and sailing. Quest and kill times aren't used. In theory: 568 quests,
+  27 zone visits, about 8 hours of pure travel from 40 to 60, and no grinding.
+- **No dungeons unless you choose them.** Every dungeon is optional (Dungeons window). When you choose
+  one, a **side route** comes first: it picks up every quest for that dungeon (max XP from the run).
+  It ends by itself when you have them all, and the route then takes you to the dungeon.
+- Tracker: a quest's progress shows once, at its first stop (no more "0/10" twice). No "(dungeon)" tag
+  on get-ready routes.
 ## v1.0.15
 - **Learns quest counts and flight times as you play** (settings > Route, on by default). It notes
   each quest's real objective counts (Questie's data has none, so the planner guessed) and how long

@@ -192,6 +192,7 @@ local function Render(r)
   end
 
   local shown = 0
+  local objShown = {}   -- a quest's progress lines appear once, at its first stop
   for i, s in ipairs(r.stops) do
     if shown >= MAX_STOPS or y > maxH then break end
     shown = shown + 1
@@ -213,7 +214,8 @@ local function Render(r)
       for _, a in ipairs(s.actions) do
         if a.kind ~= "get" then Slot(a.row.id) end
         Add(ns.ActionText(a), { indent = 22, stop = s, color = WHITE })
-        if a.kind == "do" or a.kind == "turn" or a.kind == "go" or a.kind == "dungeon" then
+        if (a.kind == "do" or a.kind == "turn" or a.kind == "go" or a.kind == "dungeon") and not objShown[a.row.id] then
+          objShown[a.row.id] = true
           for _, o in ipairs(ns.Objectives(a.row.id)) do
             Add(o.text, { indent = 30, font = SMALL_FONT, color = o.done and GREY or WHITE, check = o.done, stop = s })
           end

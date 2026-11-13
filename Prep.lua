@@ -321,17 +321,18 @@ function P.Route(name, level)
       or ("Ready: every %s quest you can take is in your log. Head for the entrance."):format(name),
   }
   return { level = level, idx = select(2, DungeonStep(name)) or 1, step = pstep, counts = counts, stops = stops,
-           loose = loose, stalled = plan.stalled, other = other, manual = true, inZone = (pm == pstep.map), prep = name }
+           loose = loose, stalled = plan.stalled, other = other, manual = true, inZone = (pm == pstep.map), prep = name,
+           allReady = (#plan.tasks == 0) }
 end
 
 function ns.StartPrep(name)
   name = name or (ns.route and ns.route.step and ns.route.step.dungeon)
   if not name then ns.Print("pick a dungeon: /rdr prep Sunken Temple (or click \"Get ready\" on a dungeon step)."); return end
   if not DungeonStep(name) then ns.Print("no dungeon called " .. name .. " in the route."); return end
-  ns.db.prep = name
+  ns.db.prep = name           -- set first: SetDungeon below then won't start it again
   cache = nil
   if not ns.DungeonOn(name) then ns.SetDungeon(name, true) end
-  ns.Print("getting ready for " .. name .. ": the tracker now walks every chain and pick-up for it. Click \"Back to the route\" in the tracker when you're done.")
+  ns.Print("side route: picking up every " .. name .. " quest first (max XP from the run). It ends by itself when you have them all - or click \"Back to the route\".")
   ns.Recompute()
   if ns.Options and ns.Options.RefreshDungeons then ns.Safe("Options", ns.Options.RefreshDungeons) end
 end

@@ -245,6 +245,9 @@ function ns.SetDungeon(name, on)
   ns.db.dungeons[name] = on and true or false
   if on and ns.db.skipDungeons then ns.db.skipDungeons = nil end
   ns.Print(name .. (on and " is in your route now." or " is out of your route: its quests and its step drop out."))
+  -- Choosing a dungeon: first a side route to pick up every quest for it (max XP from the run).
+  if on and ns.StartPrep and ns.db.prep ~= name then ns.StartPrep(name); return end
+  if not on and ns.db.prep == name and ns.StopPrep then ns.StopPrep(); return end
   ns.db.step = nil
   ns.Recompute()
   if ns.Options and ns.Options.Refresh then ns.Safe("Options", ns.Options.Refresh) end
@@ -550,7 +553,8 @@ ns.C = { TURN = "|cff33ff33", DO = "|cffffd100", GET = "|cffffffff", SOON = "|cf
 
 function ns.ActionText(a)
   local q = a.row.q
-  local nm = q.n .. (q.d and " (dungeon)" or "")
+  -- "(dungeon)" marks dungeon quests on the leveling route; on a get-ready route they all are
+  local nm = q.n .. ((q.d and not a.row.prep) and " (dungeon)" or "")
   local C = ns.C
   if a.kind == "turn" then return C.TURN .. "Hand in: " .. nm .. "|r" end
   if a.kind == "get" and a.row.pick then return C.GET .. "Get for later: " .. nm .. "|r" end
@@ -600,6 +604,12 @@ function ns.Recompute()
   -- "Get ready for <dungeon>": the prep route replaces the step until you go back to the route.
   if db.prep and ns.Prep then
     local ok, r = pcall(ns.Prep.Route, db.prep, level)
+    if ok and r and r.allReady then
+      -- every quest you can get for it is picked up: the side route is done, on to the dungeon
+      ns.Print(("ready for %s: you have every quest you can get for it. The route now takes you there."):format(db.prep))
+      db.prep = nil
+      ok, r = true, nil
+    end
     if ok and r then
       ns.route = r
       for name, fn in pairs(ns.listeners) do ns.Safe(name, fn, ns.route) end
