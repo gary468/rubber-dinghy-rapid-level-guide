@@ -143,7 +143,9 @@ local function QuestsWithAreas(mapID)
   return set
 end
 
+local otherPins = {}
 local function HideMap()
+  for _, p in ipairs(otherPins) do p:Hide() end
   for _, p in ipairs(mapPins) do p:Hide() end
   for _, l in ipairs(mapLines) do l:Hide() end
   for _, a in ipairs(mapAreas) do a:Hide() end
@@ -254,12 +256,69 @@ local function PlacePin(n, s, canvas, P, scale)
   p:Show()
 end
 
+-- Other quests in your log (not on the route): a small grey dot where it's done, or handed in once
+-- finished. No number, no line, no area - so the gold route always stands out. Hover: what it is;
+-- click: select it, so Blizzard shows its full marker and area.
+local function OtherPin(i, canvas)
+  local p = otherPins[i]
+  if p then return p end
+  p = CreateFrame("Button", nil, canvas)
+  p:SetSize(12, 12)
+  p.tex = p:CreateTexture(nil, "ARTWORK")
+  p.tex:SetAllPoints()
+  p.tex:SetTexture(CIRCLE)
+  p.tex:SetVertexColor(0.75, 0.75, 0.75, 0.9)
+  p.edge = p:CreateTexture(nil, "BACKGROUND")
+  p.edge:SetPoint("CENTER"); p.edge:SetSize(15, 15)
+  p.edge:SetTexture(CIRCLE)
+  p.edge:SetVertexColor(0.1, 0.1, 0.1, 0.9)
+  p:SetScript("OnEnter", function(self)
+    if not self.qid then return end
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:AddLine("Not on the route", 0.7, 0.7, 0.7)
+    GameTooltip:AddLine(self.title or "?", 1, 1, 1)
+    GameTooltip:AddLine(self.ready and "Finished: hand it in here" or "Where it's done", 0.8, 0.8, 0.8)
+    GameTooltip:AddLine("Click: show Blizzard's marker and area for it", 0.4, 0.8, 1)
+    GameTooltip:Show()
+  end)
+  p:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  p:SetScript("OnClick", function(self) if self.qid and ns.ShowQuestOnMap then ns.ShowQuestOnMap(self.qid) end end)
+  otherPins[i] = p
+  return p
+end
+
+local function DrawOthers(canvas, cur)
+  if ns.db.noOtherPins then return end
+  local w, h = canvas:GetWidth(), canvas:GetHeight()
+  if not w or w == 0 then return end
+  local scale = CanvasScale()
+  local n = 0
+  for _, e in ipairs(ns.QuestLog()) do
+    local q = ns.quests[e.id]
+    if q and not routeSet[e.id] and not (ns.db.skip and ns.db.skip[e.id]) then
+      local ready = ns.IsReady(e.id)
+      local loc = ready and q.t or (q.o or q.t)
+      if loc and loc[2] == cur and loc[3] and loc[4] then
+        n = n + 1
+        local p = OtherPin(n, canvas)
+        p.qid, p.title, p.ready = e.id, e.title or q.n, ready
+        p:SetScale(1 / scale)
+        p:ClearAllPoints()
+        p:SetPoint("CENTER", canvas, "TOPLEFT", loc[3] / 100 * w * scale, -loc[4] / 100 * h * scale)
+        p:SetFrameLevel(PIN_LEVEL - 5)
+        p:Show()
+      end
+    end
+  end
+end
+
 local function Draw()
   HideMap()
   if not ns.db or ns.db.noMap then return end
   local canvas = Canvas()
   if not canvas or not WorldMapFrame:IsShown() then return end
   local cur = WorldMapFrame:GetMapID()
+  ns.Safe("MapOthers", DrawOthers, canvas, cur)
   -- Draw whichever of the route's stops are on the map you're looking at (a get-ready route spans
   -- several zones; its stops in another zone show when you open that zone).
   local onStep = false

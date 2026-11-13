@@ -664,19 +664,10 @@ function ns.Recompute()
   if idx < 1 then idx = 1 elseif idx > #ns.steps then idx = #ns.steps end
   local step = ns.steps[idx]
   local rows, counts = ScanStep(step, level)
-  -- Quests from the track pool that you've accepted and that take you to this zone join the route.
+  -- Only the step's own quests are the route. Anything else in your log (picked up along the way,
+  -- not part of the plan) stays under Other Quests and shows as a grey dot on the map - it never
+  -- becomes a numbered stop.
   local logList = ns.QuestLog()
-  for _, e in ipairs(logList) do
-    if ns.trackSet[e.id] then
-      local q = ns.quests[e.id]
-      local loc = q and (q.o or q.t)
-      if loc and loc[2] == step.map then
-        local s = Status(e.id, level)
-        counts[s] = counts[s] + 1
-        if s <= SOON then rows[#rows + 1] = { id = e.id, s = s, q = q } end
-      end
-    end
-  end
   -- Which quests are started, and which one you're working on right now (its count just went up).
   -- The "current" quest is remembered across reloads and stays first until it's done.
   ns.lastProg = ns.lastProg or {}

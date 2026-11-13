@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.23
+- **Route vs other quests, clearly apart:**
+  - Only the route's own quests (or the get-ready quests on a dungeon side route) are numbered stops.
+    Quests you pick up that aren't in the plan never join the route.
+  - On the map, other quests in your log are small grey dots: no number, no line, no area. Hover for
+    "Not on the route"; click to see Blizzard's marker for it. Settings > Map can turn them off.
+  - The tracker says "Other Quests - not on the route".
 ## v1.0.22
 - **Map:** Blizzard's markers for quests that aren't on your route are hidden again. Only the quest you
   select in your quest log (or click under Other Quests) keeps its Blizzard marker and area.

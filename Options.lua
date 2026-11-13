@@ -177,6 +177,7 @@ local function Build()
   Header(f, y, "Map"); y = y - 22
   Check(f, y, "Show the route on the map and minimap", "Numbered stops, the route line and quest areas.", "noMap", true, "map"); y = y - 26
   Check(f, y, "Hide Blizzard's quest markers on the map", "While the route is on, its numbered stops replace Blizzard's quest markers.", "keepBlizzMap", true, "map"); y = y - 26
+  Check(f, y, "Other quests as grey dots on the map", "Quests in your log that aren't on the route show as small grey dots (no number), so they never look like route stops. Click one to see Blizzard's marker for it.", "noOtherPins", true, "map"); y = y - 26
   Check(f, y, "Minimap pins for the next stops", "Numbered pins on the minimap; stop 1 rides the edge when far away.", "noMiniPins", true, "map"); y = y - 30
   local areaB = Button(f, "", 220, function(self)
     local cur = ns.db.areaMode or "next"

@@ -335,7 +335,7 @@ local function Render(r)
   -- Quests in the log outside this step: Blizzard's tracker would have shown them.
   local n = #r.other
   if n > 0 then
-    Add(("%s Other Quests (%d)"):format(db.otherOpen and "-" or "+", n), {
+    Add(("%s Other Quests (%d) |cff999999- not on the route|r"):format(db.otherOpen and "-" or "+", n), {
       font = HEADER_FONT, color = GOLD, bg = MODULE_BG, height = 22, gap = 2,
       tip = "Quests in your log that aren't part of this step. Click to show or hide.",
       onClick = function() db.otherOpen = not db.otherOpen; Render(ns.route) end })
