@@ -255,14 +255,20 @@ local function Anchor()
     frame:SetPoint(p[1], UIParent, p[2], p[3], p[4])
     return
   end
+  -- Where Blizzard's tracker actually is on screen. (Its anchor point is relative to a Forever
+  -- container frame, so copying that point put us half off the left edge.)
   local otf = ObjectiveTrackerFrame
-  local point, rel, relPoint, x, yy
-  if otf and otf.GetPoint then point, rel, relPoint, x, yy = otf:GetPoint(1) end
-  if point then
-    frame:SetPoint(point, rel or UIParent, relPoint or point, x or 0, yy or 0)
-  else
-    frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -90, -260)
+  local left, top = otf and otf.GetLeft and otf:GetLeft(), otf and otf.GetTop and otf:GetTop()
+  if left and top then
+    local k = (otf:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
+    left, top = left * k, top * k
+    local sw, sh = UIParent:GetWidth() or 0, UIParent:GetHeight() or 0
+    if left >= 0 and top > 100 and left + WIDTH <= sw + 1 and top <= sh + 1 then
+      frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+      return
+    end
   end
+  frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -90, -260)
 end
 
 local function Init()
@@ -287,7 +293,17 @@ local function Init()
   header:SetHeight(26)
   header:EnableMouse(true)
   header:RegisterForDrag("LeftButton")
-  header:SetScript("OnDragStart", function() if ns.db.unlocked then frame:StartMoving() end end)
+  -- Move it: Shift + drag the header any time, or plain drag after /rdr unlock.
+  header:SetScript("OnDragStart", function()
+    if ns.db.unlocked or IsShiftKeyDown() then frame:StartMoving() end
+  end)
+  header:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:AddLine("Leveling Route")
+    GameTooltip:AddLine("Shift + drag to move. /rdr reset puts it back.", 1, 1, 1)
+    GameTooltip:Show()
+  end)
+  header:SetScript("OnLeave", function() GameTooltip:Hide() end)
   header:SetScript("OnDragStop", function()
     frame:StopMovingOrSizing()
     local p, _, rp, x, yy = frame:GetPoint(1)

@@ -41,8 +41,8 @@ Questie is recommended alongside it, since its map icons show every individual m
   - `/rdr arrow` turns the arrow on and off.
   - `/rdr tracker` shows or hides the route tracker.
   - `/rdr blizzard` gives Blizzard's objective tracker back.
-- **Moving things:** `/rdr unlock` lets you drag the tracker header and the arrow. `/rdr reset`
-  puts them back.
+- **Moving things:** Shift + drag the tracker header at any time. `/rdr unlock` lets you drag the
+  tracker header and the arrow. `/rdr reset` puts them back.
 - **Problems:** `/rdr debug` shows any errors.
 
 `/dinghy` works too.

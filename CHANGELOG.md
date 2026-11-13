@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.1
+- **Fix:** the tracker no longer starts half off the left edge of the screen. It now opens where
+  Blizzard's tracker actually sits.
+- **Moving the tracker:** Shift + drag its header at any time (or `/rdr unlock`, then drag). Hover the
+  header for a reminder. `/rdr reset` puts it back.
+- **Route order:** it finishes what you've started first. The quest you're making progress on comes
+  first, then quests whose mobs are around you, then other started quests, then new ones. Distance
+  to a mob area is measured to its nearest spawn.
+
 ## v1.0.0
 First public version.
 - **Route:** a 40–60 Alliance route across 19 zones, built from QuestieDB.
