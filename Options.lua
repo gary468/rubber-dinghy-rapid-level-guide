@@ -162,8 +162,6 @@ local function Build()
     "Brings every quest you skipped (right-click a stop > Skip) back into the route.")
   unskipB:SetPoint("TOPLEFT", PAD + 170, y)
   y = y - 30
-  Check(f, y, "Accept and hand in route quests automatically", "Accepts only quests on your route (never ones you skipped) and hands in quests the guide knows. A choice of rewards is left to you. Hold Shift at the quest giver to do it yourself. Stays off if Questie or Leatrix already automate quests.",
-    "noAuto", true, "route"); y = y - 26
   Check(f, y, "Learn quest counts and flight times", "Notes each quest's real objective counts and how long flights take, so the route planner uses real numbers instead of averages. Only facts about the game - never your pace. Stays on your PC.",
     "noLearn", true, "route"); y = y - 22
   f.learnText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")

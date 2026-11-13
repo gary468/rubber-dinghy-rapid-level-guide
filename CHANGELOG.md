@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.21
+- **Removed auto accept / hand-in.** It could leave you stuck in place when talking to NPCs. Use
+  Leatrix Plus or Questie for quest automation.
+
 ## v1.0.20
 - **Quest XP on Blizzard's own XP bar:** a light blue stretch shows the XP waiting in finished quests.
   Hover the bar for the numbers, XP per hour and time to level. The tracker's XP bar is now optional
