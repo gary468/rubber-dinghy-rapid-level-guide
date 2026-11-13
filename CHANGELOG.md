@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.13
+- **No commands needed:** the Dungeons window (settings > "Dungeons & get ready...", or the
+  minimap button > settings) has a **Get ready** button next to every dungeon. Click it for the
+  get-ready route, and click again ("Stop") to go back to the leveling route.
+
 ## v1.0.12
 - **Get ready: skipping works.** Right-click > Skip on a chain quest (e.g. Muigin and Larion) takes it and the
   rest of its chain out of the get-ready route. The dungeon quest behind it shows under "Not yet: you

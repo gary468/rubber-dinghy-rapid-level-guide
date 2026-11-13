@@ -328,8 +328,9 @@ function ns.StartPrep(name)
   ns.db.prep = name
   cache = nil
   if not ns.DungeonOn(name) then ns.SetDungeon(name, true) end
-  ns.Print("getting ready for " .. name .. ": the route now walks every chain and pick-up for it. \"Back to the route\" or /rdr prep off ends it.")
+  ns.Print("getting ready for " .. name .. ": the tracker now walks every chain and pick-up for it. Click \"Back to the route\" in the tracker when you're done.")
   ns.Recompute()
+  if ns.Options and ns.Options.RefreshDungeons then ns.Safe("Options", ns.Options.RefreshDungeons) end
 end
 
 function ns.StopPrep()
@@ -337,6 +338,7 @@ function ns.StopPrep()
   cache = nil
   ns.Print("back to the leveling route.")
   ns.Recompute()
+  if ns.Options and ns.Options.RefreshDungeons then ns.Safe("Options", ns.Options.RefreshDungeons) end
 end
 
 --- /rdr prep [dungeon | off]: matches the start of a dungeon's name ("sunken", "st", "brd" ...).

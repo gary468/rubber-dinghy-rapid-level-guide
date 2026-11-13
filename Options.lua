@@ -152,8 +152,8 @@ local function Build()
   Header(f, y, "Route"); y = y - 22
   Check(f, y, "Skip all dungeons", "No dungeon steps or dungeon quests in the route. If you accept one anyway, it's still tracked.",
     "skipDungeons", false, "route"); y = y - 26
-  local pickB = Button(f, "Choose dungeons...", 150, function() O.ToggleDungeons() end,
-    "Tick the dungeons you want. The route updates straight away: unticked ones and their quests drop out.")
+  local pickB = Button(f, "Dungeons & get ready...", 180, function() O.ToggleDungeons() end,
+    "Tick the dungeons you want in your route, or click Get ready next to one for a route through all its quest chains and pick-ups.")
   pickB:SetPoint("TOPLEFT", PAD + 4, y)
   y = y - 32
   f.skipText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -279,7 +279,7 @@ local function BuildDungeons()
   local ok, f = pcall(CreateFrame, "Frame", "RubberDinghyDungeons", UIParent, "BasicFrameTemplateWithInset")
   if not ok or not f then f = CreateFrame("Frame", "RubberDinghyDungeons", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil) end
   dwin = f
-  local DW = 500
+  local DW = 660
   f:SetSize(DW, 200)
   f:SetFrameStrata("DIALOG")
   f:SetClampedToScreen(true)
@@ -299,13 +299,13 @@ local function BuildDungeons()
   end
   local title = templTitle or f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   if not templTitle then title:SetPoint("TOP", 0, -8) end
-  title:SetText("Choose your dungeons")
+  title:SetText("Dungeons")
   tinsert(UISpecialFrames, "RubberDinghyDungeons")
   local help = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   help:SetPoint("TOPLEFT", PAD, -32)
   help:SetWidth(DW - 2 * PAD)
   help:SetJustifyH("LEFT")
-  help:SetText("Ticked dungeons are in your route at the level shown. * = picked by the planner (good group). The route updates as you tick.")
+  help:SetText("Tick = in your route, at the level shown (* = the planner's pick). Get ready = a route that walks every chain and picks up every quest for that dungeon, from where you are.")
   local y = -64
   local seen, list = {}, {}
   for _, st in ipairs(ns.steps or {}) do
@@ -316,12 +316,12 @@ local function BuildDungeons()
   for _, st in ipairs(list) do
     local name = st.dungeon
     local cb = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
-    cb:SetPoint("TOPLEFT", PAD + col * 245, y)
+    cb:SetPoint("TOPLEFT", PAD + col * 320, y)
     cb:SetSize(22, 22)
     local fs = (type(cb.Text) == "table" and cb.Text) or (type(cb.text) == "table" and cb.text) or nil
     if not fs then fs = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"); fs:SetPoint("LEFT", cb, "RIGHT", 1, 0) end
     fs:SetText(("%s (%d)%s"):format(name, st.from, st.optional and "" or " *"))
-    if fs.SetWidth then fs:SetWidth(215); fs:SetJustifyH("LEFT") end
+    if fs.SetWidth then fs:SetWidth(200); fs:SetJustifyH("LEFT") end
     if fs.SetWordWrap then fs:SetWordWrap(false) end
     cb:SetScript("OnClick", function(self) ns.SetDungeon(name, self:GetChecked() and true or false) end)
     cb:SetScript("OnEnter", function(self)
@@ -335,6 +335,15 @@ local function BuildDungeons()
     cb:SetScript("OnLeave", function() GameTooltip:Hide() end)
     cb.refresh = function() cb:SetChecked(ns.DungeonOn(name)) end
     dcontrols[#dcontrols + 1] = cb
+    -- "Get ready": route every chain and pick-up for this dungeon (or "Stop" if that's the one running).
+    local rb = Button(f, "Get ready", 82, function()
+      if ns.db.prep == name then ns.StopPrep() else ns.StartPrep(name) end
+      O.RefreshDungeons()
+    end, "Plan the quickest route, from where you are, through every quest chain and pick-up for " .. name
+      .. ". The tracker follows it until you click Stop (or Back to the route).")
+    rb:SetPoint("TOPLEFT", PAD + col * 320 + 222, y)
+    rb.refresh = function() rb:SetText(ns.db.prep == name and "Stop" or "Get ready") end
+    dcontrols[#dcontrols + 1] = rb
     col = col + 1
     if col == 2 then col = 0; y = y - 24 end
   end
