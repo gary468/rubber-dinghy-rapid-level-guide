@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.25
+- **The route now starts at level 30** (30-60). The 30s go Stormwind > Duskwood > Wetlands > Desolace >
+  Ashenvale > Zephras Isle > Stranglethorn Vale > Desolace, then into the 40s as before. In theory that's
+  764 quests in 35 zone visits, about 11 hours of pure travel, and no grinding.
+- The 30-40 dungeons are optional in the Dungeons window too: Blackfathom Deeps, the Stockade,
+  Gnomeregan, Razorfen Kraul and Downs, Scarlet Monastery's wings, the Drowned City, City of Dalaran
+  and Excavation Site: Wetlands. Each has its Dungeon Journal link.
 ## v1.0.24
 - **Map colours mean one thing each:** gold = the route (numbered stops, line, areas). Green = a quest you
   selected in your quest log that isn't on the route (its area and Blizzard's marker). Grey dots =

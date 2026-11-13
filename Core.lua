@@ -222,7 +222,7 @@ ns.trackSet = {}
 for _, id in ipairs(ns.track or {}) do ns.trackSet[id] = true end
 
 -- Which route dungeon each dungeon quest belongs to, and whether you've chosen to skip it.
--- The planner's dungeons are on by default; every other 40-60 dungeon is in the data as an optional
+-- The planner's dungeons are on by default; every other 30-60 dungeon is in the data as an optional
 -- step at its best point in the route, off until you tick it.
 ns.questDungeon, ns.dungeonDefault = {}, {}
 for _, step in ipairs(ns.steps or {}) do

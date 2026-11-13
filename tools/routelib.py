@@ -7,7 +7,7 @@ RACE, CLASS = 64, 128          # gnome mage: only used for race/class-locked que
 MOB_FACTOR = 0.45              # kill XP while questing, as a share of quest XP (calibrated: 40->60 ends ~60)
 
 # Continents (uiMapIDs), for travel cost between zones.
-KALIMDOR = {1444, 1446, 1449, 1448, 1447, 1452, 1451, 1443, 1441, 1450, 1413, 1438, 1457, 2482, 2652, 1442, 1439, 1440}
+KALIMDOR = {1444, 1446, 1449, 1448, 1447, 1452, 1451, 1443, 1441, 1450, 1413, 1438, 1457, 2482, 2652, 1442, 1439, 1440, 1445}
 EASTERN = {1434, 1417, 1418, 1419, 1427, 1428, 1425, 1422, 1423, 1435, 1424, 1416, 1453, 1455, 2548, 2521, 1431,
            1436, 1433, 1432, 1437, 1420, 1421, 1426, 1429, 1430, 1458}
 
@@ -18,6 +18,9 @@ SIZE = {
     1422: (4300, 2867), 1423: (4031, 2687), 1441: (4400, 2933), 1450: (2308, 1540), 1435: (2294, 1529),
     1424: (3200, 2133), 1416: (2800, 1867), 1413: (10133, 6756), 1438: (5092, 3395), 1453: (1737, 1158),
     1455: (790, 527), 1457: (1058, 706),
+    # 30-40 zones
+    1431: (2700, 1800), 1437: (4135, 2757), 1445: (5250, 3500), 1440: (5766, 3844), 1442: (4883, 3255),
+    1432: (2758, 1839), 1439: (6550, 4367), 1433: (2170, 1447),
 }
 DEFAULT_SIZE = (4000, 2667)
 
@@ -192,7 +195,9 @@ def hop_s(a, b):
 
 
 # Dungeon journal shortcuts (/dj <key>) for the journal addon, by dungeon name.
-DJ_KEY = {"Uldaman": "ulda", "Zul'Farrak": "zf", "Maraudon": "mara", "Sunken Temple": "st",
+DJ_KEY = {"Blackfathom Deeps": "bfd", "The Stockade": "stocks", "Gnomeregan": "gnomer", "Razorfen Kraul": "rfk",
+          "City of Dalaran": "dala", "Excavation Site: Wetlands": "exca", "Scarlet Monastery: Graveyard": "smgy",
+          "Uldaman": "ulda", "Zul'Farrak": "zf", "Maraudon": "mara", "Sunken Temple": "st",
           "Blackrock Depths": "brd", "Lower Blackrock Spire": "lbrs", "Upper Blackrock Spire": "ubrs",
           "Dire Maul: East": "dme", "Dire Maul: West": "dmw", "Dire Maul: North": "dmn",
           "Stratholme: Living": "stratliving", "Stratholme: Undead": "stratundead", "Scholomance": "scholo",
@@ -202,7 +207,7 @@ DJ_KEY = {"Uldaman": "ulda", "Zul'Farrak": "zf", "Maraudon": "mara", "Sunken Tem
 RAID_LIKE = {"Upper Blackrock Spire"}   # 10-man in Classic: not a leveling run
 
 
-def load_dungeons(wow, lo=40, hi=60):
+def load_dungeons(wow, lo=30, hi=60):
     """Dungeons from the installed dungeon journal addon: name, levels, bosses, entrance, quest IDs."""
     import os
     A = wow + r"\Interface\AddOns\ForeverDungeonJournal"

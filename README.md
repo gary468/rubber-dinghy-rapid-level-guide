@@ -1,6 +1,6 @@
 # Rubber Dinghy Rapid Level Guide
 
-A level 40–60 leveling route for **WoW Forever** (Alliance). It tells you where to go next and in
+A level 30–60 leveling route for **WoW Forever** (Alliance). It tells you where to go next and in
 what order, and keeps track of your progress as you play.
 
 ## What you get

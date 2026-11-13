@@ -58,6 +58,14 @@ STEPS = [
          note="Everlook. The Timbermaw tunnel from Felwood is the way in."),
     dict(name="Mount Hyjal", lv=(58, 60), zones=[616], extra=[],
          note="Forever's own zone - 50+ quests at 56-60. Finish here."),
+    # 30-40 (the planner decides the order; these only group quests by zone)
+    dict(name="Duskwood", lv=(30, 32), zones=[10], extra=[], note="Darkshire."),
+    dict(name="Wetlands", lv=(30, 33), zones=[11, 16732], extra=[], note="Menethil Harbor, plus Forever's Excavation Site."),
+    dict(name="Dustwallow Marsh", lv=(35, 40), zones=[15], extra=[], note="Theramore Isle."),
+    dict(name="Ashenvale", lv=(30, 32), zones=[331], extra=[], note="Astranaar."),
+    dict(name="Stonetalon Mountains", lv=(30, 32), zones=[406], extra=[], note="Stonetalon Peak."),
+    dict(name="Loch Modan", lv=(30, 30), zones=[38], extra=[], note="Thelsamar."),
+    dict(name="Darkshore", lv=(30, 30), zones=[148], extra=[], note="Auberdine."),
 ]
 RAIDS = {2717, 2159, 2677, 1977, 3428, 3429, 3456, 19}
 ALLIANCE_RACES = 1 | 4 | 8 | 64
@@ -249,7 +257,7 @@ for st in STEPS:
         lvl = q.get("questLevel") or 0
         # Any quest from this zone's NPCs up to 62 belongs to the step (follow-ups like Zorbin's 55s
         # included); ones far above you just show as "later" in game.
-        if not (lo - 6 <= lvl <= 62): continue
+        if not (min(lo - 6, 28) <= lvl <= 62): continue   # the route runs 30-60
         g = givers.get(qid)
         if not g or g["area"] not in st["zones"]: continue
         if g.get("fac") and "A" not in str(g["fac"]): continue
@@ -271,7 +279,7 @@ track = {}
 for qid, q in Q.items():
     if qid in used or not eligible(qid, q): continue
     lvl = q.get("questLevel") or 0
-    if not (38 <= lvl <= 62): continue
+    if not (28 <= lvl <= 62): continue
     g = givers.get(qid)
     if g and g.get("fac") and "A" not in str(g["fac"]): continue
     o = _objective_area(qid, None)
