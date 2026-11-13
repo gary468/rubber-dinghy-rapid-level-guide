@@ -21,11 +21,11 @@ what order, and keeps track of your progress as you play.
 - **Automatic progress.** It reads your progress from the game, finds the right zone for your level,
   and moves on when you've done a zone.
 
-**The route is planned from Questie's database for speed.** Every Alliance quest at 40–60 was
-scored by XP against travel time. The planner then picked the fastest order of zone visits, coming
-back to a zone when its next batch of quests opens up. In simulation it reaches 60 on quests alone,
-with no grinding, in 48 visits. It starts in Riverglades, Badlands, Stranglethorn Vale, Tanaris and
-Feralas, and finishes in Mount Hyjal, the Plaguelands, Silithus and Winterspring.
+**The route is planned for the fastest time to 60** from Questie's database and the DungeonJournal
+addon. Every quest's objectives, follow-up chains, travel time, dungeon runs (with a good group)
+and grinding are timed. A search then picks the order of zones and dungeons that reaches 60 in
+the fewest hours played: about 44 in simulation, including Zul'Farrak, Maraudon and Sunken Temple.
+Dungeon steps link to the Dungeon Journal for where each quest starts.
 
 **Alliance only for now.** A Horde route is planned. On Horde characters the addon stays switched
 off and changes nothing.
@@ -57,6 +57,7 @@ Game Menu > Options > AddOns.
 - **Skipping:** right-click a stop in the tracker to skip it (or one quest at it). `/rdr skip`
   skips stop 1, and `/rdr unskip` brings skipped quests back. Settings can also skip all dungeon
   quests.
+- **Dungeons:** `/rdr dj` opens the Dungeon Journal on the current dungeon step.
 - **Rare alerts:** `/rdr rares` turns them on or off, and `/rdr raretest` shows a sample. Bind a key
   to the Target button under Key Bindings > Rubber Dinghy.
 - **Problems:** `/rdr debug` shows any errors.
@@ -69,6 +70,10 @@ Game Menu > Options > AddOns.
   and contributors. This addon is not part of or endorsed by Questie.
 - **Map maths and minimap pins:** [HereBeDragons](https://github.com/Nevcairiel/HereBeDragons) by
   Nevcairiel. The **LibStub** and **CallbackHandler** libraries are also used.
+- **Dungeon levels, quest lists and entrance points** used for planning come from the DungeonJournal
+  addon by Exehn, read from the local install at build time. Only the dungeon names and entrance
+  points end up in the route. The addon opens the journal (`/dj`) when it's installed, and bundles
+  none of its code.
 - **Licence:** GNU GPL v3 or later (see `LICENSE.md`).
 
 ## Rebuilding the route data
@@ -79,6 +84,9 @@ Python that has the `lupa` package for the planner:
 powershell -File tools/build_route.ps1 -LupaPython <path to python with lupa>
 ```
 
-This decodes QuestieDB, builds the zone data, plans the visit order (`tools/plan_route.py`) and
-writes `Data.lua`. Planner settings (hop costs, minimum visit size) are in `tools/build_route.ps1`.
-Zone notes and the quest-to-zone rules are in `STEPS` in `tools/gen_route.py`.
+This decodes QuestieDB, builds the zone data, makes a first plan (`tools/plan_route.py`), searches
+for the fastest order of zones and dungeons (`tools/optimize.py`, `-Minutes` to search longer,
+`-Force "Sunken Temple"` for dungeons that must be in it) and writes `Data.lua`. The time model's
+numbers (kill time, flights, boats, dungeon runs) are in `tools/routelib.py`. Dungeon run times and
+kill XP come from the DungeonJournal addon's Run Log when it has one. Zone notes are in `STEPS` in
+`tools/gen_route.py`.

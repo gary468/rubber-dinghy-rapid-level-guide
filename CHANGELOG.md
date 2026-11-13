@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.0.6
+- **The route is now planned for the fastest time to 60**, in hours played, with travel counted
+  only as the time it takes.
+  - The time model covers everything: each quest's objectives (kills, loot, objects), kill XP while
+    questing, riding between quest spots, flights and boats, and dungeon runs. Grinding is used
+    where nothing beats it.
+  - A search tries thousands of zone and dungeon orders and keeps whatever saves time.
+  - Result in simulation: about 44 hours played from 40 to 60, against about 47 for v1.0.5 on the
+    same clock.
+- **Quest chains and follow-ups:**
+  - A quest is worth its own XP plus the chain it opens. Cheap breadcrumbs into good chains are
+    done, and dead ends that grinding beats are skipped.
+  - Quests handed out in one zone but done in another are picked up on the way. They show as
+    **"Get for later"** stops.
+- **Dungeons are part of the route** (assuming a good group): Zul'Farrak, Maraudon and Sunken
+  Temple.
+  - Dungeon times and kill XP are calibrated from the DungeonJournal addon's Run Log. Your logged
+    runs count as below average.
+  - A dungeon step shows the entrance, every quest for that dungeon (the ones you hold or can get),
+    and an **"Open in the Dungeon Journal"** link (also `/rdr dj`).
+  - Inside the instance, the route switches to that dungeon's step.
+  - Dungeon quests are picked up in the zones you pass through beforehand.
+  - "Skip dungeon quests" in settings drops the dungeon steps.
+- **Grind steps** where nothing beats killing mobs (one short one at 59 in this plan).
+
 ## v1.0.5
 - **A faster route, planned from Questie's database.**
   - Every Alliance quest at 40–60 was scored by XP against travel. The route is the fastest order

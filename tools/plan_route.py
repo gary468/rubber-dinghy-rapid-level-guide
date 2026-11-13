@@ -1,27 +1,27 @@
-"""Route planner: builds the 40-60 zone order from Questie's data, optimising XP per distance.
+"""Route planner: the fastest 40-60, in minutes, from Questie's data and the dungeon journal.
 
-Usage:  python tools/plan_route.py Data.lua "<WoW>/_forever_" tools/plan.json
+Usage:  python tools/plan_route.py Data.lua "<WoW>/_forever_" tools/plan.json [tools/qmeta.json]
 
-Starting at 40 it repeatedly picks the zone visit with the best (XP gained) / (travel in the zone +
-travel to get there), where XP follows Questie's rules (incl. the low-level penalty) plus kill XP
-while questing, and chains unlock as quests get done. Zones can be visited more than once (e.g. once
-at 46 and again at 55 for the zone's higher quests). gen_route.py turns plan.json into the route.
+One goal: the fewest minutes to 60. Every option is timed with the model in routelib.py:
+  * a zone visit: getting there (flight/boat), riding between its quest spots, and doing each quest
+    (objective kills/objects + accepting and handing in), for its quest XP plus the kill XP;
+  * a dungeon run: finding a group, the run itself and fetching its quests, for its quest XP plus the
+    kill XP inside;
+  * grinding: solo kill XP per hour at your level.
+At each point the planner takes the option with the most XP per minute. A quest is only taken if it
+beats grinding on its own (so slow, low-XP quests are dropped). Dungeon quests whose giver is in a
+zone you visit are picked up then, at no extra cost. gen_route.py turns plan.json into the route.
 """
-import json, re, sys
+import json, os, re, sys
 import routelib as R
 
 DATA, WOW, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
+QMETA = sys.argv[4] if len(sys.argv) > 4 else os.path.join(os.path.dirname(OUT), "qmeta.json")
 steps, quests, track, base = R.load(DATA, WOW)
-
-import os
-E = lambda k, d: float(os.environ.get(k, d))
-# Travel costs in yard-equivalents: a flight/ride to another zone, a boat/portal to the other continent.
-HOP_SAME_CONTINENT, HOP_OTHER_CONTINENT, HOP_UNKNOWN = E("HOP_SAME", 2500), E("HOP_OTHER", 7000), 4000
-VISIT_OVERHEAD = E("OVERHEAD", 600)
-MIN_GAIN_SHARE = E("MIN_SHARE", 0.25)   # a visit must give at least this share of a level (or MIN_QUESTS quests)
-MIN_QUESTS = E("MIN_QUESTS", 6)
-RELAX = os.environ.get("RELAX", "1") == "1"   # allow small visits before grinding
-WORTH_LEVELS = 7               # skip quests more than this many levels below you (<= 40% XP)
+meta = {int(k): v for k, v in json.load(open(QMETA)).items()}
+DUNGEONS_ON = os.environ.get("DUNGEONS", "1") == "1"
+dungeons = R.load_dungeons(WOW) if DUNGEONS_ON else []
+WORTH_LEVELS = 9               # never consider quests this far below you
 
 # map names: route step names, plus lookups from Questie's zone tables
 names = {s["map"]: s["name"] for s in steps}
@@ -33,11 +33,18 @@ for m in re.finditer(r"\[(\d+)\]\s*=\s*(\d+)", open(WOW + r"\Interface\AddOns\Qu
 for area, m in area_map.items():
     if m not in names and area in zone_names: names[m] = zone_names[area]
 
-# Plannable quests: Alliance-wide (no class/race lock), not dungeon/repeatable, a real giver, has XP.
+# Dungeon quests (from the journal, plus Questie's own dungeon flag) are only done in dungeon runs.
+dq_of = {}
+for d in dungeons:
+    for q in d["quests"]:
+        if q in quests: dq_of.setdefault(q, d["name"])
+dun_by_name = {d["name"]: d for d in dungeons}
+
+# Plannable open-world quests: Alliance-wide (no class/race lock), not repeatable, a real giver, has XP.
 ALL_ALLIANCE = 1 | 4 | 8 | 64
 home, points = {}, {}
 for qid, q in quests.items():
-    if q.get("rep") or q.get("d") or q.get("cl"): continue
+    if q.get("rep") or q.get("cl") or qid in dq_of or q.get("d"): continue
     if q.get("ra") and (q["ra"] & ALL_ALLIANCE) != ALL_ALLIANCE: continue
     if qid not in base or base[qid][1] <= 0: continue
     g, o, t = R.loc(q.get("g")), R.loc(q.get("o")), R.loc(q.get("t"))
@@ -45,14 +52,31 @@ for qid, q in quests.items():
     h = (o or t or g)[0]
     home[qid] = h
     points[qid] = [p for p in (g, o, t) if p and p[0] == h]
-
 by_map = {}
 for qid, m in home.items(): by_map.setdefault(m, []).append(qid)
+UNLOCKS = {p for q in quests.values() for p in (q.get("pg") or []) + (q.get("ps") or []) if isinstance(p, int) and p > 0}
+# Dungeon quests by the map their giver stands on (picked up when you're there anyway).
+dpick_by_map = {}
+for qid in dq_of:
+    g = R.loc(quests[qid].get("g"))
+    if g: dpick_by_map.setdefault(g[0], []).append(qid)
 
 
-def visit(m, lv, xp, done, start=None):
-    """Simulate doing everything worthwhile on map m now. Returns (gain, lv, xp, quests, tour)."""
-    done = set(done); did, gain, pts = [], 0, []
+def qvalue(qid, lv):
+    """(xp incl. kill XP, seconds) for doing one quest at level lv."""
+    secs, kxp = R.quest_cost(meta.get(qid), lv)
+    return R.quest_xp(base, qid, lv) + kxp, secs
+
+
+def level_up(lv, xp):
+    while lv < 60 and xp >= R.level_xp(lv):
+        xp -= R.level_xp(lv); lv += 1
+    return lv, xp
+
+
+def visit(m, lv, xp, done):
+    """Do every quest on map m that beats grinding, in level order, as they unlock."""
+    done = set(done); did, gain, secs, pts = [], 0, R.VISIT_S, []
     progressed = True
     while progressed:
         progressed = False
@@ -60,57 +84,86 @@ def visit(m, lv, xp, done, start=None):
             q = quests[qid]
             if qid in done or not R.available(q, done, lv, allow_class=False): continue
             if (q.get("l") or 0) < lv - WORTH_LEVELS: continue
-            g = R.quest_xp(base, qid, lv)
-            g = int(g * (1 + R.MOB_FACTOR)) if q.get("ob") else g
-            done.add(qid); did.append(qid); gain += g; xp += g; progressed = True
+            g, s = qvalue(qid, lv)
+            if qid not in UNLOCKS and g / s * 3600 < R.grind_xph(lv): continue   # grinding is faster
+            done.add(qid); did.append(qid); gain += g; secs += s; xp += g; progressed = True
             pts += points[qid]
-            while lv < 60 and xp >= R.level_xp(lv):
-                xp -= R.level_xp(lv); lv += 1
-    return gain, lv, xp, did, R.tour(pts, start)
+            lv, xp = level_up(lv, xp)
+    secs += R.tour(pts) / R.SPEED
+    return gain, secs, lv, xp, did
 
 
-def hop(a, b):
-    if a is None or a == b: return 0
-    ca, cb = R.continent(a), R.continent(b)
-    if "?" in (ca, cb): return HOP_UNKNOWN
-    return HOP_SAME_CONTINENT if ca == cb else HOP_OTHER_CONTINENT
+def dungeon_run(d, lv, xp, done, held):
+    """One run of dungeon d now: quests you hold or can fetch, plus kill XP inside."""
+    if not (d["lo"] + 2 <= lv <= d["hi"] - 1) or d["name"] in ran: return None
+    qs, fetch_maps = [], set()
+    for qid in d["quests"]:
+        q = quests.get(qid)
+        if not q or qid in done or qid not in base: continue
+        if not R.available(q, done | set(qs), lv, allow_class=False, dungeon=True): continue
+        if q.get("ra") and (q["ra"] & ALL_ALLIANCE) != ALL_ALLIANCE: continue
+        if R.quest_xp(base, qid, lv) <= 0: continue
+        qs.append(qid)
+        g = R.loc(q.get("g"))
+        if qid not in held and g and g[0] != d["entrance"][1]: fetch_maps.add(g[0])
+    run_s = d["run_s"]
+    secs = R.GROUP_S + run_s + len(fetch_maps) * R.CITY_PICKUP_S + len(qs) * R.TURNIN_S
+    gain = sum(R.quest_xp(base, q, lv) for q in qs) + int(R.grind_xph(lv) * d["kill_rate"] * run_s / 3600)
+    nlv, nxp = level_up(lv, xp + gain)
+    return gain, secs, nlv, nxp, qs
 
 
-def pick(min_share, min_quests):
-    best = None
-    for m in by_map:
-        if R.continent(m) == "?": continue          # instanced/unknown maps aren't open-world zones
-        gain, nlv, nxp, did, trav = visit(m, lv, xp, done)
-        if not did: continue
-        if gain < min_share * R.level_xp(lv) and len(did) < min_quests: continue
-        score = gain / (trav + hop(cur, m) + VISIT_OVERHEAD)
-        if not best or score > best[0]: best = (score, m, gain, nlv, nxp, did, trav)
-    return best
-
-
-lv, xp, done, cur, plan, grind_total = 40, 0, set(), None, [], 0
+lv, xp, done, held, ran, cur, plan, clock = 40, 0, set(), set(), set(), None, [], 0.0
 while lv < 60:
-    # Prefer substantial visits; relax when the world runs dry; grind (mobs/dungeon) as the last resort.
-    best = pick(MIN_GAIN_SHARE, MIN_QUESTS) or (RELAX and (pick(0.08, 3) or pick(0, 1))) or None
-    if not best:
+    best = None   # (xp per hour, kind, payload)
+    for m in by_map:
+        if R.continent(m) == "?": continue
+        gain, secs, nlv, nxp, did = visit(m, lv, xp, done)
+        if not did: continue
+        secs += R.hop_s(cur, m)
+        rate = gain / secs * 3600
+        if not best or rate > best[0]: best = (rate, "zone", (m, gain, secs, nlv, nxp, did))
+    for d in dungeons:
+        r = dungeon_run(d, lv, xp, done, held)
+        if not r or not r[4]: continue
+        gain, secs, nlv, nxp, qs = r
+        secs += R.hop_s(cur, d["entrance"][1])
+        rate = gain / secs * 3600
+        if not best or rate > best[0]: best = (rate, "dungeon", (d, gain, secs, nlv, nxp, qs))
+    if not best or best[0] < R.grind_xph(lv):
         need = R.level_xp(lv) - xp
-        plan.append(dict(map=cur, name="GRIND / DUNGEON", lv_in=lv, lv_out=lv + 1, quests=[], xp=need,
-                         travel=0, hop=0, score=0))
-        grind_total += need
-        lv, xp = lv + 1, 0
+        secs = need / R.grind_xph(lv) * 3600
+        plan.append(dict(kind="grind", map=cur, name=names.get(cur, "here"), lv_in=lv, lv_out=lv + 1, quests=[],
+                         xp=need, secs=round(secs), rate=round(R.grind_xph(lv))))
+        clock += secs; lv, xp = lv + 1, 0
         continue
-    score, m, gain, nlv, nxp, did, trav = best
-    plan.append(dict(map=m, name=names.get(m, f"map {m}"), lv_in=lv, lv_out=nlv, quests=did, xp=gain,
-                     travel=round(trav), hop=hop(cur, m), score=round(score, 2)))
-    lv, xp, cur = nlv, nxp, m
-    done.update(did)
+    rate, kind, p = best
+    if kind == "zone":
+        m, gain, secs, nlv, nxp, did = p
+        # Dungeon quests whose giver is here: pick them up now for a later run (if you can take them).
+        pick = [q for q in dpick_by_map.get(m, []) if q not in held and q not in done
+                and R.available(quests[q], done | set(did), nlv, allow_class=False, dungeon=True)]
+        secs += 30 * len(pick)
+        held.update(pick)
+        plan.append(dict(kind="zone", map=m, name=names.get(m, f"map {m}"), lv_in=lv, lv_out=nlv, quests=did,
+                         pick=pick, xp=gain, secs=round(secs), rate=round(rate)))
+        lv, xp, cur = nlv, nxp, m
+        done.update(did)
+    else:
+        d, gain, secs, nlv, nxp, qs = p
+        ran.add(d["name"])
+        plan.append(dict(kind="dungeon", map=d["entrance"][1], name=d["name"], dj=d["dj"], entrance=list(d["entrance"]),
+                         lv_in=lv, lv_out=nlv, quests=qs, xp=gain, secs=round(secs), rate=round(rate)))
+        lv, xp, cur = nlv, nxp, d["entrance"][1]
+        done.update(qs)
+    clock += secs
 
 json.dump(plan, open(OUT, "w"), indent=1)
-total_travel = sum(p["travel"] + p["hop"] for p in plan)
-print(f"{'#':>2} {'zone':24} {'cont':4} {'lv':>9} {'quests':>6} {'xp':>8} {'travel':>7} {'hop':>5} {'score':>6}")
+print(f"{'#':>2} {'kind':7} {'where':26} {'lv':>7} {'q':>3} {'xp':>8} {'min':>5} {'xp/h':>7}")
 for i, p in enumerate(plan, 1):
-    print(f"{i:>2} {p['name'][:24]:24} {R.continent(p['map']):4} {str(p['lv_in']) + '->' + str(p['lv_out']):>9} "
-          f"{len(p['quests']):>6} {p['xp']:>8,} {p['travel']:>7,} {p['hop']:>5} {p['score']:>6}")
-print(f"\nReached level {lv}, {len(plan)} visits, {sum(len(p['quests']) for p in plan)} quests, "
-      f"est. travel {total_travel:,} yd, grind/dungeon XP needed {grind_total:,} "
-      f"({round(grind_total / sum(R.level_xp(l) for l in range(40, 60)) * 100)}% of 40-60)")
+    print(f"{i:>2} {p['kind']:7} {p['name'][:26]:26} {str(p['lv_in']) + '->' + str(p['lv_out']):>7} "
+          f"{len(p['quests']):>3} {p['xp']:>8,} {round(p['secs'] / 60):>5} {p['rate']:>7,}")
+kinds = {k: sum(p["secs"] for p in plan if p["kind"] == k) / 3600 for k in ("zone", "dungeon", "grind")}
+print(f"\nLevel 60 in {clock / 3600:.1f} h played: questing {kinds['zone']:.1f} h, dungeons {kinds['dungeon']:.1f} h "
+      f"({sum(1 for p in plan if p['kind'] == 'dungeon')} runs), grinding {kinds['grind']:.1f} h. "
+      f"{sum(len(p['quests']) for p in plan)} quests, {sum(1 for p in plan if p['kind'] == 'zone')} zone visits.")

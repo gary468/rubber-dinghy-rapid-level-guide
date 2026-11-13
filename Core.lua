@@ -241,6 +241,15 @@ local function ScanStep(step, level)
     counts[s] = counts[s] + 1
     if s <= SOON then rows[#rows + 1] = { id = id, s = s, q = ns.quests[id] } end
   end
+  -- Dungeon quests to pick up here for a later run: only their giver is a stop here. Once accepted
+  -- they belong to the dungeon's step, so they never hold you in this zone.
+  for _, id in ipairs(step.pick or {}) do
+    local s = Status(id, level)
+    if s == OPEN or s == SOON then
+      counts[s] = counts[s] + 1
+      rows[#rows + 1] = { id = id, s = s, q = ns.quests[id], pick = true }
+    end
+  end
   return rows, counts
 end
 
@@ -250,7 +259,38 @@ end
 -- stays current for up to 5 levels past its range, so a level-up from hand-ins doesn't send you to
 -- the next zone with quests half done. Much older leftovers (e.g. 41-44 quests at 50) don't count.
 local STAY_LEVELS = 5
+--- The dungeon you're inside, as the route names it (the journal addon maps the game's instance
+--- names, e.g. "The Temple of Atal'Hakkar" -> "Sunken Temple"), or nil.
+local INSTANCE_DUNGEON = { -- instance map ID -> route dungeon name (Classic IDs)
+  [70] = "Uldaman", [209] = "Zul'Farrak", [349] = "Maraudon", [109] = "Sunken Temple",
+  [230] = "Blackrock Depths", [229] = "Lower Blackrock Spire", [329] = "Stratholme", [289] = "Scholomance",
+  [429] = "Dire Maul",
+}
+local INSTANCE_NAME = { ["The Temple of Atal'Hakkar"] = "Sunken Temple", ["Temple of Atal'Hakkar"] = "Sunken Temple" }
+function ns.CurrentDungeon()
+  if not GetInstanceInfo then return nil end
+  local name, kind, _, _, _, _, _, id = GetInstanceInfo()
+  if kind ~= "party" or not name then return nil end
+  if id and INSTANCE_DUNGEON[id] then return INSTANCE_DUNGEON[id] end
+  if INSTANCE_NAME[name] then return INSTANCE_NAME[name] end
+  local fdj = _G.ForeverDungeonJournal_NS
+  if fdj and fdj.DungeonFromInstanceName then
+    local ok, mapped = pcall(fdj.DungeonFromInstanceName, name)
+    if ok and mapped then return mapped end
+  end
+  return name
+end
+
 local function AutoStep(level)
+  -- Inside a dungeon on the route: its step.
+  local dn = ns.CurrentDungeon()
+  if dn then
+    for i, step in ipairs(ns.steps) do
+      if step.dungeon and (step.dungeon == dn or dn:find(step.dungeon, 1, true) or step.dungeon:find(dn, 1, true)) then
+        return i
+      end
+    end
+  end
   -- The zone you're standing in wins if you still have its quests on the go.
   local pm = ns.PlayerPos()
   if pm then
@@ -262,6 +302,8 @@ local function AutoStep(level)
     end
   end
   for i, step in ipairs(ns.steps) do
+    -- A grind step (nothing left that beats killing mobs) is current while you're in its levels.
+    if step.grind and level >= step.from and level < step.to then return i end
     if level <= step.to + STAY_LEVELS then
       local _, c = ScanStep(step, level)
       if c[READY] + c[LOG] > 0 then return i end
@@ -277,9 +319,12 @@ end
 -- Routing: rows -> stops -> nearest-first order
 ---------------------------------------------------------------------------
 -- A stop is a place: {map, x, y, r?, name, area, actions = {{kind, row}}, away}
+local curStep
 local function Target(r)
   local q = r.q
   if r.s == READY then return q.t, "turn" end
+  -- Dungeon step: quests you're doing are done inside, so the stop is the dungeon's entrance.
+  if r.s == LOG and q.d and curStep and curStep.ent then return curStep.ent, "dungeon" end
   if r.s == LOG then
     if q.o then return q.o, "do" end
     -- No mobs/objects to find (talk-to and delivery quests): head for the hand-in NPC.
@@ -403,8 +448,10 @@ function ns.ActionText(a)
   local nm = q.n .. (q.d and " (dungeon)" or "")
   local C = ns.C
   if a.kind == "turn" then return C.TURN .. "Hand in: " .. nm .. "|r" end
+  if a.kind == "get" and a.row.pick then return C.GET .. "Get for later: " .. nm .. "|r" end
   if a.kind == "get" then return C.GET .. "Get: " .. nm .. "|r" end
   if a.kind == "do" then return C.DO .. nm .. "|r" end
+  if a.kind == "dungeon" then return C.DO .. "In the dungeon: " .. q.n .. "|r" end
   if a.kind == "go" then return C.DO .. "Finish: " .. nm .. "|r" end
   return C.SOON .. nm .. " (level " .. (q.r or "?") .. ")|r"
 end
@@ -412,6 +459,19 @@ end
 function ns.StopTitle(s)
   if s.area then return "Kill/loot: " .. (s.name or "?") end
   return s.name or "?"
+end
+
+--- Open the dungeon journal addon (DungeonJournal, /dj) on a dungeon, if it's installed.
+function ns.OpenJournal(step)
+  step = step or (ns.route and ns.route.step)
+  local dj = step and step.dj
+  local open = SlashCmdList and SlashCmdList.FOREVERDUNGEONJOURNAL
+  if open then
+    open(dj or "")
+    return true
+  end
+  ns.Print("install the DungeonJournal addon to see where every dungeon quest starts (/dj).")
+  return false
 end
 
 function ns.StopTooltip(owner, s, anchor)
@@ -466,6 +526,7 @@ function ns.Recompute()
     for _, r in ipairs(rows) do if r.id == db.currentQuest and r.s == LOG then still = true end end
     if not still then db.currentQuest = nil end -- finished, handed in or dropped
   end
+  curStep = step
   local stops, loose, start = BuildStops(rows, step.map, db.currentQuest)
   -- Quests in the log that this step's route doesn't cover (other zones etc.): the tracker still
   -- shows them, since it replaces Blizzard's.
@@ -595,6 +656,7 @@ SlashCmdList.RUBBERDINGHY = function(msg)
     if s then ns.Skip(ns.StopQuestIDs(s), "stop 1 (" .. ns.StopTitle(s) .. ")") else ns.Print("nothing to skip.") end
   elseif msg == "unskip" then ns.UnskipAll()
   elseif msg == "auto" or msg == "route" then ns.Auto()
+  elseif msg == "dj" or msg == "journal" or msg == "dungeon" then ns.OpenJournal()
   elseif msg == "debug" then
     local any = false
     for name, err in pairs(ns.errors) do ns.Print(name .. ": " .. err); any = true end

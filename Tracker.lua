@@ -166,7 +166,13 @@ local function Render(r)
   Add(("Step %d/%d: %s (%s)%s"):format(r.idx, #ns.steps, step.name, range, r.manual and " - manual" or ""),
     { font = HEADER_FONT, color = GOLD, bg = MODULE_BG, height = 22, gap = 2,
       tip = "Leveling route step. Use < and > in the header to change step, A for automatic." })
-  Add((r.inZone and "" or ("Go to " .. step.name .. ". ")) .. step.note, { font = SMALL_FONT, color = GREY, gap = 4 })
+  local goTo = (r.inZone or step.dungeon or step.grind) and "" or ("Go to " .. step.name .. ". ")
+  Add(goTo .. step.note, { font = SMALL_FONT, color = GREY, gap = 4 })
+  if step.dungeon then
+    Add("|cff66ccffOpen " .. step.dungeon .. " in the Dungeon Journal|r", { font = SMALL_FONT, gap = 4,
+      tip = "Where every quest for this dungeon starts, its bosses and map (DungeonJournal addon, /dj).",
+      onClick = function() ns.OpenJournal(step) end })
+  end
 
   local shown = 0
   for i, s in ipairs(r.stops) do
@@ -190,7 +196,7 @@ local function Render(r)
       for _, a in ipairs(s.actions) do
         if a.kind ~= "get" then Slot(a.row.id) end
         Add(ns.ActionText(a), { indent = 22, stop = s, color = WHITE })
-        if a.kind == "do" or a.kind == "turn" or a.kind == "go" then
+        if a.kind == "do" or a.kind == "turn" or a.kind == "go" or a.kind == "dungeon" then
           for _, o in ipairs(ns.Objectives(a.row.id)) do
             Add(o.text, { indent = 30, font = SMALL_FONT, color = o.done and GREY or WHITE, check = o.done, stop = s })
           end

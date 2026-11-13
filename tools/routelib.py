@@ -47,6 +47,19 @@ def load(data_path, wow):
     return steps, quests, track, base
 
 
+def map_names(wow, steps):
+    """uiMapID -> zone name: route step names, then Questie's zone table."""
+    names = {s["map"]: s["name"] for s in steps}
+    zone_names, area_map = {}, {}
+    for m in re.finditer(r'\[(-?\d+)\]\s*=\s*"([^"]+)"', open(wow + r"\Interface\AddOns\Questie\Localization\lookups\lookupZones.lua", encoding="utf-8", errors="replace").read()):
+        zone_names.setdefault(int(m.group(1)), m.group(2))
+    for m in re.finditer(r"\[(\d+)\]\s*=\s*(\d+)", open(wow + r"\Interface\AddOns\QuestieDB\support\Forever\Zones\areaIdToUiMapId.lua", encoding="utf-8").read()):
+        area_map.setdefault(int(m.group(1)), int(m.group(2)))
+    for area, m in area_map.items():
+        if m not in names and area in zone_names: names[m] = zone_names[area]
+    return names
+
+
 def level_xp(lv):
     """Classic XP to go from lv to lv+1 (matches 209,800 at 59)."""
     diff = 0 if lv <= 28 else {29: 1, 30: 3, 31: 6}.get(lv, 5 * (lv - 30))
@@ -87,10 +100,11 @@ def continent(m):
 MAX_ABOVE = 3                  # don't take on quests more than 3 levels above you (red = too dangerous)
 
 
-def available(q, done, lv, allow_class=True):
+def available(q, done, lv, allow_class=True, dungeon=False):
     if q.get("ra") and not (q["ra"] & RACE): return False
     if q.get("cl") and not (allow_class and (q["cl"] & CLASS)): return False
-    if q.get("rep") or q.get("d"): return False
+    if q.get("rep"): return False
+    if q.get("d") and not dungeon: return False
     if (q.get("r") or 0) > lv: return False
     if (q.get("l") or 0) > lv + MAX_ABOVE: return False
     for p in q.get("pg") or []:
@@ -99,6 +113,139 @@ def available(q, done, lv, allow_class=True):
     if ps and not any(p in done for p in ps): return False
     if any(p in done for p in (q.get("ex") or [])): return False
     return True
+
+
+###########################################################################
+# Time model: everything in seconds, one goal - the fewest minutes from 40 to 60.
+# Travel counts only as the time it takes (flight/boat fees don't matter).
+###########################################################################
+SPEED = 11.0              # yd/s mounted
+KILL_S = 25               # seconds per kill incl. eating/drinking, solo at level
+QUEST_BASE_S = 45         # accept + hand in + reading, per quest
+KILLS = {"creature": 8, "item_drop": 12, "killcredit": 4}   # QuestieDB has no counts: Classic averages
+OBJECTS, OBJECT_S = 6, 20 # clicky objectives: how many, seconds each
+HOP_SAME_S, HOP_OTHER_S, HOP_UNKNOWN_S = 300, 900, 600      # zone change: flights / boat + flights (incl. waiting)
+VISIT_S = 60              # settling into a zone (flight master, hub)
+# Dungeons, assuming a good group. Calibrated from the dungeon journal's Run Log (every kill's XP
+# and time, per run) where you have one: your logged runs count as below average, and a good group
+# gets GOOD_GROUP x their kill XP per hour and finishes in GOOD_GROUP_TIME x their run time.
+# Without a log: run time from the boss count, kill XP at DUNGEON_KILL_RATE x solo grinding.
+import os as _os
+GROUP_S = float(_os.environ.get("GROUP_S", 300))
+RUN_BASE_S, BOSS_S, MAX_BOSSES = 900, 300, 12
+GOOD_GROUP = float(_os.environ.get("GOOD_GROUP", 1.5))
+GOOD_GROUP_TIME = 0.85
+DUNGEON_KILL_RATE = float(_os.environ.get("DUNGEON_KILL_RATE", 1.2))   # dungeon kill XP/h vs solo grinding
+CITY_PICKUP_S = 240       # fetching dungeon quests from a giver in another zone (often a capital)
+TURNIN_S = 60
+
+
+def mob_xp(lv):
+    """Classic XP for killing a same-level normal mob."""
+    return 45 + 5 * lv
+
+
+def grind_xph(lv):
+    return 3600.0 / KILL_S * mob_xp(lv)
+
+
+def quest_cost(meta, lv):
+    """(seconds, kill XP) to do one quest's objectives at level lv, from its objective types."""
+    m = meta or {}
+    kills = (m.get("c", 0) * KILLS["creature"] + m.get("i", 0) * KILLS["item_drop"]
+             + m.get("k", 0) * KILLS["killcredit"])
+    objs = m.get("o", 0) * OBJECTS
+    return QUEST_BASE_S + kills * KILL_S + objs * OBJECT_S, kills * mob_xp(lv)
+
+
+def hop_s(a, b):
+    if a is None or a == b: return 0
+    ca, cb = continent(a), continent(b)
+    if "?" in (ca, cb): return HOP_UNKNOWN_S
+    return HOP_SAME_S if ca == cb else HOP_OTHER_S
+
+
+# Dungeon journal shortcuts (/dj <key>) for the journal addon, by dungeon name.
+DJ_KEY = {"Uldaman": "ulda", "Zul'Farrak": "zf", "Maraudon": "mara", "Sunken Temple": "st",
+          "Blackrock Depths": "brd", "Lower Blackrock Spire": "lbrs", "Upper Blackrock Spire": "ubrs",
+          "Dire Maul: East": "dme", "Dire Maul: West": "dmw", "Dire Maul: North": "dmn",
+          "Stratholme: Living": "stratliving", "Stratholme: Undead": "stratundead", "Scholomance": "scholo",
+          "Alcaz Prison": "alcaz", "Blackmaw Hold": "blackmaw", "Krol'dok Stronghold": "kroldok",
+          "The Drowned City": "drowned", "Razorfen Downs": "rfd", "Scarlet Monastery: Cathedral": "cath",
+          "Scarlet Monastery: Armory": "arm", "Scarlet Monastery: Library": "lib", "Shaper's Terrace": "shaper"}
+RAID_LIKE = {"Upper Blackrock Spire"}   # 10-man in Classic: not a leveling run
+
+
+def load_dungeons(wow, lo=40, hi=60):
+    """Dungeons from the installed dungeon journal addon: name, levels, bosses, entrance, quest IDs."""
+    import os
+    A = wow + r"\Interface\AddOns\ForeverDungeonJournal"
+    if not os.path.isdir(A): return []
+    L = lua51.LuaRuntime(unpack_returned_tuples=True)
+    L.execute('FDJ = {Constants = setmetatable({}, {__index=function() return "" end})}; ForeverDungeonJournal_NS = FDJ')
+    run = L.eval("function(src, name) local f = assert(loadstring(src, name)); return f('ForeverDungeonJournal', FDJ) end")
+    for fn in ("Data\\Dungeons.lua", "Data\\DungeonEntrances.lua"):
+        run(open(A + "\\" + fn, encoding="utf-8", errors="replace").read(), fn)
+    DB = L.globals().FDJ.DB
+    out = []
+    for name in list(DB.keys()):
+        d = DB[name]
+        m = re.match(r"(\d+)\s*-\s*(\d+)", str(d.level or ""))
+        if not m or name in RAID_LIKE: continue
+        dlo, dhi = int(m.group(1)), int(m.group(2))
+        if dhi < lo or dlo > hi: continue
+        e = d.entrance
+        if not e or not e.mapID: continue
+        qs = []
+        if d.quests:
+            for i in range(1, len(d.quests) + 1):
+                q = d.quests[i]
+                if q.faction in ("Alliance", "Both") and q.id: qs.append(int(q.id))
+        bosses = len(d.bosses) if d.bosses else 6
+        out.append(dict(name=str(name), lo=dlo, hi=dhi, bosses=bosses,
+                        entrance=(str(e.label or name), int(e.mapID), round(float(e.x) * 100, 1), round(float(e.y) * 100, 1)),
+                        quests=qs, dj=DJ_KEY.get(str(name)),
+                        run_s=RUN_BASE_S + BOSS_S * min(bosses, MAX_BOSSES), kill_rate=DUNGEON_KILL_RATE, logged=0))
+    # Calibrate from logged runs: each dungeon's own run time; one kill-XP rate for all of them.
+    runs = load_run_log(wow)
+    ratios = []
+    for d in out:
+        mine = [r for r in runs if r["dungeon"] == d["name"]]
+        if not mine: continue
+        d["run_s"] = sum(r["secs"] for r in mine) / len(mine) * GOOD_GROUP_TIME
+        d["logged"] = len(mine)
+        mid = (d["lo"] + d["hi"]) / 2.0          # the log has no level: assume mid-range
+        ratios += [r["kill_xp"] / max(r["kill_secs"], 60) * 3600 / grind_xph(mid) for r in mine]
+    if ratios and "DUNGEON_KILL_RATE" not in _os.environ:
+        rate = sum(ratios) / len(ratios) * GOOD_GROUP
+        for d in out: d["kill_rate"] = rate
+    return sorted(out, key=lambda d: d["lo"])
+
+
+def load_run_log(wow):
+    """Every dungeon run in the journal's Run Log, all characters: dungeon, secs, kill_xp, kill_secs."""
+    import glob
+    out = []
+    for path in glob.glob(wow + r"\WTF\Account\*\*\*\SavedVariables\ForeverDungeonJournal.lua"):
+        try:
+            L = lua51.LuaRuntime(unpack_returned_tuples=True)
+            L.execute(open(path, encoding="utf-8", errors="replace").read())
+            db = L.globals().ForeverDungeonJournalCharacterDB
+            runs = db and db.runLog and db.runLog.runs
+            if not runs: continue
+            for i in range(1, len(runs) + 1):
+                r = runs[i]
+                ks = r.kills
+                if not ks or len(ks) < 20: continue          # too short to say anything
+                ts = [ks[j].t for j in range(1, len(ks) + 1)]
+                xp = sum(ks[j].x or 0 for j in range(1, len(ks) + 1))
+                start = r.created or min(ts)
+                end = r.lastSeen or max(ts)
+                out.append(dict(dungeon=str(r.dungeon or r.instanceName), secs=end - start, kill_xp=xp,
+                                kill_secs=max(ts) - min(ts)))
+        except Exception:
+            continue
+    return out
 
 
 def tour(points, start=None):
