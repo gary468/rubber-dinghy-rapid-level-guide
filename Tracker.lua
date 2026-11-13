@@ -152,7 +152,7 @@ local GOLD, WHITE, GREY, GREEN = { 1, 0.82, 0 }, { 1, 1, 1 }, { 0.6, 0.6, 0.6 },
 --- The XP bar (fills it in; shows or hides it). Returns the height it takes.
 function T.RefreshXP()
   if not xpwrap then return 0 end
-  local st = (not ns.db.noXPBar) and ns.XP and ns.XP.State()
+  local st = ns.db.trackerXP and ns.XP and ns.XP.State()   -- off by default: it's on Blizzard's bar
   if not st then
     xpwrap:Hide(); xpwrap:SetHeight(0.1)
     return 0

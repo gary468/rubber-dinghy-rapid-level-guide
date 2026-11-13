@@ -16,6 +16,7 @@ local function Apply(what)
   elseif what == "arrow" and ns.Arrow then ns.Arrow.Refresh()
   elseif what == "minimap" and ns.MinimapButton then ns.MinimapButton.Refresh()
   elseif what == "rares" and ns.Rares then ns.Rares.Refresh()
+  elseif what == "xpbar" and ns.XP then ns.XP.RefreshBlizzBar()
   elseif what == "route" then ns.Recompute()
   end
 end
@@ -170,7 +171,8 @@ local function Build()
   y = y - 22
   Header(f, y, "Tracker"); y = y - 22
   Check(f, y, "Show the route tracker", "The step and its stops, where Blizzard's objective tracker normally sits.", "noTracker", true, "tracker"); y = y - 26
-  Check(f, y, "XP bar in the tracker", "Your XP, the XP waiting in finished quests, XP per hour and time to your next level.", "noXPBar", true, "tracker"); y = y - 26
+  Check(f, y, "Show quest XP on Blizzard's XP bar", "A light blue stretch on your XP bar for the XP waiting in finished quests, and XP per hour and time to level when you hover the bar.", "noXPOverlay", true, "xpbar"); y = y - 26
+  Check(f, y, "Also an XP bar in the tracker", "The same, as a bar at the top of the route tracker.", "trackerXP", false, "tracker"); y = y - 26
   Check(f, y, "Hide Blizzard's objective tracker", "The route tracker replaces it. Untick to get Blizzard's back.", "keepBlizzard", true, "blizzard"); y = y - 40
   Slider(f, y, "Tracker size", "trackerScale", 0.7, 1.5, 0.05, 1, pct, "trackerScale"); y = y - 34
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.20
+- **Quest XP on Blizzard's own XP bar:** a light blue stretch shows the XP waiting in finished quests.
+  Hover the bar for the numbers, XP per hour and time to level. The tracker's XP bar is now optional
+  (off by default, settings > Tracker).
+
 ## v1.0.19
 - **Fix: freezes on a get-ready route.** Each re-plan (on every hand-in, pick-up or quest item looted)
   made over 120,000 quest-log lookups, freezing the game for seconds. That's why handing in and moving
