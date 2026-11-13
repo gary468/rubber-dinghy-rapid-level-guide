@@ -1,0 +1,436 @@
+-- Rubber Dinghy - core: quest status, route building, events and slash commands.
+-- Progress, race and class are read live from the game. Each step's quests become numbered stops
+-- (quest givers, hand-ins, mob areas) ordered nearest-first from where you stand. The tracker
+-- (Tracker.lua), map overlay (Map.lua) and arrow (Arrow.lua) all draw from ns.route.
+local ADDON, ns = ...
+
+ns.MERGE = 1.5            -- stops closer than this (map %) are merged into one
+ns.inits, ns.listeners = {}, {}
+
+local band = bit and bit.band or function(a, b)
+  local r, p = 0, 1
+  while a > 0 and b > 0 do
+    if a % 2 == 1 and b % 2 == 1 then r = r + p end
+    a, b, p = math.floor(a / 2), math.floor(b / 2), p * 2
+  end
+  return r
+end
+
+---------------------------------------------------------------------------
+-- Safe calls: a UI module failing must never break the others. First error per module is printed.
+---------------------------------------------------------------------------
+ns.errors = {}
+function ns.Print(msg) print("|cff66ccffRubber Dinghy|r " .. msg) end
+function ns.Safe(name, fn, ...)
+  local ok, err = pcall(fn, ...)
+  if not ok then
+    if not ns.errors[name] then ns.Print(name .. " failed: " .. tostring(err) .. " (/rdr debug)") end
+    ns.errors[name] = tostring(err)
+  end
+  return ok
+end
+
+---------------------------------------------------------------------------
+-- Game API wrappers (same fallbacks Questie uses on this client)
+---------------------------------------------------------------------------
+local function IsDone(id)
+  if C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted then
+    return C_QuestLog.IsQuestFlaggedCompleted(id) and true or false
+  elseif IsQuestFlaggedCompleted then
+    return IsQuestFlaggedCompleted(id) and true or false
+  end
+  return false
+end
+
+local function LogIndex(id)
+  if C_QuestLog and C_QuestLog.GetLogIndexForQuestID then
+    return C_QuestLog.GetLogIndexForQuestID(id) or 0
+  elseif GetQuestLogIndexByID then
+    return GetQuestLogIndexByID(id) or 0
+  end
+  return 0
+end
+ns.LogIndex = LogIndex
+
+local function IsReady(id, index)
+  if C_QuestLog and C_QuestLog.IsComplete then
+    return C_QuestLog.IsComplete(id) and true or false
+  end
+  if GetQuestLogTitle and index and index > 0 then
+    local isComplete = select(6, GetQuestLogTitle(index))
+    return isComplete == 1 or isComplete == true
+  end
+  return false
+end
+
+--- Objective lines for a quest in the log: { {text=, done=} }.
+function ns.Objectives(id)
+  local out = {}
+  if C_QuestLog and C_QuestLog.GetQuestObjectives then
+    for _, o in ipairs(C_QuestLog.GetQuestObjectives(id) or {}) do
+      if o.text and o.text ~= "" then out[#out + 1] = { text = o.text, done = o.finished and true or false } end
+    end
+    return out
+  end
+  local index = LogIndex(id)
+  if index > 0 and GetNumQuestLeaderBoards and GetQuestLogLeaderBoard then
+    for j = 1, GetNumQuestLeaderBoards(index) or 0 do
+      local text, _, finished = GetQuestLogLeaderBoard(j, index)
+      if text and text ~= "" then out[#out + 1] = { text = text, done = finished and true or false } end
+    end
+  end
+  return out
+end
+
+--- Every quest in the log: { {id=, title=, level=} }.
+function ns.QuestLog()
+  local out = {}
+  if C_QuestLog and C_QuestLog.GetNumQuestLogEntries and C_QuestLog.GetInfo then
+    for i = 1, (C_QuestLog.GetNumQuestLogEntries()) or 0 do
+      local info = C_QuestLog.GetInfo(i)
+      if info and not info.isHeader and info.questID and info.questID > 0 then
+        out[#out + 1] = { id = info.questID, title = info.title, level = info.level }
+      end
+    end
+  elseif GetNumQuestLogEntries and GetQuestLogTitle then
+    for i = 1, (GetNumQuestLogEntries()) or 0 do
+      local title, level, _, isHeader, _, _, _, questID = GetQuestLogTitle(i)
+      if not isHeader and questID and questID > 0 then
+        out[#out + 1] = { id = questID, title = title, level = level }
+      end
+    end
+  end
+  return out
+end
+
+local mapNames = {}
+function ns.MapName(uiMap)
+  if not uiMap or uiMap == 0 then return nil end
+  if mapNames[uiMap] == nil then
+    local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(uiMap)
+    mapNames[uiMap] = info and info.name or false
+  end
+  return mapNames[uiMap] or nil
+end
+
+function ns.PlayerPos()
+  if not (C_Map and C_Map.GetBestMapForUnit and C_Map.GetPlayerMapPosition) then return nil end
+  local m = C_Map.GetBestMapForUnit("player")
+  if not m then return nil end
+  local p = C_Map.GetPlayerMapPosition(m, "player")
+  if not p then return nil end
+  local x, y = p:GetXY()
+  if not x or (x == 0 and y == 0) then return nil end
+  return m, x * 100, y * 100
+end
+
+local raceBit, classBit
+local function ReadPlayerBits()
+  local _, _, raceID = UnitRace("player")
+  local _, _, classID = UnitClass("player")
+  raceBit = raceID and 2 ^ (raceID - 1) or nil
+  classBit = classID and 2 ^ (classID - 1) or nil
+end
+
+-- Texture/font helpers: use Forever's own art when the client has it, else a plain fallback.
+function ns.HasAtlas(name)
+  return C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(name) ~= nil
+end
+function ns.SetAtlasOr(tex, atlases, fallback, ...)
+  for _, a in ipairs(atlases) do
+    if ns.HasAtlas(a) and tex.SetAtlas then tex:SetAtlas(a); return a end
+  end
+  if fallback then tex:SetTexture(fallback); if ... then tex:SetVertexColor(...) end end
+  return nil
+end
+function ns.Font(names)
+  for _, n in ipairs(names) do if _G[n] then return n end end
+  return "GameFontNormal"
+end
+
+---------------------------------------------------------------------------
+-- Quest status
+---------------------------------------------------------------------------
+-- READY = in log and complete, LOG = in log, OPEN = can pick up now, SOON = one or two levels short,
+-- LOCKED = an earlier quest is missing, DONE, LATER = too far above you, NA = not for your race/class.
+local READY, LOG, OPEN, SOON, LOCKED, DONE, LATER, NA = 1, 2, 3, 4, 5, 6, 7, 8
+ns.S = { READY = READY, LOG = LOG, OPEN = OPEN, SOON = SOON, LOCKED = LOCKED, DONE = DONE, LATER = LATER }
+
+local function ForMe(q)
+  if q.ra and raceBit and band(q.ra, raceBit) == 0 then return false end
+  if q.cl and classBit and band(q.cl, classBit) == 0 then return false end
+  return true
+end
+
+local function PrereqsMet(q)
+  if q.pg then
+    for _, p in ipairs(q.pg) do
+      if p > 0 and not IsDone(p) then return false end
+    end
+  end
+  if q.ps then
+    local any = false
+    for _, p in ipairs(q.ps) do
+      if IsDone(p) then any = true; break end
+    end
+    if not any then return false end
+  end
+  if q.ex then
+    for _, p in ipairs(q.ex) do
+      if IsDone(p) or LogIndex(p) > 0 then return false end
+    end
+  end
+  return true
+end
+
+local function Status(id, level)
+  local q = ns.quests[id]
+  if not q or not ForMe(q) then return NA end
+  if IsDone(id) then return DONE end
+  local index = LogIndex(id)
+  if index > 0 then return IsReady(id, index) and READY or LOG end
+  if not PrereqsMet(q) then return LOCKED end
+  if level < (q.r or 0) then
+    return (q.r - level <= 2) and SOON or LATER
+  end
+  if q.l > level + 4 then return LATER end
+  return OPEN
+end
+
+local function ScanStep(step, level)
+  local rows, counts = {}, { 0, 0, 0, 0, 0, 0, 0, 0 }
+  for _, id in ipairs(step.quests) do
+    local s = Status(id, level)
+    counts[s] = counts[s] + 1
+    if s <= SOON then rows[#rows + 1] = { id = id, s = s, q = ns.quests[id] } end
+  end
+  return rows, counts
+end
+
+-- Current step: the first one with work left that you haven't out-levelled. Steps with quests in
+-- your log stay current for 3 levels past their range, so you finish what you started.
+local function AutoStep(level)
+  for i, step in ipairs(ns.steps) do
+    if level <= step.to + 3 then
+      local _, c = ScanStep(step, level)
+      if c[READY] + c[LOG] > 0 then return i end
+      if level <= step.to and c[OPEN] + c[SOON] > 0 then return i end
+    end
+  end
+  return #ns.steps
+end
+
+---------------------------------------------------------------------------
+-- Routing: rows -> stops -> nearest-first order
+---------------------------------------------------------------------------
+-- A stop is a place: {map, x, y, r?, name, area, actions = {{kind, row}}, away}
+local function Target(r)
+  local q = r.q
+  if r.s == READY then return q.t, "turn" end
+  if r.s == LOG then
+    if q.o then return q.o, "do" end
+    -- No mobs/objects to find (talk-to and delivery quests): head for the hand-in NPC.
+    if q.t and not q.ob then return q.t, "go" end
+    -- Has objectives but the database has no location for them: listed without a stop.
+    return nil, "do"
+  end
+  if r.s == OPEN then return q.g, "get" end
+  return nil, "soon"
+end
+
+local function BuildStops(rows, stepMap)
+  local stops, loose = {}, {}
+  for _, r in ipairs(rows) do
+    local loc, kind = Target(r)
+    if loc and loc[3] and loc[4] and loc[3] >= 0 and loc[2] and loc[2] > 0 then
+      local found
+      for _, s in ipairs(stops) do
+        if s.map == loc[2] and math.abs(s.x - loc[3]) < ns.MERGE and math.abs(s.y - loc[4]) < ns.MERGE
+          and (s.area == (kind == "do")) then
+          found = s; break
+        end
+      end
+      if not found then
+        found = { map = loc[2], x = loc[3], y = loc[4], r = loc[5], name = loc[1], area = (kind == "do"),
+                  actions = {}, away = (loc[2] ~= stepMap) }
+        stops[#stops + 1] = found
+      elseif kind == "do" and loc[1] and not found.name:find(loc[1], 1, true) then
+        found.name = found.name .. ", " .. loc[1]
+      end
+      found.actions[#found.actions + 1] = { kind = kind, row = r }
+    else
+      loose[#loose + 1] = { kind = kind, row = r }
+    end
+  end
+
+  -- Start from the player if they're in this zone, else from the busiest stop (the hub).
+  local here, away = {}, {}
+  for _, s in ipairs(stops) do
+    if s.away then away[#away + 1] = s else here[#here + 1] = s end
+  end
+  local pm, px, py = ns.PlayerPos()
+  local cx, cy
+  if pm == stepMap then
+    cx, cy = px, py
+  else
+    local hub
+    for _, s in ipairs(here) do
+      if not hub or #s.actions > #hub.actions then hub = s end
+    end
+    if hub then cx, cy = hub.x, hub.y end
+  end
+  local ordered = {}
+  while #here > 0 do
+    local bi, bd = 1, math.huge
+    for i, s in ipairs(here) do
+      local d = cx and ((s.x - cx) ^ 2 + (s.y - cy) ^ 2) or 0
+      if s.area then d = d + 4 end -- hand-ins and pick-ups at the same distance go first
+      if d < bd then bi, bd = i, d end
+    end
+    local s = table.remove(here, bi)
+    ordered[#ordered + 1] = s
+    cx, cy = s.x, s.y
+  end
+  table.sort(away, function(a, b) return a.map < b.map end)
+  for _, s in ipairs(away) do ordered[#ordered + 1] = s end
+  for i, s in ipairs(ordered) do s.index = i end
+  return ordered, loose, (pm == stepMap) and { px, py } or nil
+end
+
+---------------------------------------------------------------------------
+-- Text shared by the tracker, map tooltips and arrow
+---------------------------------------------------------------------------
+ns.C = { TURN = "|cff33ff33", DO = "|cffffd100", GET = "|cffffffff", SOON = "|cff999999", DIM = "|cff999999" }
+
+function ns.ActionText(a)
+  local q = a.row.q
+  local nm = q.n .. (q.d and " (dungeon)" or "")
+  local C = ns.C
+  if a.kind == "turn" then return C.TURN .. "Hand in: " .. nm .. "|r" end
+  if a.kind == "get" then return C.GET .. "Get: " .. nm .. "|r" end
+  if a.kind == "do" then return C.DO .. nm .. "|r" end
+  if a.kind == "go" then return C.DO .. "Finish: " .. nm .. "|r" end
+  return C.SOON .. nm .. " (level " .. (q.r or "?") .. ")|r"
+end
+
+function ns.StopTitle(s)
+  if s.area then return "Kill/loot: " .. (s.name or "?") end
+  return s.name or "?"
+end
+
+function ns.StopTooltip(owner, s, anchor)
+  GameTooltip:SetOwner(owner, anchor or "ANCHOR_LEFT")
+  GameTooltip:AddLine(s.index .. ". " .. ns.StopTitle(s))
+  GameTooltip:AddLine(("%s %.1f, %.1f"):format(ns.MapName(s.map) or "?", s.x, s.y), 0.8, 0.8, 0.8)
+  for _, a in ipairs(s.actions) do
+    GameTooltip:AddLine(ns.ActionText(a) .. " |cff999999[" .. a.row.q.l .. "]|r", 1, 1, 1)
+  end
+  GameTooltip:Show()
+end
+
+---------------------------------------------------------------------------
+-- Route state
+---------------------------------------------------------------------------
+ns.route = { stops = {}, loose = {}, counts = { 0, 0, 0, 0, 0, 0, 0, 0 } }
+
+function ns.Recompute()
+  local level = UnitLevel("player") or 1
+  local db = ns.db
+  local idx = db.step or AutoStep(level)
+  if idx < 1 then idx = 1 elseif idx > #ns.steps then idx = #ns.steps end
+  local step = ns.steps[idx]
+  local rows, counts = ScanStep(step, level)
+  local stops, loose, start = BuildStops(rows, step.map)
+  -- Quests in the log that this step's route doesn't cover (other zones etc.): the tracker still
+  -- shows them, since it replaces Blizzard's.
+  local inRoute = {}
+  for _, r in ipairs(rows) do inRoute[r.id] = true end
+  local other = {}
+  for _, e in ipairs(ns.QuestLog()) do
+    if not inRoute[e.id] then other[#other + 1] = e end
+  end
+  local pm = ns.PlayerPos()
+  ns.route = { level = level, idx = idx, step = step, counts = counts, stops = stops, loose = loose,
+               start = start, other = other, manual = db.step ~= nil, inZone = (pm == step.map) }
+  for name, fn in pairs(ns.listeners) do ns.Safe(name, fn, ns.route) end
+end
+
+local pending = false
+function ns.Queue()
+  if pending then return end
+  pending = true
+  C_Timer.After(0.3, function() pending = false; ns.Recompute() end)
+end
+
+function ns.Step(delta)
+  local cur = ns.db.step or AutoStep(UnitLevel("player") or 1)
+  local n = cur + delta
+  if n < 1 then n = 1 elseif n > #ns.steps then n = #ns.steps end
+  ns.db.step = n
+  ns.Recompute()
+end
+
+function ns.Auto()
+  ns.db.step = nil
+  ns.Recompute()
+end
+
+---------------------------------------------------------------------------
+-- Events + slash command
+---------------------------------------------------------------------------
+local ev = CreateFrame("Frame")
+ev:RegisterEvent("PLAYER_LOGIN")
+ev:RegisterEvent("QUEST_LOG_UPDATE")
+ev:RegisterEvent("QUEST_ACCEPTED")
+ev:RegisterEvent("QUEST_REMOVED")
+ev:RegisterEvent("QUEST_TURNED_IN")
+ev:RegisterEvent("PLAYER_LEVEL_UP")
+ev:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+ev:SetScript("OnEvent", function(_, event, arg1)
+  if event == "PLAYER_LOGIN" then
+    -- Version 1 is an Alliance route. On Horde characters do nothing at all (Blizzard's tracker stays).
+    if UnitFactionGroup and UnitFactionGroup("player") == "Horde" then
+      ns.disabled = true
+      ns.Print("the route is Alliance-only for now - a Horde route is planned. Nothing changes on this character.")
+      return
+    end
+    RubberDinghyDB = RubberDinghyDB or {}
+    ns.db = RubberDinghyDB
+    ReadPlayerBits()
+    for name, fn in pairs(ns.inits) do ns.Safe(name, fn) end
+    ns.Queue()
+    return
+  end
+  if not ns.db then return end
+  if event == "PLAYER_LEVEL_UP" then
+    local newLevel = tonumber(arg1)
+    if newLevel and newLevel % 2 == 0 then ns.Print(("Level %d - new spells to train."):format(newLevel)) end
+  end
+  if event == "QUEST_TURNED_IN" then
+    C_Timer.After(1.5, ns.Queue) -- the completed flag can lag the event
+  end
+  ns.Queue()
+end)
+
+ns.commands = {}
+SLASH_RUBBERDINGHY1 = "/rdr"
+SLASH_RUBBERDINGHY2 = "/dinghy"
+SlashCmdList.RUBBERDINGHY = function(msg)
+  msg = (msg or ""):lower():match("^%s*(.-)%s*$")
+  if ns.disabled then ns.Print("Alliance-only for now - a Horde route is planned."); return end
+  if not ns.db then return end
+  local cmd = ns.commands[msg]
+  if cmd then cmd(); return end
+  if msg == "next" then ns.Step(1)
+  elseif msg == "prev" then ns.Step(-1)
+  elseif msg == "auto" or msg == "route" then ns.Auto()
+  elseif msg == "debug" then
+    local any = false
+    for name, err in pairs(ns.errors) do ns.Print(name .. ": " .. err); any = true end
+    if not any then ns.Print("no errors recorded") end
+    if ns.commands.mapdebug then ns.commands.mapdebug() end
+  else
+    ns.Print("/rdr next | prev | auto (back to automatic) | map (route lines on/off) | arrow (on/off) | "
+      .. "tracker (show/hide) | blizzard (give Blizzard's tracker back) | unlock (move tracker/arrow) | reset | debug")
+  end
+end

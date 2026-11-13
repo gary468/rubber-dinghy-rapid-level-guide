@@ -1,0 +1,8 @@
+# Fetched at release time by the packager (.pkgmeta); a local copy is only for building by hand.
+Libs/
+# Intermediate file from tools/decode.py
+tools/data.json
+# Local builds
+dist/
+*.zip
+__pycache__/

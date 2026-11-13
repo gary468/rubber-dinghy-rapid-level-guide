@@ -1,0 +1,27 @@
+name: Package and release
+
+# Push a version tag (e.g. v1.0.0) to build the addon zip and publish it:
+# - always: a GitHub Release (this is what WowUp installs and updates from)
+# - CurseForge: once the CF_API_TOKEN secret and ## X-Curse-Project-ID are set
+# - Wago Addons: once the WAGO_API_TOKEN secret and ## X-Wago-ID are set
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CF_API_KEY: ${{ secrets.CF_API_TOKEN }}
+      WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: BigWigsMods/packager@v2
