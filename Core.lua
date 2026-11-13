@@ -300,6 +300,22 @@ local function AutoStep(level)
         if c[READY] + c[LOG] > 0 then return i end
       end
     end
+    -- Carrying a dungeon's quests: that dungeon's step (you're on your way there, e.g. flying into
+    -- Blasted Lands for the Temple of Atal'Hakkar), before any zone you happen to pass through.
+    for i, step in ipairs(ns.steps) do
+      if step.dungeon and level <= step.to + STAY_LEVELS then
+        local _, c = ScanStep(step, level)
+        if c[READY] + c[LOG] > 0 then return i end
+      end
+    end
+    -- You've arrived in a zone the route visits around your level (e.g. you flew in): that visit,
+    -- if it has quests for you to pick up - rather than sending you back somewhere else.
+    for i, step in ipairs(ns.steps) do
+      if step.map == pm and not step.dungeon and level >= step.from - 2 and level <= step.to + 2 then
+        local _, c = ScanStep(step, level)
+        if c[OPEN] > 0 then return i end
+      end
+    end
   end
   for i, step in ipairs(ns.steps) do
     -- A grind step (nothing left that beats killing mobs) is current while you're in its levels.

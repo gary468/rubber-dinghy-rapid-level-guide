@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.7
+- **Heading to a dungeon:** while you carry a dungeon's quests, that dungeon's step stays current
+  (with their progress), wherever you are on the way, e.g. flying into Blasted Lands for the Temple
+  of Atal'Hakkar. Before, the zone you passed through or an older zone took over.
+- **Flying into a zone** the route visits around your level makes it the current step, even before
+  you've picked anything up there.
+
 ## v1.0.6
 - **The route is now planned for the fastest time to 60**, in hours played, with travel counted
   only as the time it takes.
