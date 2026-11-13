@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.19
+- **Fix: freezes on a get-ready route.** Each re-plan (on every hand-in, pick-up or quest item looted)
+  made over 120,000 quest-log lookups, freezing the game for seconds. That's why handing in and moving
+  stopped working. Now it's under 100 lookups, with a hard 30 ms limit that keeps the best route found
+  so far.
+
 ## v1.0.18
 - **Accepts and hands in route quests automatically** (settings > Route, on by default).
   - Only quests on your route (or your get-ready side route), never ones you skipped. Hands in quests

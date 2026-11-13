@@ -14,8 +14,9 @@ ns.Prep = P
 
 local HOP_SAME, HOP_OTHER, NO_COORDS, NO_LOC = 60, 160, 40, 250  -- map-% units
 local MAX_TASKS = 80
-local STRATEGIES = { 0, 0.5, 1, 2, 4 }   -- how strongly to favour zones with several tasks waiting
-local SEEDS = 8                          -- variations per strategy
+local STRATEGIES = { 1, 2, 0, 4 }        -- how strongly to favour zones with several tasks waiting (best first)
+local SEEDS = 4                          -- variations per strategy
+local BUDGET_MS = 30                     -- planning stops after this and keeps the best so far (never freezes)
 
 ---------------------------------------------------------------------------
 -- Continents (for travel cost), from the game's own map tree
@@ -80,7 +81,9 @@ local function DungeonStep(name)
 end
 
 -- Prerequisites of a quest: ours (all of pg, any one of ps), else the journal's required chain.
-local function Prereqs(id)
+-- The data never changes, so each quest's list is worked out once.
+local prereqCache = {}
+local function PrereqsRaw(id)
   local q = ns.quests[id]
   local all, any = {}, {}
   if q then
@@ -94,13 +97,28 @@ local function Prereqs(id)
   end
   return all, any
 end
+local function Prereqs(id)
+  local c = prereqCache[id]
+  if not c then c = { PrereqsRaw(id) }; prereqCache[id] = c end
+  return c[1], c[2]
+end
 
--- Real quest state: "done", "ready" (objectives done), "log", or nil.
+-- Real quest state: "done", "ready" (objectives done), "log", or nil. While planning, each quest is
+-- asked about once (realMemo), not thousands of times.
+local realMemo
 local function RealState(id)
-  if ns.IsDone(id) then return "done" end
-  local idx = ns.LogIndex(id)
-  if idx > 0 then return ns.IsReady(id, idx) and "ready" or "log" end
-  return nil
+  if realMemo then
+    local v = realMemo[id]
+    if v ~= nil then return v or nil end
+  end
+  local r
+  if ns.IsDone(id) then r = "done"
+  else
+    local idx = ns.LogIndex(id)
+    if idx > 0 then r = ns.IsReady(id, idx) and "ready" or "log" end
+  end
+  if realMemo then realMemo[id] = r or false end
+  return r
 end
 
 -- One simulated run. weight: favour zones with several tasks waiting; rnd: tie-break noise (or nil).
@@ -129,7 +147,7 @@ local function Run(targets, level, start, weight, rnd, logN, logMax)
     -- You skipped it (right-click > Skip): its chain stops here.
     if skip[id] then why[id] = "skipped"; return nil end
     -- Not for your race or class (e.g. one of several alternative lead-ins): not this way.
-    if q and ns.Status(id, level) == ns.S.NA then why[id] = "isn't for your race or class"; return nil end
+    if q and not ns.ForMe(q) then why[id] = "isn't for your race or class"; return nil end
     local s = St(id)
     if s == "done" or s == "held" then return nil end
     if s == "ready" then return q and { id = id, kind = "turn", loc = q.t } end
@@ -243,8 +261,13 @@ function P.Plan(name, level)
   local logN = #ns.QuestLog()
   local logMax = (C_QuestLog and C_QuestLog.GetMaxNumQuestsCanAccept and C_QuestLog.GetMaxNumQuestsCanAccept()) or 20
   local best
+  realMemo = {}
+  local clock = debugprofilestop
+  local t0 = clock and clock()
   for si, w in ipairs(STRATEGIES) do
+    if best and t0 and clock() - t0 > BUDGET_MS then break end
     for seed = 0, SEEDS - 1 do
+      if best and t0 and clock() - t0 > BUDGET_MS then break end
       local rnd = seed > 0 and Rng(si * 1000 + seed) or nil
       local tasks, total, state, why, touched, logFull = Run(targets, level, start, w, rnd, logN, logMax)
       if not best or #tasks > #best.tasks or (#tasks == #best.tasks and total < best.total) then
@@ -252,6 +275,7 @@ function P.Plan(name, level)
       end
     end
   end
+  realMemo = nil
   local ready, stalled = {}, {}
   for _, t in ipairs(targets) do
     if ns.LogIndex(t) > 0 then ready[#ready + 1] = t

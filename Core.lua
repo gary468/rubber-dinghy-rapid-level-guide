@@ -276,6 +276,8 @@ local function ForMe(q)
   return true
 end
 
+ns.ForMe = function(q) return ForMe(q) end   -- race/class only (cheap)
+
 local function PrereqsMet(q)
   if q.pg then
     for _, p in ipairs(q.pg) do
