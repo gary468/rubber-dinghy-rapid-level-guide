@@ -75,6 +75,28 @@ local function Blob()
   return blobFrame
 end
 
+-- The area of a quest you picked that ISN'T on the route: green (Blizzard's own quest-area look), so
+-- gold always means "route" and green "your pick, not on the route".
+local chosenBlob
+local function ChosenBlob()
+  if blobOK == false then return nil end
+  local canvas = WorldMapFrame and WorldMapFrame.GetCanvas and WorldMapFrame:GetCanvas()
+  if not canvas then return nil end
+  if not chosenBlob then
+    local ok, f = pcall(CreateFrame, "QuestPOIFrame", nil, canvas)
+    if not ok or not f or not f.DrawBlob then return nil end
+    f:SetAllPoints(canvas)
+    pcall(function()
+      f:SetFillTexture("Interface\\WorldMap\\UI-QuestBlob-Inside")
+      f:SetBorderTexture("Interface\\WorldMap\\UI-QuestBlob-Outside")
+      f:SetFillAlpha(110); f:SetBorderAlpha(200); f:SetBorderScalar(0.5)
+    end)
+    chosenBlob = f
+  end
+  chosenBlob:SetFrameLevel(OVERLAY_LEVEL - 2)
+  return chosenBlob
+end
+
 -- Blizzard's own quest markers (the gold "..." / "?" circles and their blue areas) are hidden while
 -- the route is on, so our numbered stops are the quest markers. Pin templates are found at runtime
 -- (any map pin pool named like Quest...Pin / ...QuestBlob..., never quest offers or other addons'
@@ -120,8 +142,10 @@ local function SuppressBlizzard()
         local hide
         -- only the quest you picked in the quest log keeps Blizzard's marker; the route's own
         -- quests have our numbered stops, and other quests stay out of the way
-        if qid then hide = qid ~= chosen
-        else hide = (chosen == 0) end   -- areas without a quest ID belong to the chosen quest
+        -- Blizzard's areas are always hidden (route areas are ours, in gold; a chosen off-route quest
+        -- gets ours in green). Its marker stays only for a quest you picked that isn't on the route.
+        if qid then hide = (qid ~= chosen) or routeSet[qid]
+        else hide = true end
         if hide and pin:IsShown() then pin:Hide() end
       end
     end
@@ -150,6 +174,7 @@ local function HideMap()
   for _, l in ipairs(mapLines) do l:Hide() end
   for _, a in ipairs(mapAreas) do a:Hide() end
   if blobFrame then pcall(blobFrame.DrawNone, blobFrame) end
+  if chosenBlob then pcall(chosenBlob.DrawNone, chosenBlob) end
 end
 
 --- A numbered POI-style pin. Used on the world map and (smaller) on the minimap.
@@ -319,6 +344,16 @@ local function Draw()
   if not canvas or not WorldMapFrame:IsShown() then return end
   local cur = WorldMapFrame:GetMapID()
   ns.Safe("MapOthers", DrawOthers, canvas, cur)
+  -- the quest you picked in the quest log, if it's not on the route: its area in green
+  local chosen = Map.ChosenQuest()
+  if chosen and chosen ~= 0 and not routeSet[chosen] and QuestsWithAreas(cur)[chosen] then
+    local cb = ChosenBlob()
+    if cb then
+      if cb.SetMapID then pcall(cb.SetMapID, cb, cur) end
+      cb:Show()
+      pcall(cb.DrawBlob, cb, chosen, true)
+    end
+  end
   -- Draw whichever of the route's stops are on the map you're looking at (a get-ready route spans
   -- several zones; its stops in another zone show when you open that zone).
   local onStep = false

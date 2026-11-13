@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.24
+- **Map colours mean one thing each:** gold = the route (numbered stops, line, areas). Green = a quest you
+  selected in your quest log that isn't on the route (its area and Blizzard's marker). Grey dots =
+  other quests in your log. Blizzard's own green areas are no longer drawn for route quests.
+
 ## v1.0.23
 - **Route vs other quests, clearly apart:**
   - Only the route's own quests (or the get-ready quests on a dungeon side route) are numbered stops.
