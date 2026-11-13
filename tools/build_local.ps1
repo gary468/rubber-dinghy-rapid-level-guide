@@ -22,6 +22,7 @@ foreach ($lib in "LibStub\LibStub.lua", "CallbackHandler-1.0\CallbackHandler-1.0
 if (Test-Path $out) { Remove-Item $out -Recurse -Force }
 New-Item -ItemType Directory -Force $out | Out-Null
 Copy-Item (Join-Path $root "*.lua") $out
+Copy-Item (Join-Path $root "Bindings.xml") $out
 Copy-Item (Join-Path $root "LICENSE.md"), (Join-Path $root "README.md"), (Join-Path $root "CHANGELOG.md") $out
 Copy-Item (Join-Path $root "Libs") (Join-Path $out "Libs") -Recurse
 New-Item -ItemType Directory -Force (Join-Path $out "media") | Out-Null

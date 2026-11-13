@@ -481,7 +481,7 @@ ns.commands.unlock = function() ns.SetMoveMode(true) end
 ns.commands.move = function() ns.SetMoveMode(not ns.db.unlocked) end
 ns.commands.lock = function() ns.SetMoveMode(false) end
 ns.commands.reset = function()
-  ns.db.trackerPos, ns.db.arrowPos = nil, nil
+  ns.db.trackerPos, ns.db.arrowPos, ns.db.rarePos = nil, nil, nil
   ns.db.trackerScale, ns.db.arrowScale = nil, nil
   T.ApplyScale()
   Anchor()

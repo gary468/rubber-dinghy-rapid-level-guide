@@ -25,3 +25,4 @@ Arrow.lua
 Options.lua
 Minimap.lua
 Tooltip.lua
+Rares.lua

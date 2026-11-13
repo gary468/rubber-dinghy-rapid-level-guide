@@ -14,6 +14,7 @@ local function Apply(what)
   elseif what == "map" and ns.Map then ns.Map.Refresh()
   elseif what == "arrow" and ns.Arrow then ns.Arrow.Refresh()
   elseif what == "minimap" and ns.MinimapButton then ns.MinimapButton.Refresh()
+  elseif what == "rares" and ns.Rares then ns.Rares.Refresh()
   elseif what == "route" then ns.Recompute()
   end
 end
@@ -182,6 +183,15 @@ local function Build()
   Header(f, y, "Arrow"); y = y - 22
   Check(f, y, "Show the arrow to the next stop", "Points at stop 1 with the distance in yards. Never sets a map marker.", "noArrow", true, "arrow"); y = y - 40
   Slider(f, y, "Arrow size", "arrowScale", 0.6, 2, 0.05, 1, pct, "arrow"); y = y - 34
+
+  Header(f, y, "Rare & named mobs"); y = y - 22
+  Check(f, y, "Alert me when one is nearby", "Rares, rare elites and named quest targets (\"... slain: 0/1\"). Seen on enemy nameplates, mouseover and your target, so turn enemy nameplates on (V) to spot them sooner.", "noRares", true, "rares"); y = y - 26
+  Check(f, y, "Mark it with a skull", "Puts the skull raid marker on it. In a group you need to be leader or assist.", "noRareSkull", true, "rares"); y = y - 26
+  Check(f, y, "Play a sound", "The raid warning sound.", "noRareSound", true, "rares"); y = y - 30
+  local testB = Button(f, "Test alert", 110, function() if ns.commands.raretest then ns.commands.raretest() end end,
+    "Shows a sample alert and the Target button. Shift + drag the button to move it. Bind a key to it under Key Bindings > Rubber Dinghy.")
+  testB:SetPoint("TOPLEFT", PAD, y)
+  y = y - 34
 
   Header(f, y, "Minimap button"); y = y - 22
   local mm = Check(f, y, "Show the minimap button", "Left-click: this window. Right-click: show or hide the tracker.", "minimapHide", true, "minimap")

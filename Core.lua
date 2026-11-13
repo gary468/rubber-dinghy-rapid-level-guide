@@ -604,6 +604,7 @@ SlashCmdList.RUBBERDINGHY = function(msg)
     ns.Print("/rdr - settings window | /rdr unlock - move the tracker and arrow, /rdr lock when done | "
       .. "/rdr reset - default places and sizes | /rdr next, prev, auto - change step | "
       .. "/rdr skip - skip stop 1 (or right-click a stop) | /rdr unskip - bring skipped quests back | "
-      .. "/rdr map, arrow, tracker, minimap - show/hide | /rdr blizzard - Blizzard's tracker back | /rdr debug")
+      .. "/rdr map, arrow, tracker, minimap - show/hide | /rdr blizzard - Blizzard's tracker back | "
+      .. "/rdr rares - rare alerts on/off, /rdr raretest - sample alert | /rdr debug")
   end
 end

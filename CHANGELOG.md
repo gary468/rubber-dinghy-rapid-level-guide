@@ -8,6 +8,15 @@
     against about 18 for the old route, which left 28% of the XP to grinding.
   - Return visits are labelled, e.g. "Tanaris (return visit)".
 - A visit stays current for one level past its planned range, so a little extra XP doesn't skip it.
+- **Rare and named mob alerts.**
+  - When a rare, a rare elite or a named quest target ("... slain: 0/1") shows up, you get a raid
+    warning, a sound and a skull on the mob.
+  - A **Target** button also appears: click it, or bind a key under Key Bindings > Rubber Dinghy. WoW
+    doesn't let addons target a mob on their own, so it takes that one press.
+  - Spotted on enemy nameplates (turn them on with V), mouseover and your target. Minimap rare
+    markers are used too where the client has them.
+  - Settings: on/off, skull, sound and a test alert. Also `/rdr rares` and `/rdr raretest`. Shift +
+    drag moves the button.
 - **Note when updating:** quit and restart WoW (not just `/reload`).
 
 ## v1.0.4

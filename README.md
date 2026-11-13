@@ -15,6 +15,9 @@ what order, and keeps track of your progress as you play.
   quests you're on. Click a stop in the tracker to open the map on it.
 - **Minimap pins** for the next stops, and an **arrow** pointing at the next stop with the distance.
   It never places map markers.
+- **Rare and named mob alerts.** A rare, rare elite or named quest target nearby gets a raid warning,
+  a sound and a skull. A Target button (or your key binding) targets it in one press. WoW doesn't let
+  addons target by themselves. Turn on enemy nameplates (V) to spot them from further away.
 - **Automatic progress.** It reads your progress from the game, finds the right zone for your level,
   and moves on when you've done a zone.
 
@@ -54,6 +57,8 @@ Game Menu > Options > AddOns.
 - **Skipping:** right-click a stop in the tracker to skip it (or one quest at it). `/rdr skip`
   skips stop 1, and `/rdr unskip` brings skipped quests back. Settings can also skip all dungeon
   quests.
+- **Rare alerts:** `/rdr rares` turns them on or off, and `/rdr raretest` shows a sample. Bind a key
+  to the Target button under Key Bindings > Rubber Dinghy.
 - **Problems:** `/rdr debug` shows any errors.
 
 `/dinghy` works too.
