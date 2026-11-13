@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: Rubber Dinghy Rapid Level Guide
-## Notes: Level 30-60 Alliance leveling route for WoW Forever: route tracker, map route, minimap pins and arrow. /rdr
+## Notes: Level 10-60 Alliance leveling route for WoW Forever: route tracker, map route, minimap pins and arrow. /rdr
 ## IconTexture: Interface\AddOns\RubberDinghyRapidLevelGuide\media\icon
 ## Version: @project-version@
 ## SavedVariablesPerCharacter: RubberDinghyDB

@@ -222,7 +222,7 @@ ns.trackSet = {}
 for _, id in ipairs(ns.track or {}) do ns.trackSet[id] = true end
 
 -- Which route dungeon each dungeon quest belongs to, and whether you've chosen to skip it.
--- The planner's dungeons are on by default; every other 30-60 dungeon is in the data as an optional
+-- The planner's dungeons are on by default; every other 10-60 dungeon is in the data as an optional
 -- step at its best point in the route, off until you tick it.
 ns.questDungeon, ns.dungeonDefault = {}, {}
 for _, step in ipairs(ns.steps or {}) do
@@ -467,6 +467,14 @@ end
 local curStep
 local function Target(r)
   local q = r.q
+  -- On a dungeon step, a hand-in at an altar/idol inside (Questie puts it at the entrance) is part of
+  -- the run: shown at the entrance as "hand in inside".
+  if r.s == READY and q.d and curStep and curStep.ent then
+    local t, e = q.t, curStep.ent
+    if not t or not t[3] or (t[2] == e[2] and math.abs(t[3] - e[3]) < 6 and math.abs(t[4] - e[4]) < 6) then
+      return e, "dungeonturn"
+    end
+  end
   if r.s == READY then return q.t, "turn" end
   -- Dungeon step: quests you're doing are done inside, so the stop is the dungeon's entrance.
   if r.s == LOG and q.d and curStep and curStep.ent then return curStep.ent, "dungeon" end
@@ -515,6 +523,17 @@ local function BuildStops(rows, stepMap, current)
     end
   end
 
+  -- Within a stop: hand-ins inside a dungeon come after the quests you do in there.
+  for _, s in ipairs(stops) do
+    if #s.actions > 1 then
+      local rank = function(a) return a.kind == "dungeonturn" and 2 or 1 end
+      for i = 2, #s.actions do        -- stable insertion sort (keeps the original order otherwise)
+        local a, j = s.actions[i], i - 1
+        while j >= 1 and rank(s.actions[j]) > rank(a) do s.actions[j + 1] = s.actions[j]; j = j - 1 end
+        s.actions[j + 1] = a
+      end
+    end
+  end
   -- Start from the player if they're in this zone, else from the busiest stop (the hub).
   local here, away = {}, {}
   for _, s in ipairs(stops) do
@@ -597,7 +616,10 @@ function ns.ActionText(a)
   if a.kind == "get" and a.row.pick then return C.GET .. "Get for later: " .. nm .. "|r" end
   if a.kind == "get" then return C.GET .. "Get: " .. nm .. "|r" end
   if a.kind == "do" then return C.DO .. nm .. "|r" end
-  if a.kind == "dungeon" then return C.DO .. "In the dungeon: " .. q.n .. "|r" end
+  if a.kind == "dungeon" then return C.DO .. q.n .. "|r" end
+  if a.kind == "dungeonturn" then
+    return C.TURN .. "Hand in" .. ((q.t and q.t[1]) and (" at the " .. q.t[1]) or " inside") .. ": " .. q.n .. "|r"
+  end
   if a.kind == "go" then return C.DO .. "Finish: " .. nm .. "|r" end
   return C.SOON .. nm .. " (level " .. (q.r or "?") .. ")|r"
 end
@@ -640,6 +662,7 @@ function ns.Recompute()
   if not db or ns.disabled then return end   -- not logged in yet, or a Horde character
   local level = UnitLevel("player") or 1
   -- "Get ready for <dungeon>": the side route replaces the step until it's done or you leave it.
+  if db.prep and not ns.DungeonOn(db.prep) then db.prep = nil end   -- that dungeon is no longer chosen
   if db.prep and ns.Prep then
     local ok, r = pcall(ns.Prep.Route, db.prep, level)
     if ok and r and r.allReady then

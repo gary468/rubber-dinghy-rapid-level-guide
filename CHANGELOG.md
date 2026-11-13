@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.0.26
+- **The route now runs 10-60:** Teldrassil and Zephras Isle, then Westfall, Loch Modan, Duskwood,
+  Redridge, Darkshore, Ashenvale and Wetlands into the 30s and on to 60. In theory that's 1,020
+  quests in 43 zone visits, about 14.5 hours of pure travel, and no grinding. Every dungeon from 10
+  to 60 is optional (Deadmines, Wailing Caverns, Shadowfang Keep and the rest), each with its Get
+  ready button and Dungeon Journal link.
+- **Quest icons like Questie** on the world map, for everything that isn't a route stop:
+  - "!" for quest givers (faded when the quest is low level for you), "?" for hand-ins;
+  - a dot at every spawn of the mobs your quests need;
+  - dashed patrol paths for NPCs and quest mobs that walk (gold for the route's own).
+  - Hover for the quest and what to do; shift-click to hide a quest's icons. Settings > Map has the
+    switch and "Show hidden quests again".
+- **Rare alerts fixed for Forever:** mobs are recognised by the NPC ID in their GUID (QuestieDB's 363
+  rares and 186 named quest targets), so they work even when the client hides a mob's name and type
+  from addons - the same way RareScanner does it. Forever's rare markers (vignettes) are read too.
+- **Dungeon step, clearer:** each quest once, in the order you'd do it ("Hand in at the Altar of
+  Hakkar: ..." last), "Get ready first" only while there's something left to pick up, "Skip this
+  dungeon", and the quests you're not doing folded into "+ 3 not this run" (click to see why).
+- **Get-ready route:** it ends once you hold every quest you can get. Hand-ins and drops inside the run,
+  and chains you skipped, no longer hold it open. "Not yet" folds into "+ N not yet". It also stops
+  when the dungeon is unticked.
 ## v1.0.25
 - **The route now starts at level 30** (30-60). The 30s go Stormwind > Duskwood > Wetlands > Desolace >
   Ashenvale > Zephras Isle > Stranglethorn Vale > Desolace, then into the 40s as before. In theory that's

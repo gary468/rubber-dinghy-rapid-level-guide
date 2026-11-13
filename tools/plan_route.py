@@ -15,7 +15,7 @@ zone you visit are picked up then, at no extra cost. gen_route.py turns plan.jso
 import json, os, re, sys
 import routelib as R
 import os as _os_start
-START_LEVEL = int(_os_start.environ.get("START_LEVEL", 30))   # the route runs START_LEVEL-60
+START_LEVEL = int(_os_start.environ.get("START_LEVEL", 10))   # the route runs START_LEVEL-60
 
 DATA, WOW, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 QMETA = sys.argv[4] if len(sys.argv) > 4 else os.path.join(os.path.dirname(OUT), "qmeta.json")

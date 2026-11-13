@@ -168,8 +168,10 @@ local function QuestsWithAreas(mapID)
 end
 
 local otherPins = {}
+local HideIcons   -- set below, with the quest icon layer
 local function HideMap()
   for _, p in ipairs(otherPins) do p:Hide() end
+  if HideIcons then HideIcons() end
   for _, p in ipairs(mapPins) do p:Hide() end
   for _, l in ipairs(mapLines) do l:Hide() end
   for _, a in ipairs(mapAreas) do a:Hide() end
@@ -281,62 +283,179 @@ local function PlacePin(n, s, canvas, P, scale)
   p:Show()
 end
 
--- Other quests in your log (not on the route): a small grey dot where it's done, or handed in once
--- finished. No number, no line, no area - so the gold route always stands out. Hover: what it is;
--- click: select it, so Blizzard shows its full marker and area.
-local function OtherPin(i, canvas)
-  local p = otherPins[i]
+-- Questie-style quest icons for everything that isn't a route stop (the route keeps its numbered gold
+-- stops, line and areas on top):
+--   "!"  quest givers with a quest you can pick up (faded when it's low level for you)
+--   "?"  where to hand in a quest you've finished
+--   dots every spawn of the mobs/objects a quest in your log needs
+--   dashed patrol paths for quest givers, hand-in NPCs and quest mobs that walk
+-- Hover: the quest and what to do there. Shift-click: hide that quest's icons (settings brings them
+-- back). Click a quest-log icon: show Blizzard's marker and area for it.
+local ICON_AVAIL = "Interface\\GossipFrame\\AvailableQuestIcon"
+local ICON_TURNIN = "Interface\\GossipFrame\\ActiveQuestIcon"
+local iconPool, pathLines = {}, {}
+local byGiverMap
+
+local function GiverIndex()
+  if byGiverMap then return byGiverMap end
+  byGiverMap = {}
+  for id, q in pairs(ns.quests or {}) do
+    local g = q.g
+    if g and g[2] and g[3] then
+      byGiverMap[g[2]] = byGiverMap[g[2]] or {}
+      table.insert(byGiverMap[g[2]], id)
+    end
+  end
+  return byGiverMap
+end
+
+local function HideQuest(id)
+  ns.db.hiddenQuests = ns.db.hiddenQuests or {}
+  ns.db.hiddenQuests[id] = true
+  local q = ns.quests[id]
+  ns.Print(("hid %s's map icons. Settings > Map > \"Show hidden quests again\" brings them back."):format(q and q.n or "that quest"))
+  if Map.MarkDirty then Map.MarkDirty() end
+end
+
+local function Icon(i, canvas)
+  local p = iconPool[i]
   if p then return p end
   p = CreateFrame("Button", nil, canvas)
-  p:SetSize(12, 12)
   p.tex = p:CreateTexture(nil, "ARTWORK")
   p.tex:SetAllPoints()
-  p.tex:SetTexture(CIRCLE)
-  p.tex:SetVertexColor(0.75, 0.75, 0.75, 0.9)
   p.edge = p:CreateTexture(nil, "BACKGROUND")
-  p.edge:SetPoint("CENTER"); p.edge:SetSize(15, 15)
+  p.edge:SetPoint("CENTER")
   p.edge:SetTexture(CIRCLE)
-  p.edge:SetVertexColor(0.1, 0.1, 0.1, 0.9)
+  p.edge:SetVertexColor(0, 0, 0, 0.85)
+  p:RegisterForClicks("LeftButtonUp", "RightButtonUp")
   p:SetScript("OnEnter", function(self)
-    if not self.qid then return end
+    local q = self.qid and ns.quests[self.qid]
+    if not q then return end
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:AddLine("Not on the route", 0.7, 0.7, 0.7)
-    GameTooltip:AddLine(self.title or "?", 1, 1, 1)
-    GameTooltip:AddLine(self.ready and "Finished: hand it in here" or "Where it's done", 0.8, 0.8, 0.8)
-    GameTooltip:AddLine("Click: show Blizzard's marker and area for it", 0.4, 0.8, 1)
+    GameTooltip:AddLine(("%s |cff999999[%s]|r"):format(q.n, q.l or "?"), 1, 0.82, 0)
+    if self.kind == "avail" then GameTooltip:AddLine("Pick up from " .. (q.g and q.g[1] or "?"), 1, 1, 1)
+    elseif self.kind == "turnin" then GameTooltip:AddLine("Finished: hand in to " .. (q.t and q.t[1] or "?"), 0.2, 1, 0.2)
+    else GameTooltip:AddLine((q.o and q.o[1]) or "Objective", 1, 1, 1) end
+    GameTooltip:AddLine(self.onRoute and "On your route" or "Not on the route", 0.7, 0.7, 0.7)
+    GameTooltip:AddLine("Shift-click: hide this quest's icons", 0.4, 0.8, 1)
     GameTooltip:Show()
   end)
   p:SetScript("OnLeave", function() GameTooltip:Hide() end)
-  p:SetScript("OnClick", function(self) if self.qid and ns.ShowQuestOnMap then ns.ShowQuestOnMap(self.qid) end end)
-  otherPins[i] = p
+  p:SetScript("OnClick", function(self)
+    if not self.qid then return end
+    if IsShiftKeyDown and IsShiftKeyDown() then HideQuest(self.qid); return end
+    if self.kind ~= "avail" and ns.ShowQuestOnMap then ns.ShowQuestOnMap(self.qid) end
+  end)
+  iconPool[i] = p
   return p
 end
 
+local function PathLine(i, canvas)
+  local l = pathLines[i]
+  if not l then
+    if not canvas.CreateLine then return nil end
+    l = canvas:CreateLine(nil, "OVERLAY")
+    pathLines[i] = l
+  end
+  return l
+end
+
+HideIcons = function()
+  for _, p in ipairs(iconPool) do p:Hide() end
+  for _, l in ipairs(pathLines) do l:Hide() end
+end
+
 local function DrawOthers(canvas, cur)
+  HideIcons()
   if ns.db.noOtherPins then return end
   local w, h = canvas:GetWidth(), canvas:GetHeight()
   if not w or w == 0 then return end
   local scale = CanvasScale()
-  local n = 0
+  local level = UnitLevel("player") or 1
+  local hidden = ns.db.hiddenQuests or {}
+  local skip = ns.db.skip or {}
+  local n, li, pathsDone = 0, 0, {}
+  local function Place(qid, kind, x, y, size, r, g, b, a, onRoute)
+    n = n + 1
+    local p = Icon(n, canvas)
+    p.qid, p.kind, p.onRoute = qid, kind, onRoute
+    p:SetSize(size, size)
+    p.edge:SetSize(size + 3, size + 3)
+    if kind == "spawn" then
+      p.tex:SetTexture(CIRCLE); p.tex:SetVertexColor(r, g, b, a); p.edge:Show()
+    else
+      p.tex:SetTexture(kind == "avail" and ICON_AVAIL or ICON_TURNIN)
+      p.tex:SetVertexColor(1, 1, 1, a)
+      if p.tex.SetDesaturated then p.tex:SetDesaturated(r == 0) end
+      p.edge:Hide()
+    end
+    p:SetScale(1 / scale)
+    p:ClearAllPoints()
+    p:SetPoint("CENTER", canvas, "TOPLEFT", x / 100 * w * scale, -y / 100 * h * scale)
+    p:SetFrameLevel(PIN_LEVEL - (kind == "spawn" and 8 or 4))
+    p:Show()
+  end
+  local function Path(npcId, gold)
+    if not npcId or pathsDone[npcId] or not ns.paths then return end
+    pathsDone[npcId] = true
+    local pth = ns.paths[npcId]
+    if not pth or pth[1] ~= cur then return end
+    local c = pth[2]
+    for k = 1, #c - 3, 2 do
+      li = li + 1
+      local l = PathLine(li, canvas)
+      if not l then return end
+      l:SetThickness(2 / scale)
+      if gold then l:SetColorTexture(1, 0.82, 0, 0.55) else l:SetColorTexture(1, 1, 1, 0.45) end
+      l:SetStartPoint("TOPLEFT", canvas, c[k] / 100 * w, -c[k + 1] / 100 * h)
+      l:SetEndPoint("TOPLEFT", canvas, c[k + 2] / 100 * w, -c[k + 3] / 100 * h)
+      l:Show()
+    end
+  end
+
+  -- quests in your log that aren't route stops: hand-in "?" or their mobs' spawns
+  local inLog = {}
   for _, e in ipairs(ns.QuestLog()) do
+    inLog[e.id] = true
     local q = ns.quests[e.id]
-    if q and not routeSet[e.id] and not (ns.db.skip and ns.db.skip[e.id]) then
-      local ready = ns.IsReady(e.id)
-      local loc = ready and q.t or (q.o or q.t)
-      if loc and loc[2] == cur and loc[3] and loc[4] then
-        n = n + 1
-        local p = OtherPin(n, canvas)
-        p.qid, p.title, p.ready = e.id, e.title or q.n, ready
-        p:SetScale(1 / scale)
-        p:ClearAllPoints()
-        p:SetPoint("CENTER", canvas, "TOPLEFT", loc[3] / 100 * w * scale, -loc[4] / 100 * h * scale)
-        p:SetFrameLevel(PIN_LEVEL - 5)
-        p:Show()
+    if q and not routeSet[e.id] and not hidden[e.id] and not skip[e.id] then
+      if ns.IsReady(e.id) then
+        if q.t and q.t[2] == cur and q.t[3] then Place(e.id, "turnin", q.t[3], q.t[4], 18, 1, 1, 1, 1, false) end
+        if q.tp then Path(q.tp, false) end
+      elseif q.o and q.o[2] == cur then
+        local pts = q.o[6]
+        if pts and #pts >= 2 then
+          for k = 1, #pts - 1, 2 do Place(e.id, "spawn", pts[k], pts[k + 1], 8, 1, 1, 1, 0.9, false) end
+        elseif q.o[3] then Place(e.id, "spawn", q.o[3], q.o[4], 10, 1, 1, 1, 0.9, false) end
+        for _, nid in ipairs(q.op or {}) do Path(nid, false) end
+      end
+    end
+  end
+  -- quests you can pick up here: "!" at the giver (faded when it's well below your level)
+  for _, id in ipairs(GiverIndex()[cur] or {}) do
+    if not inLog[id] and not routeSet[id] and not hidden[id] and not skip[id] then
+      local q = ns.quests[id]
+      if ns.Status(id, level) == ns.S.OPEN then
+        local low = (q.l or 0) < level - 5
+        Place(id, "avail", q.g[3], q.g[4], 18, low and 0 or 1, 1, 1, low and 0.6 or 1, false)
+        if q.gp then Path(q.gp, false) end
+      end
+    end
+  end
+  -- patrol paths for the route's own NPCs and mobs, in gold
+  for _, s in ipairs((route and route.stops) or {}) do
+    if s.map == cur then
+      for _, a in ipairs(s.actions or {}) do
+        local q = a.row.q
+        if q then
+          if a.kind == "get" and q.gp then Path(q.gp, true)
+          elseif a.kind == "turn" and q.tp then Path(q.tp, true)
+          elseif q.op then for _, nid in ipairs(q.op) do Path(nid, true) end end
+        end
       end
     end
   end
 end
-
 local function Draw()
   HideMap()
   if not ns.db or ns.db.noMap then return end
@@ -427,6 +546,7 @@ local function SafeDraw() ns.Safe("Map", Draw) end
 
 -- Like Questie: while the map is open, redraw when the zone, canvas size or zoom changes.
 local dirty = true
+function Map.MarkDirty() dirty = true end
 local drawnMap, drawnW, drawnH, drawnScale
 local function StartDriver()
   local canvas = WorldMapFrame and WorldMapFrame.GetCanvas and WorldMapFrame:GetCanvas()

@@ -1,6 +1,6 @@
 # Rubber Dinghy Rapid Level Guide
 
-A level 30–60 leveling route for **WoW Forever** (Alliance). It tells you where to go next and in
+A level 10–60 leveling route for **WoW Forever** (Alliance). It tells you where to go next and in
 what order, and keeps track of your progress as you play.
 
 ## What you get
@@ -15,6 +15,8 @@ what order, and keeps track of your progress as you play.
   quests you're on. Click a stop in the tracker to open the map on it.
 - **Minimap pins** for the next stops, and an **arrow** pointing at the next stop with the distance.
   It never places map markers.
+- **Quest icons like Questie** on the world map: quest givers (!), hand-ins (?), every spawn of the
+  mobs your quests need, and patrol paths of NPCs that walk. Shift-click an icon to hide that quest.
 - **Rare and named mob alerts.** A rare, rare elite or named quest target nearby gets a raid warning,
   a sound and a skull. A Target button (or your key binding) targets it in one press. WoW doesn't let
   addons target by themselves. Turn on enemy nameplates (V) to spot them from further away.

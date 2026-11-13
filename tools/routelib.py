@@ -21,6 +21,10 @@ SIZE = {
     # 30-40 zones
     1431: (2700, 1800), 1437: (4135, 2757), 1445: (5250, 3500), 1440: (5766, 3844), 1442: (4883, 3255),
     1432: (2758, 1839), 1439: (6550, 4367), 1433: (2170, 1447),
+    # 10-20 zones
+    1429: (3470, 2314), 1426: (4925, 3283), 1438: (5092, 3395),
+    # 20-30 zones
+    1436: (3500, 2333), 1413: (10133, 6756), 1416: (2800, 1867), 1424: (3200, 2133),
 }
 DEFAULT_SIZE = (4000, 2667)
 
@@ -195,7 +199,8 @@ def hop_s(a, b):
 
 
 # Dungeon journal shortcuts (/dj <key>) for the journal addon, by dungeon name.
-DJ_KEY = {"Blackfathom Deeps": "bfd", "The Stockade": "stocks", "Gnomeregan": "gnomer", "Razorfen Kraul": "rfk",
+DJ_KEY = {"Ragefire Chasm": "rfc", "The Hall of Thanes": "hall", "Hall of Thanes": "hall", "The Deadmines": "dm", "Wailing Caverns": "wc", "Shadowfang Keep": "sfk", "Ruins of Lordaeron": "rol",
+          "Blackfathom Deeps": "bfd", "The Stockade": "stocks", "Gnomeregan": "gnomer", "Razorfen Kraul": "rfk",
           "City of Dalaran": "dala", "Excavation Site: Wetlands": "exca", "Scarlet Monastery: Graveyard": "smgy",
           "Uldaman": "ulda", "Zul'Farrak": "zf", "Maraudon": "mara", "Sunken Temple": "st",
           "Blackrock Depths": "brd", "Lower Blackrock Spire": "lbrs", "Upper Blackrock Spire": "ubrs",
@@ -207,7 +212,7 @@ DJ_KEY = {"Blackfathom Deeps": "bfd", "The Stockade": "stocks", "Gnomeregan": "g
 RAID_LIKE = {"Upper Blackrock Spire"}   # 10-man in Classic: not a leveling run
 
 
-def load_dungeons(wow, lo=30, hi=60):
+def load_dungeons(wow, lo=10, hi=60):
     """Dungeons from the installed dungeon journal addon: name, levels, bosses, entrance, quest IDs."""
     import os
     A = wow + r"\Interface\AddOns\ForeverDungeonJournal"

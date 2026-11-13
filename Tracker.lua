@@ -206,30 +206,40 @@ local function Render(r)
     { font = HEADER_FONT, color = GOLD, bg = MODULE_BG, height = 22, gap = 2,
       tip = "Leveling route step. Use < and > in the header to change step, A for automatic." })
   local goTo = (r.inZone or step.dungeon or step.grind) and "" or ("Go to " .. step.name .. ". ")
-  Add(goTo .. step.note, { font = SMALL_FONT, color = GREY, gap = 4 })
+  local note = step.note
+  if step.dungeon and not step.prep then
+    local held, open = 0, 0
+    for _, id in ipairs(step.quests) do
+      local st = ns.Status(id, r.level)
+      if st == ns.S.LOG or st == ns.S.READY then held = held + 1 elseif st == ns.S.OPEN then open = open + 1 end
+    end
+    note = ("Run it with a group - %d of its quests in your log%s."):format(held,
+      open > 0 and (", " .. open .. " more you could pick up first") or "")
+    step._open = open
+  end
+  Add(goTo .. note, { font = SMALL_FONT, color = GREY, gap = 4 })
   if step.prep then
     Add("|cffff8040Back to the route|r - stop getting ready for " .. step.dungeon, { font = SMALL_FONT, gap = 2,
-      tip = "Ends the get-ready route and goes back to the leveling route (/rdr prep off).",
+      tip = "Ends the get-ready route and goes back to the leveling route.",
       onClick = function() ns.StopPrep() end })
-  elseif step.dungeon and ns.DungeonOn(step.dungeon) then
-    Add("|cffffd100Get ready for " .. step.dungeon .. "|r - route every chain and pick-up for it", { font = SMALL_FONT, gap = 2,
+  elseif step.dungeon and ns.DungeonOn(step.dungeon) and (step._open or 0) > 0 then
+    Add("|cffffd100Get ready first|r - a route to pick up the " .. step._open .. " quests you don't have yet", { font = SMALL_FONT, gap = 2,
       tip = "Plans the quickest route, from where you are, to walk every quest chain and pick up every quest "
-        .. step.dungeon .. " has for you. It updates as you go (/rdr prep).",
+        .. step.dungeon .. " has for you.",
       onClick = function() ns.StartPrep(step.dungeon) end })
   end
   if step.dungeon and not step.prep then
-    local on = ns.DungeonOn(step.dungeon)
-    Add(on and ("|cff33ff33Doing " .. step.dungeon .. "|r - click to skip it")
-        or ("|cffff8040Not in your route|r - click to add " .. step.dungeon), { font = SMALL_FONT, gap = 2,
-      tip = "Choose your dungeons here or in /rdr settings. Skipped dungeons and their quests drop out of the route.",
-      onClick = function()
-        if on then T.ConfirmSkipDungeon(step.dungeon) else ns.SetDungeon(step.dungeon, true) end
-      end })
-    Add("|cff66ccffOpen " .. step.dungeon .. " in the Dungeon Journal|r", { font = SMALL_FONT, gap = 4,
-      tip = "Where every quest for this dungeon starts, its bosses and map (DungeonJournal addon, /dj).",
+    Add("|cff66ccffOpen in the Dungeon Journal|r", { font = SMALL_FONT, gap = 1,
+      tip = "Where every quest for this dungeon starts, its bosses and map (DungeonJournal addon).",
       onClick = function() ns.OpenJournal(step) end })
+    local on = ns.DungeonOn(step.dungeon)
+    Add(on and "|cff999999Skip this dungeon|r" or ("|cffff8040Not in your route|r - click to add " .. step.dungeon),
+      { font = SMALL_FONT, gap = 4,
+        tip = "Choose your dungeons in settings > Dungeons. A skipped dungeon and its quests drop out of the route.",
+        onClick = function()
+          if on then T.ConfirmSkipDungeon(step.dungeon) else ns.SetDungeon(step.dungeon, true) end
+        end })
   end
-
   local shown = 0
   local objShown = {}   -- a quest's progress lines appear once, at its first stop
   for i, s in ipairs(r.stops) do
@@ -268,11 +278,16 @@ local function Render(r)
 
   -- Get-ready route: the dungeon's quests it can't reach yet, and why.
   if r.prep and r.stalled and #r.stalled > 0 and y < maxH then
-    Add("Not yet:", { font = SMALL_FONT, color = GREY, indent = 4 })
-    for _, s in ipairs(r.stalled) do
-      if y > maxH then break end
-      local q = ns.quests[s.id]
-      Add((q and q.n or ("quest " .. s.id)) .. " - " .. s.why, { font = SMALL_FONT, color = GREY, indent = 12 })
+    local open = ns.db.notYetOpen
+    Add(("%s %d not yet"):format(open and "-" or "+", #r.stalled), { font = SMALL_FONT, color = GREY, indent = 4,
+      tip = "Quests for this dungeon you can't get yet (or chose to skip). Click to show or hide them.",
+      onClick = function() ns.db.notYetOpen = not ns.db.notYetOpen; Render(ns.route) end })
+    if open then
+      for _, s in ipairs(r.stalled) do
+        if y > maxH then break end
+        local q = ns.quests[s.id]
+        Add((q and q.n or ("quest " .. s.id)) .. " - " .. s.why, { font = SMALL_FONT, color = GREY, indent = 12 })
+      end
     end
   end
 
@@ -285,12 +300,13 @@ local function Render(r)
   -- (its pick-up text, notes and required chains are used when the journal addon is loaded).
   if step.dungeon and y < maxH then
     local S = ns.S
-    Add("Dungeon quests", { font = TITLE_FONT, color = GOLD, gap = 1 })
+    local atStop = {}
+    for _, s in ipairs(r.stops) do for _, a in ipairs(s.actions) do atStop[a.row.id] = true end end
+    local items = {}
     for _, id in ipairs(step.quests) do
-      if y > maxH then Add("...", { color = GREY, indent = 8 }); break end
       local q = ns.quests[id]
       local s = q and ns.Status(id, r.level)
-      if q and s ~= S.NA then
+      if q and s ~= S.NA and s ~= S.DONE and not atStop[id] then
         local jq = ns.JournalQuest(id, step.dungeon) or {}
         local text, color, check = q.n, WHITE, false
         if s == S.DONE then color, check = GREY, true
@@ -320,15 +336,30 @@ local function Render(r)
           end
           text, color = q.n .. (#need > 0 and (" - needs: " .. table.concat(need, ", ")) or " - needs an earlier quest"), GREY
         elseif s == S.SKIP then text, color = q.n .. " - skipped", GREY
-        else text, color = q.n .. " - level " .. (q.r or q.l or "?"), GREY end
-        Add(text, { indent = 8, font = SMALL_FONT, color = color, check = check, tip = jq.note or jq.objective })
+        elseif q.g and q.g[1] == "(item drop)" then text, color = q.n .. " - starts from a drop in the dungeon", GREY
+        elseif (q.r or 0) > r.level then text, color = q.n .. " - opens at level " .. q.r, GREY
+        else text, color = q.n .. " - level " .. (q.l or "?") .. " quest, a bit high for you yet", GREY end
+        items[#items + 1] = { text, color, check, jq.note or jq.objective }
+      end
+    end
+    -- one closed line ("+ 3 not this run"); click to see them and why
+    if #items > 0 then
+      local open = ns.db.notRunOpen
+      Add(("%s %d not this run"):format(open and "-" or "+", #items), { font = SMALL_FONT, color = GREY, gap = 1,
+        tip = "This dungeon's quests you won't have for this run (skipped, not unlocked, or too high yet). Click to show or hide them.",
+        onClick = function() ns.db.notRunOpen = not ns.db.notRunOpen; Render(ns.route) end })
+      if open then
+        for _, it in ipairs(items) do
+          if y > maxH then Add("...", { color = GREY, indent = 8 }); break end
+          Add(it[1], { indent = 8, font = SMALL_FONT, color = it[2], check = it[3], tip = it[4] })
+        end
       end
     end
     y = y + 3
   end
 
   local c, S = r.counts, ns.S
-  if not r.prep then Add(("%d to hand in, %d in log, %d to pick up, %d later, %d locked%s"):format(
+  if not r.prep and not step.dungeon then Add(("%d to hand in, %d in log, %d to pick up, %d later, %d locked%s"):format(
     c[S.READY], c[S.LOG], c[S.OPEN], c[S.LATER], c[S.LOCKED],
     (c[S.SKIP] or 0) > 0 and (", " .. c[S.SKIP] .. " skipped") or ""), { font = SMALL_FONT, color = GREY, gap = 6 }) end
 

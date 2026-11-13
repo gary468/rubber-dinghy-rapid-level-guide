@@ -15,7 +15,7 @@ stop, add a zone or dungeon run anywhere. It writes the best route as a plan for
 import json, random, sys, time
 import routelib as R
 import os as _os_start
-START_LEVEL = int(_os_start.environ.get("START_LEVEL", 30))   # the route runs START_LEVEL-60
+START_LEVEL = int(_os_start.environ.get("START_LEVEL", 10))   # the route runs START_LEVEL-60
 
 args = [a for i, a in enumerate(sys.argv[1:], 1) if not a.startswith("--") and sys.argv[i - 1] not in ("--minutes", "--force", "--objective")]
 # --objective travel (default): XP against location only - least riding/flying/boating to reach 60 on
@@ -246,12 +246,22 @@ for sp in SEEDS:
     results.append((h, r, sp))
 h, route, sp = min(results)
 hours, plan = simulate(route, record=True)
+json.dump(plan, open(OUT, "w"), indent=1)   # checkpoint: the route itself, before the optional dungeons
+# Level at each point of the route (to try a dungeon only where your level fits it).
+lv_at, stop_i, lvl = [], 0, START_LEVEL
+pos_of = {}
+for v in plan:
+    if v["kind"] == "grind": continue
+    key = ("dungeon", v["name"]) if v["kind"] == "dungeon" else ("zone", v["map"])
+    pos_of.setdefault(len(pos_of), v["lv_in"])
+levels = [pos_of.get(j, 60) for j in range(len(route) + 1)]
 # Every other dungeon becomes an optional step (off until the player ticks it), at the point in this
 # route where adding it costs least time.
 for name, d in dungeons.items():
     if ("dungeon", name) in route or d["hi"] < START_LEVEL + 2 or not d["quests"]: continue
     FORCE.add(name)
-    tries = [route[:j] + [("dungeon", name)] + route[j:] for j in range(len(route) + 1)]
+    fits = [j for j in range(len(route) + 1) if d["lo"] - 1 <= levels[min(j, len(levels) - 1)] <= d["hi"]]
+    tries = [route[:j] + [("dungeon", name)] + route[j:] for j in (fits[:8] or range(len(route) + 1))]
     best_r = min(tries, key=lambda r: simulate(r)[0])
     h2, p2 = simulate(best_r, record=True)
     FORCE.discard(name)

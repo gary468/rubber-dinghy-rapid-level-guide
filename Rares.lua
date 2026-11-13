@@ -34,42 +34,47 @@ local function Enabled() return ns.db and not ns.db.noRares and not ns.disabled 
 local function InCombat() return InCombatLockdown and InCombatLockdown() end
 
 ---------------------------------------------------------------------------
--- Which mobs count: rares, rare elites, world bosses, and named quest targets
--- (a mob whose name is in a "0/1" kill objective of a quest in your log, e.g. "Lord Shalzaru slain: 0/1").
+-- Which mobs count: rares (QuestieDB's rare / rare-elite mobs) and named quest targets (a mob with
+-- 1-3 spawns that a quest in your log needs killed, e.g. Lord Shalzaru). Matched by the NPC ID in
+-- the unit's GUID: this client can hide a unit's name and classification from addons ("secret
+-- values"), but not its GUID - the same way RareScanner does it.
 ---------------------------------------------------------------------------
-local questTargets, questDirty = {}, true
-local function QuestTarget(name)
-  if questDirty then
-    wipe(questTargets)
-    for _, q in ipairs(ns.QuestLog()) do
-      local objs = (C_QuestLog and C_QuestLog.GetQuestObjectives and C_QuestLog.GetQuestObjectives(q.id)) or ns.Objectives(q.id)
-      for _, o in ipairs(objs or {}) do
-        -- "0/1 Lord Shalzaru slain" (modern) or "Lord Shalzaru slain: 0/1" (classic)
-        local need = o.numRequired or (o.text and tonumber(o.text:match("%d+%s*/%s*(%d+)")))
-        local done = o.finished or o.done
-        if o.text and not done and need == 1 and (o.type == nil or o.type == "monster") then
-          questTargets[#questTargets + 1] = o.text
-        end
-      end
-    end
-    questDirty = false
-  end
-  for _, text in ipairs(questTargets) do
-    if text:find(name, 1, true) then return true end
-  end
-  return false
+local function Secret(v) return issecretvalue and v ~= nil and issecretvalue(v) end
+
+local function NpcId(unit)
+  local guid = UnitGUID(unit)
+  if not guid or Secret(guid) then return nil end
+  local kind, _, _, _, _, id = strsplit("-", guid)
+  if kind ~= "Creature" and kind ~= "Vehicle" then return nil end
+  return tonumber(id), guid
 end
 
 local KIND = { rare = "Rare", rareelite = "Rare elite", worldboss = "Boss" }
+--- kind, name, guid for a unit worth an alert (or nil)
 function R.Classify(unit)
-  if not UnitExists(unit) or UnitIsPlayer(unit) or UnitIsDead(unit) then return end
-  if UnitCanAttack and not UnitCanAttack("player", unit) then return end
-  local kind = KIND[UnitClassification(unit) or ""]
-  if kind then return kind end
+  if not UnitExists(unit) then return end
+  local dead = UnitIsDead(unit)
+  if dead and not Secret(dead) then return end
+  local id, guid = NpcId(unit)
+  if not id then return end
+  local hostile = UnitCanAttack and UnitCanAttack("player", unit)
+  if hostile == false then return end            -- friendly (a "rare" NPC you talk to)
   local name = UnitName(unit)
-  if name and QuestTarget(name) then return "Quest target" end
+  if not name or Secret(name) or name == UNKNOWNOBJECT then name = nil end
+  if ns.rareNpcs and ns.rareNpcs[id] then return "Rare", name or ns.rareNpcs[id], guid end
+  local named = ns.namedNpcs and ns.namedNpcs[id]
+  if named then
+    for _, qid in ipairs(named[2] or {}) do
+      if ns.LogIndex(qid) > 0 and not ns.IsReady(qid) then return "Quest target", name or named[1], guid end
+    end
+  end
+  -- not in our lists: fall back to the game's classification when it isn't hidden
+  local cls = UnitClassification(unit)
+  if cls and not Secret(cls) and KIND[cls] then
+    local hostile = UnitCanAttack and UnitCanAttack("player", unit)
+    if hostile == nil or Secret(hostile) or hostile then return KIND[cls], name or "Rare", guid end
+  end
 end
-
 ---------------------------------------------------------------------------
 -- The Target button (secure: can only change outside combat)
 ---------------------------------------------------------------------------
@@ -185,9 +190,8 @@ end
 
 function R.CheckUnit(unit)
   if not Enabled() then return end
-  local kind = R.Classify(unit)
+  local kind, name, guid = R.Classify(unit)
   if not kind then return end
-  local name, guid = UnitName(unit), UnitGUID(unit)
   Mark(unit)
   local key = guid or name
   local now = GetTime()
@@ -201,8 +205,12 @@ end
 local function CheckVignette(id)
   if not Enabled() or not (C_VignetteInfo and C_VignetteInfo.GetVignetteInfo) then return end
   local info = C_VignetteInfo.GetVignetteInfo(id)
-  if not info or not info.name or not info.objectGUID then return end
+  if not info or not info.objectGUID or Secret(info.objectGUID) then return end
   if not (info.objectGUID:match("^Creature") or info.objectGUID:match("^Vehicle")) then return end -- not treasure
+  if not info.name or Secret(info.name) then
+    local _, _, _, _, _, nid = strsplit("-", info.objectGUID)
+    info = { name = ns.rareNpcs and ns.rareNpcs[tonumber(nid)] or "Rare", objectGUID = info.objectGUID }
+  end
   local now = GetTime()
   if seen[info.name] and now - seen[info.name] < REALERT then return end
   seen[info.name] = now
@@ -233,7 +241,18 @@ ev:SetScript("OnEvent", function(_, event, arg1, arg2)
   elseif event == "UPDATE_MOUSEOVER_UNIT" then R.CheckUnit("mouseover")
   elseif event == "PLAYER_TARGET_CHANGED" then R.CheckUnit("target")
   elseif event == "VIGNETTE_MINIMAP_UPDATED" then if arg2 then CheckVignette(arg1) end
-  elseif event == "QUEST_LOG_UPDATE" then questDirty = true
+  elseif event == "VIGNETTES_UPDATED" then
+    -- every rare marker the game knows about right now (throttled)
+    local now = GetTime()
+    if not R.lastVig or now - R.lastVig > 5 then
+      R.lastVig = now
+      if C_VignetteInfo and C_VignetteInfo.GetVignettes then
+        for _, vid in ipairs(C_VignetteInfo.GetVignettes() or {}) do
+          local info = C_VignetteInfo.GetVignetteInfo(vid)
+          if info and (info.onMinimap or info.onWorldMap) then CheckVignette(vid) end
+        end
+      end
+    end
   elseif event == "PLAYER_REGEN_ENABLED" then
     if pending == "hide" then R.Hide() elseif pending then ShowButton(pending) end
   end
@@ -250,7 +269,7 @@ end)
 ns.inits.Rares = function()
   Build()
   for _, e in ipairs({ "NAME_PLATE_UNIT_ADDED", "UPDATE_MOUSEOVER_UNIT", "PLAYER_TARGET_CHANGED",
-                       "QUEST_LOG_UPDATE", "PLAYER_REGEN_ENABLED", "VIGNETTE_MINIMAP_UPDATED" }) do
+                       "QUEST_LOG_UPDATE", "PLAYER_REGEN_ENABLED", "VIGNETTE_MINIMAP_UPDATED", "VIGNETTES_UPDATED" }) do
     pcall(ev.RegisterEvent, ev, e) -- not every client has every event
   end
 end

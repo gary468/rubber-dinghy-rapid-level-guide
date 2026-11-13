@@ -150,10 +150,12 @@ local function Run(targets, level, start, weight, rnd, logN, logMax)
     if q and not ns.ForMe(q) then why[id] = "isn't for your race or class"; return nil end
     local s = St(id)
     if s == "done" or s == "held" then return nil end
+    -- A dungeon quest you hold is the point of getting ready: the rest (objectives, hand-ins at an
+    -- altar inside, or back at the giver after the run) is part of the run, not the prep.
+    if depth == 0 and q and q.d and (s == "ready" or s == "log") then return nil end
     if s == "ready" then return q and { id = id, kind = "turn", loc = q.t } end
     if s == "log" then
       if not q then why[id] = "isn't in the quest data"; return nil end
-      if q.d and depth == 0 then return nil end                     -- dungeon quest held: done inside
       if q.o then return { id = id, kind = "do", loc = q.o } end
       if q.t then return { id = id, kind = "go", loc = q.t } end
       return { id = id, kind = "do", loc = nil }
@@ -161,6 +163,8 @@ local function Run(targets, level, start, weight, rnd, logN, logMax)
     if Met(id) then
       if not q then why[id] = "isn't in the quest data"; return nil end
       if (q.r or 0) > level then why[id] = "opens at level " .. q.r; return nil end
+      -- started by an item that drops inside (e.g. The Essence of Eranikus): you get it in the run
+      if depth == 0 and q.d and not (q.g and q.g[3]) then why[id] = "starts from a drop inside the dungeon"; return nil end
       return { id = id, kind = "get", loc = q.g }
     end
     local all, any = Prereqs(id)
@@ -342,7 +346,9 @@ function P.Route(name, level)
   for i, s in ipairs(stops) do s.index = i end
   -- Ready = nothing left to do AND nothing out of reach AND no full log holding pick-ups back.
   -- (Nothing doable but quests out of reach is "not yet", not "ready".)
-  local allReady = (#plan.tasks == 0) and (#plan.stalled == 0) and not plan.logFull
+  -- Nothing left you can do before the run, and you hold at least one of its quests. Chains you
+  -- skipped or that open later don't keep it open (they're listed under "Not yet").
+  local allReady = (#plan.tasks == 0) and (#plan.ready > 0) and not plan.logFull
   local counts = { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
   -- The rest of your log stays listed under Other Quests.
   local inRoute, other = {}, {}

@@ -66,6 +66,13 @@ STEPS = [
     dict(name="Stonetalon Mountains", lv=(30, 32), zones=[406], extra=[], note="Stonetalon Peak."),
     dict(name="Loch Modan", lv=(30, 30), zones=[38], extra=[], note="Thelsamar."),
     dict(name="Darkshore", lv=(30, 30), zones=[148], extra=[], note="Auberdine."),
+    # 20-30
+    dict(name="Redridge Mountains", lv=(20, 24), zones=[44], extra=[], note="Lakeshire."),
+    dict(name="Westfall", lv=(20, 20), zones=[40], extra=[], note="Sentinel Hill."),
+    # 10-20 (starting zones' later quests included)
+    dict(name="Elwynn Forest", lv=(10, 12), zones=[12], extra=[], note="Goldshire."),
+    dict(name="Dun Morogh", lv=(10, 12), zones=[1], extra=[], note="Kharanos."),
+    dict(name="Teldrassil", lv=(10, 12), zones=[141], extra=[], note="Dolanaar."),
 ]
 RAIDS = {2717, 2159, 2677, 1977, 3428, 3429, 3456, 19}
 ALLIANCE_RACES = 1 | 4 | 8 | 64
@@ -160,8 +167,8 @@ def loc_of(qgivers):
             e = ent(kind, i)
             if not e["name"]: continue
             p = pts(e)
-            if p: return dict(name=e["name"], area=p[0][0], x=p[0][1], y=p[0][2], fac=e["fac"])
-            return dict(name=e["name"], area=e["zone"], x=None, y=None, fac=e["fac"])
+            if p: return dict(name=e["name"], area=p[0][0], x=p[0][1], y=p[0][2], fac=e["fac"], id=i if kind == "npc" else None)
+            return dict(name=e["name"], area=e["zone"], x=None, y=None, fac=e["fac"], id=i if kind == "npc" else None)
     if pos(qgivers, 3): return dict(name="(item drop)", area=None, x=None, y=None, fac=None)
     return None
 
@@ -257,7 +264,7 @@ for st in STEPS:
         lvl = q.get("questLevel") or 0
         # Any quest from this zone's NPCs up to 62 belongs to the step (follow-ups like Zorbin's 55s
         # included); ones far above you just show as "later" in game.
-        if not (min(lo - 6, 28) <= lvl <= 62): continue   # the route runs 30-60
+        if not (min(lo - 6, 8) <= lvl <= 62): continue   # the route runs 10-60
         g = givers.get(qid)
         if not g or g["area"] not in st["zones"]: continue
         if g.get("fac") and "A" not in str(g["fac"]): continue
@@ -279,7 +286,7 @@ track = {}
 for qid, q in Q.items():
     if qid in used or not eligible(qid, q): continue
     lvl = q.get("questLevel") or 0
-    if not (28 <= lvl <= 62): continue
+    if not (8 <= lvl <= 62): continue
     g = givers.get(qid)
     if g and g.get("fac") and "A" not in str(g["fac"]): continue
     o = _objective_area(qid, None)
@@ -390,6 +397,25 @@ out.append("ns.track = {" + ",".join(map(str, sorted(track))) + "}")
 out.append("ns.quests = {")
 n_obj = 0
 qmeta = {}
+# Patrol paths: {npcId: (uiMap, [x1, y1, x2, y2, ...])}, first path only, thinned to <= 40 points.
+paths = {}
+def npc_path(i):
+    if i in paths: return paths[i]
+    w = get(f"X-Npc-{i}-8")
+    res = None
+    if isinstance(w, dict):
+        for area, plist in w.items():
+            m = uimap.get(int(area))
+            if not m or not plist or not isinstance(plist, list): continue
+            pts = [p for p in plist[0] if isinstance(p, list) and len(p) >= 2 and p[0] is not None and p[1] is not None]
+            if len(pts) < 2: continue
+            if len(pts) > 40:
+                step = len(pts) / 40.0
+                pts = [pts[int(k * step)] for k in range(40)]
+            res = (m, pts); break
+    paths[i] = res
+    return res
+obj_npcs = {}   # creature NPC id -> quests that need it killed
 for qid in sorted(set(used) | set(track)):
     q = Q[qid]; st = used.get(qid)
     fb = get(f"X-Quest-{qid}-3")
@@ -424,6 +450,14 @@ for qid in sorted(set(used) | set(track)):
         a = larr(q.get(fld))
         if a != "nil": parts.append(f"{key}={a}")
     if (q.get("zoneOrSort") or 0) in dungeons or qid in dungeon_quests: parts.append("d=true")
+    # NPCs that walk a patrol: giver, hand-in, and the quest's mobs (keys into ns.paths)
+    gid = (givers.get(qid) or {}).get("id"); tid = (t or {}).get("id")
+    if gid and npc_path(gid): parts.append(f"gp={gid}")
+    if tid and npc_path(tid): parts.append(f"tp={tid}")
+    objp = [c[0] for c in (pos(get(f"X-Quest-{qid}-10") or {}, 1) or []) if isinstance(c, list) and c and npc_path(c[0])]
+    if objp: parts.append("op={" + ",".join(map(str, objp[:6])) + "}")
+    for c in (pos(get(f"X-Quest-{qid}-10") or {}, 1) or []):
+        if isinstance(c, list) and c and isinstance(c[0], int): obj_npcs.setdefault(c[0], []).append(qid)
     out.append(f"  [{qid}]={{{', '.join(parts)}}},")
     # Objective types for the planner's time model (QuestieDB has no counts, only what kind).
     obj = get(f"X-Quest-{qid}-10") or {}
@@ -436,6 +470,34 @@ for qid in sorted(set(used) | set(track)):
     mt["k"] = len([c for c in pos(obj, 5) or [] if isinstance(c, list) and c])
     qmeta[qid] = {k: v for k, v in mt.items() if v}
 out.append("}")
+out.append("-- Patrol paths of NPCs that walk: [npcId] = {uiMapID, {x1,y1, x2,y2, ...}}")
+out.append("ns.paths = {")
+for i, pth in sorted((k, v) for k, v in paths.items() if v):
+    out.append(f"  [{i}]={{{pth[0]},{{" + ",".join(f"{x:.1f},{y:.1f}" for x, y in pth[1]) + "}},")
+out.append("}")
+# Rares and named quest targets by NPC ID: the game can hide a unit's name and classification from
+# addons (secret values), but the NPC ID in its GUID is always readable.
+rares, named = {}, {}
+for k in list(meta):
+    mm = re.match(r"X-Npc-(\d+)-S$", k)
+    if not mm: continue
+    i = int(mm.group(1))
+    row = get(k) or {}
+    rank, lo, hi, nm = pos(row, 6), pos(row, 4) or 0, pos(row, 5) or 0, pos(row, 1)
+    if not nm or not (8 <= (hi or lo) <= 63): continue
+    if rank == 4 or rank == 2:
+        sp = ent("npc", i)["spawns"]
+        if any(int(a) in uimap and int(a) not in dungeons for a in sp): rares[i] = nm
+for i, qs in obj_npcs.items():
+    e = ent("npc", i)
+    if not e["name"] or i in rares: continue
+    n_sp = sum(len(v or []) for v in e["spawns"].values())
+    if 0 < n_sp <= 3: named[i] = (e["name"], sorted(set(qs))[:4])
+out.append("-- Rare mobs (open world), [npcId] = name")
+out.append("ns.rareNpcs = {" + ", ".join(f"[{i}]={lstr(n)}" for i, n in sorted(rares.items())) + "}")
+out.append("-- Named quest targets (a mob with 1-3 spawns that a quest needs killed): [npcId] = {name, {questIds}}")
+out.append("ns.namedNpcs = {" + ", ".join(f"[{i}]={{{lstr(n)},{{{','.join(map(str, qs))}}}}}" for i, (n, qs) in sorted(named.items())) + "}")
+print("patrol paths:", sum(1 for v in paths.values() if v), "| rares:", len(rares), "| named quest targets:", len(named))
 open(OUT, "w", encoding="utf-8").write("\n".join(out) + "\n")
 json.dump(qmeta, open(HERE + r"\qmeta.json", "w"))
 print("steps:", [(st["name"], len(ids)) for st, ids in steps_out])
