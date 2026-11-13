@@ -95,13 +95,32 @@ local function BlizzQuestTemplates()
 end
 Map.BlizzQuestTemplates = BlizzQuestTemplates
 
+-- Only the route's own quests swap Blizzard's markers for our numbered stops. Every other quest in
+-- your log keeps its Blizzard marker and area, and so does the quest you've picked in the quest log
+-- (or clicked under Other Quests), route or not.
+local routeSet = {}
+function Map.ChosenQuest()
+  local id = (C_QuestLog and C_QuestLog.GetSelectedQuest and C_QuestLog.GetSelectedQuest()) or 0
+  if (not id or id == 0) and GetQuestLogSelection and GetQuestLogTitle then
+    local idx = GetQuestLogSelection()
+    if idx and idx > 0 then id = select(8, GetQuestLogTitle(idx)) end
+  end
+  if (not id or id == 0) and ns.mapFocusQuest then id = ns.mapFocusQuest end   -- clicked under Other Quests
+  return id or 0
+end
+
 local function SuppressBlizzard()
   if not (WorldMapFrame and WorldMapFrame.EnumeratePinsByTemplate) then return end
   local on = ns.db and not ns.db.noMap and not ns.db.keepBlizzMap
   if on then
+    local chosen = Map.ChosenQuest()
     for _, name in ipairs(BlizzQuestTemplates()) do
       for pin in WorldMapFrame:EnumeratePinsByTemplate(name) do
-        if pin:IsShown() then pin:Hide() end
+        local qid = pin.questID or pin.questId
+        local hide
+        if qid then hide = routeSet[qid] and qid ~= chosen
+        else hide = (chosen == 0) end   -- areas without a quest ID belong to the chosen quest
+        if hide and pin:IsShown() then pin:Hide() end
       end
     end
     suppressed = true
@@ -375,6 +394,10 @@ end
 
 ns.listeners.Map = function(r)
   route = r
+  routeSet = {}
+  for _, s in ipairs(r.stops or {}) do
+    for _, a in ipairs(s.actions or {}) do routeSet[a.row.id] = true end
+  end
   -- Keep a highlight across route updates (the stops are rebuilt): same place, same name.
   if hlStop then
     local keep
@@ -385,6 +408,28 @@ ns.listeners.Map = function(r)
   end
   dirty = true
   UpdateMinimap()
+end
+
+--- Open the world map on a quest from your log (on the route or not): select it, so Blizzard draws
+--- its marker and area, and show the map where it's handed in (when finished) or done.
+function ns.ShowQuestOnMap(id)
+  if not id or not WorldMapFrame then return end
+  if InCombatLockdown and InCombatLockdown() then ns.Print("can't open the map in combat."); return end
+  ns.mapFocusQuest = id
+  if C_QuestLog and C_QuestLog.SetSelectedQuest then pcall(C_QuestLog.SetSelectedQuest, id) end
+  if C_SuperTrack and C_SuperTrack.SetSuperTrackedQuestID then pcall(C_SuperTrack.SetSuperTrackedQuestID, id) end
+  local q = ns.quests and ns.quests[id]
+  local loc = q and ((ns.IsReady and ns.IsReady(id) and q.t) or q.o or q.t or q.g)
+  local m = loc and loc[2]
+  if (not m or m == 0) and GetQuestUiMapID then
+    local ok, mm = pcall(GetQuestUiMapID, id); if ok then m = mm end
+  end
+  if not WorldMapFrame:IsShown() then
+    if OpenWorldMap then pcall(OpenWorldMap, m) elseif ToggleWorldMap then pcall(ToggleWorldMap) end
+  end
+  if m and m > 0 and WorldMapFrame.SetMapID then pcall(WorldMapFrame.SetMapID, WorldMapFrame, m) end
+  if WorldMapFrame.RefreshAllDataProviders then pcall(WorldMapFrame.RefreshAllDataProviders, WorldMapFrame) end
+  dirty = true
 end
 
 ns.inits.Map = StartDriver

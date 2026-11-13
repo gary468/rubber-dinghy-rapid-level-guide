@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.0.11
+- **Get ready for a dungeon.** Click "Get ready for Sunken Temple" on a dungeon step, or type
+  `/rdr prep sunken`. The route becomes the quickest way, from where you are, to walk every quest
+  chain and pick up every quest that dungeon has for you (class quests too).
+  - Chains are followed from start to finish, across zones and continents.
+  - Many orderings are tried and the one with the least travel wins. A flight costs more the further
+    it goes, and a boat costs the most.
+  - It re-plans as you go and shows what it can't reach yet ("opens at level 52"). When everything
+    is picked up, it points you to the entrance. "Back to the route" ends it.
+- **Map:** only the route's own quests swap Blizzard's quest markers for numbered stops. Every other
+  quest keeps its Blizzard marker and area, and so does the quest you've selected in your quest
+  log, even if it's on the route.
+- **Other Quests:** click one in the tracker to open the map on it (where it's done or handed in).
 ## v1.0.10
 - **Skipping a dungeon asks first** ("Skip Sunken Temple?") when you click "click to skip it" on a
   dungeon step.

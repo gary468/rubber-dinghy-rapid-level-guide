@@ -179,7 +179,7 @@ end
 -- SKIP = you chose to skip it (or it's a dungeon quest and dungeon quests are skipped).
 local READY, LOG, OPEN, SOON, LOCKED, DONE, LATER, NA, SKIP = 1, 2, 3, 4, 5, 6, 7, 8, 9
 ns.S = { READY = READY, LOG = LOG, OPEN = OPEN, SOON = SOON, LOCKED = LOCKED, DONE = DONE, LATER = LATER, NA = NA, SKIP = SKIP }
-ns.IsDone = IsDone
+ns.IsDone, ns.LogIndex, ns.IsReady = IsDone, LogIndex, IsReady
 
 -- Quests that are never suggested but are routed once they're in your log.
 ns.trackSet = {}
@@ -561,6 +561,17 @@ ns.route = { stops = {}, loose = {}, counts = { 0, 0, 0, 0, 0, 0, 0, 0 } }
 function ns.Recompute()
   local level = UnitLevel("player") or 1
   local db = ns.db
+  -- "Get ready for <dungeon>": the prep route replaces the step until you go back to the route.
+  if db.prep and ns.Prep then
+    local ok, r = pcall(ns.Prep.Route, db.prep, level)
+    if ok and r then
+      ns.route = r
+      for name, fn in pairs(ns.listeners) do ns.Safe(name, fn, ns.route) end
+      return
+    elseif not ok then
+      ns.errors.Prep = tostring(r)
+    end
+  end
   local idx = db.step or AutoStep(level)
   if idx < 1 then idx = 1 elseif idx > #ns.steps then idx = #ns.steps end
   local step = ns.steps[idx]
@@ -726,6 +737,8 @@ SlashCmdList.RUBBERDINGHY = function(msg)
   elseif msg == "unskip" then ns.UnskipAll()
   elseif msg == "auto" or msg == "route" then ns.Auto()
   elseif msg == "dj" or msg == "journal" or msg == "dungeon" then ns.OpenJournal()
+  elseif msg:match("^prep") or msg:match("^ready") then
+    if ns.Prep then ns.Prep.Command(msg:match("^%a+%s*(.*)$")) end
   elseif msg == "debug" then
     local any = false
     for name, err in pairs(ns.errors) do ns.Print(name .. ": " .. err); any = true end

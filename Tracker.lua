@@ -168,7 +168,17 @@ local function Render(r)
       tip = "Leveling route step. Use < and > in the header to change step, A for automatic." })
   local goTo = (r.inZone or step.dungeon or step.grind) and "" or ("Go to " .. step.name .. ". ")
   Add(goTo .. step.note, { font = SMALL_FONT, color = GREY, gap = 4 })
-  if step.dungeon then
+  if step.prep then
+    Add("|cffff8040Back to the route|r - stop getting ready for " .. step.dungeon, { font = SMALL_FONT, gap = 2,
+      tip = "Ends the get-ready route and goes back to the leveling route (/rdr prep off).",
+      onClick = function() ns.StopPrep() end })
+  elseif step.dungeon and ns.DungeonOn(step.dungeon) then
+    Add("|cffffd100Get ready for " .. step.dungeon .. "|r - route every chain and pick-up for it", { font = SMALL_FONT, gap = 2,
+      tip = "Plans the quickest route, from where you are, to walk every quest chain and pick up every quest "
+        .. step.dungeon .. " has for you. It updates as you go (/rdr prep).",
+      onClick = function() ns.StartPrep(step.dungeon) end })
+  end
+  if step.dungeon and not step.prep then
     local on = ns.DungeonOn(step.dungeon)
     Add(on and ("|cff33ff33Doing " .. step.dungeon .. "|r - click to skip it")
         or ("|cffff8040Not in your route|r - click to add " .. step.dungeon), { font = SMALL_FONT, gap = 2,
@@ -214,6 +224,16 @@ local function Render(r)
   end
   local more = #r.stops - shown
   if more > 0 then Add(("+%d more stops"):format(more), { font = SMALL_FONT, color = GREY, indent = 22 }) end
+
+  -- Get-ready route: the dungeon's quests it can't reach yet, and why.
+  if r.prep and r.stalled and #r.stalled > 0 and y < maxH then
+    Add("Not yet:", { font = SMALL_FONT, color = GREY, indent = 4 })
+    for _, s in ipairs(r.stalled) do
+      if y > maxH then break end
+      local q = ns.quests[s.id]
+      Add((q and q.n or ("quest " .. s.id)) .. " - " .. s.why, { font = SMALL_FONT, color = GREY, indent = 12 })
+    end
+  end
 
   for _, a in ipairs(r.loose) do
     if y > maxH then break end
@@ -267,9 +287,9 @@ local function Render(r)
   end
 
   local c, S = r.counts, ns.S
-  Add(("%d to hand in, %d in log, %d to pick up, %d later, %d locked%s"):format(
+  if not r.prep then Add(("%d to hand in, %d in log, %d to pick up, %d later, %d locked%s"):format(
     c[S.READY], c[S.LOG], c[S.OPEN], c[S.LATER], c[S.LOCKED],
-    (c[S.SKIP] or 0) > 0 and (", " .. c[S.SKIP] .. " skipped") or ""), { font = SMALL_FONT, color = GREY, gap = 6 })
+    (c[S.SKIP] or 0) > 0 and (", " .. c[S.SKIP] .. " skipped") or ""), { font = SMALL_FONT, color = GREY, gap = 6 }) end
 
   -- Quests in the log outside this step: Blizzard's tracker would have shown them.
   local n = #r.other
@@ -282,9 +302,12 @@ local function Render(r)
       for _, e in ipairs(r.other) do
         if y > maxH then Add("...", { color = GREY }); break end
         Slot(e.id)
-        Add(("[%s] %s"):format(e.level or "?", e.title or "?"), { font = TITLE_FONT, color = GOLD, indent = 4 })
+        local id = e.id
+        local show = function() if ns.ShowQuestOnMap then ns.ShowQuestOnMap(id) end end
+        local tip = "Click: show it on the map (Blizzard's marker and area)."
+        Add(("[%s] %s"):format(e.level or "?", e.title or "?"), { font = TITLE_FONT, color = GOLD, indent = 4, onClick = show, tip = tip })
         for _, o in ipairs(ns.Objectives(e.id)) do
-          Add(o.text, { indent = 14, font = SMALL_FONT, color = o.done and GREY or WHITE, check = o.done })
+          Add(o.text, { indent = 14, font = SMALL_FONT, color = o.done and GREY or WHITE, check = o.done, onClick = show, tip = tip })
         end
       end
     end
