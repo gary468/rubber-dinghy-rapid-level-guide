@@ -103,6 +103,29 @@ function ns.QuestLog()
   return out
 end
 
+--- How far into a quest you are: fulfilled, required (summed over its objectives).
+function ns.Progress(id)
+  local have, need = 0, 0
+  if C_QuestLog and C_QuestLog.GetQuestObjectives then
+    for _, o in ipairs(C_QuestLog.GetQuestObjectives(id) or {}) do
+      if o.numRequired and o.numRequired > 0 then
+        have, need = have + math.min(o.numFulfilled or 0, o.numRequired), need + o.numRequired
+      elseif o.text then
+        local a, b = o.text:match("(%d+)%s*/%s*(%d+)")
+        if a then have, need = have + tonumber(a), need + tonumber(b)
+        else need = need + 1; if o.finished then have = have + 1 end end
+      end
+    end
+    return have, need
+  end
+  for _, o in ipairs(ns.Objectives(id)) do
+    local a, b = o.text:match("(%d+)%s*/%s*(%d+)")
+    if a then have, need = have + tonumber(a), need + tonumber(b)
+    else need = need + 1; if o.done then have = have + 1 end end
+  end
+  return have, need
+end
+
 local mapNames = {}
 function ns.MapName(uiMap)
   if not uiMap or uiMap == 0 then return nil end
@@ -238,7 +261,7 @@ local function Target(r)
   return nil, "soon"
 end
 
-local function BuildStops(rows, stepMap)
+local function BuildStops(rows, stepMap, current)
   local stops, loose = {}, {}
   for _, r in ipairs(rows) do
     local loc, kind = Target(r)
@@ -251,11 +274,20 @@ local function BuildStops(rows, stepMap)
         end
       end
       if not found then
-        found = { map = loc[2], x = loc[3], y = loc[4], r = loc[5], name = loc[1], area = (kind == "do"),
-                  actions = {}, away = (loc[2] ~= stepMap) }
+        -- cx/cy/r = the mob area's centre and size (for the map circle); pts = where its spawns
+        -- actually are (flat x,y list). x/y later move to the spawn nearest the route.
+        found = { map = loc[2], x = loc[3], y = loc[4], cx = loc[3], cy = loc[4], r = loc[5], name = loc[1],
+                  area = (kind == "do"), actions = {}, away = (loc[2] ~= stepMap), pts = nil }
+        if loc[6] then found.pts = {}; for k = 1, #loc[6] do found.pts[k] = loc[6][k] end end
         stops[#stops + 1] = found
-      elseif kind == "do" and loc[1] and not found.name:find(loc[1], 1, true) then
-        found.name = found.name .. ", " .. loc[1]
+      else
+        if kind == "do" and loc[1] and not found.name:find(loc[1], 1, true) then
+          found.name = found.name .. ", " .. loc[1]
+        end
+        if loc[6] then
+          found.pts = found.pts or {}
+          for k = 1, #loc[6] do found.pts[#found.pts + 1] = loc[6][k] end
+        end
       end
       found.actions[#found.actions + 1] = { kind = kind, row = r }
     else
@@ -279,15 +311,47 @@ local function BuildStops(rows, stepMap)
     end
     if hub then cx, cy = hub.x, hub.y end
   end
+  -- Distance to a stop: to its nearest spawn for mob areas, else to the NPC. Returns the point too.
+  local function Dist(s, x, y)
+    local bx, by = s.cx or s.x, s.cy or s.y
+    if not x then return 0, bx, by end
+    local bd = (bx - x) ^ 2 + (by - y) ^ 2
+    if s.pts then
+      for k = 1, #s.pts - 1, 2 do
+        local u, v = s.pts[k], s.pts[k + 1]
+        local d = (u - x) ^ 2 + (v - y) ^ 2
+        if d < bd then bd, bx, by = d, u, v end
+      end
+    end
+    return bd, bx, by
+  end
+
+  -- Finish what you've started before anything new; distance only decides within a tier.
+  --   tier 0: the quest you're making progress on right now (its count went up last)
+  --   tier 1: a quest whose mobs are around you (within ~5% of one of its spawns)
+  --   tier 2: other quests you've already started (some progress, not done)
+  --   tier 3: everything else (pick-ups, untouched quests, hand-ins), nearest first
+  for _, s in ipairs(here) do
+    s.tier = 3
+    for _, a in ipairs(s.actions) do
+      if a.kind ~= "get" and a.row.started and s.tier > 2 then s.tier = 2 end
+      if a.kind ~= "get" and current and a.row.id == current then s.tier = 0 end
+    end
+    if s.area and pm == stepMap and s.tier > 1 then
+      local d = Dist(s, px, py)
+      if d <= 25 then s.tier = 1 end
+    end
+  end
   local ordered = {}
   while #here > 0 do
-    local bi, bd = 1, math.huge
+    local bi, bt, bd, bx, by = 1, math.huge, math.huge, nil, nil
     for i, s in ipairs(here) do
-      local d = cx and ((s.x - cx) ^ 2 + (s.y - cy) ^ 2) or 0
-      if s.area then d = d + 4 end -- hand-ins and pick-ups at the same distance go first
-      if d < bd then bi, bd = i, d end
+      local d, px2, py2 = Dist(s, cx, cy)
+      if s.area and s.tier == 3 then d = d + 4 end -- same distance: hand-ins and pick-ups first
+      if s.tier < bt or (s.tier == bt and d < bd) then bi, bt, bd, bx, by = i, s.tier, d, px2, py2 end
     end
     local s = table.remove(here, bi)
+    if s.area and bx then s.x, s.y = bx, by end -- pin, arrow and line go to the nearest part
     ordered[#ordered + 1] = s
     cx, cy = s.x, s.y
   end
@@ -340,7 +404,24 @@ function ns.Recompute()
   if idx < 1 then idx = 1 elseif idx > #ns.steps then idx = #ns.steps end
   local step = ns.steps[idx]
   local rows, counts = ScanStep(step, level)
-  local stops, loose, start = BuildStops(rows, step.map)
+  -- Which quests are started, and which one you're working on right now (its count just went up).
+  -- The "current" quest is remembered across reloads and stays first until it's done.
+  ns.lastProg = ns.lastProg or {}
+  for _, r in ipairs(rows) do
+    if r.s == LOG then
+      local have, need = ns.Progress(r.id)
+      r.started = have > 0 and have < need
+      local before = ns.lastProg[r.id]
+      if before and have > before then db.currentQuest = r.id end
+      ns.lastProg[r.id] = have
+    end
+  end
+  if db.currentQuest then
+    local still = false
+    for _, r in ipairs(rows) do if r.id == db.currentQuest and r.s == LOG then still = true end end
+    if not still then db.currentQuest = nil end -- finished, handed in or dropped
+  end
+  local stops, loose, start = BuildStops(rows, step.map, db.currentQuest)
   -- Quests in the log that this step's route doesn't cover (other zones etc.): the tracker still
   -- shows them, since it replaces Blizzard's.
   local inRoute = {}

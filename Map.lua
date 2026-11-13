@@ -234,7 +234,7 @@ local function Draw()
         local a = GetArea(ai, canvas)
         a:SetSize(s.r * 2 / 100 * w, s.r * 2 / 100 * h)
         a:ClearAllPoints()
-        local cx, cy = P(s.x, s.y)
+        local cx, cy = P(s.cx or s.x, s.cy or s.y) -- the whole area, not just the nearest spawn
         a:SetPoint("CENTER", canvas, "TOPLEFT", cx, cy)
         a:SetVertexColor(1, 0.45, 0, 0.3)
         a:Show()
