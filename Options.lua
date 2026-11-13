@@ -161,7 +161,12 @@ local function Build()
   local unskipB = Button(f, "Un-skip all", 100, function() ns.UnskipAll(); O.Refresh() end,
     "Brings every quest you skipped (right-click a stop > Skip) back into the route.")
   unskipB:SetPoint("TOPLEFT", PAD + 170, y)
-  y = y - 34
+  y = y - 30
+  Check(f, y, "Learn quest counts and flight times", "Notes each quest's real objective counts and how long flights take, so the route planner uses real numbers instead of averages. Only facts about the game - never your pace. Stays on your PC.",
+    "noLearn", true, "route"); y = y - 22
+  f.learnText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  f.learnText:SetPoint("TOPLEFT", PAD + 30, y)
+  y = y - 22
   Header(f, y, "Tracker"); y = y - 22
   Check(f, y, "Show the route tracker", "The step and its stops, where Blizzard's objective tracker normally sits.", "noTracker", true, "tracker"); y = y - 26
   Check(f, y, "Hide Blizzard's objective tracker", "The route tracker replaces it. Untick to get Blizzard's back.", "keepBlizzard", true, "blizzard"); y = y - 40
@@ -226,6 +231,7 @@ function O.Refresh()
   for _, c in ipairs(controls) do if c.refresh then c.refresh() end end
   local n = ns.SkipCount()
   win.skipText:SetText(n > 0 and (n .. (n == 1 and " quest skipped" or " quests skipped")) or "No quests skipped")
+  if win.learnText and ns.Learn then win.learnText:SetText(ns.db.noLearn and "Off." or ns.Learn.Summary()) end
   local r = ns.route
   if r and r.step then
     win.stepText:SetText(("|cffffd100Step %d/%d:|r %s (%d-%d)%s"):format(r.idx, #ns.steps, r.step.name,

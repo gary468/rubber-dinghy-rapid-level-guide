@@ -23,6 +23,9 @@ MINUTES = float(sys.argv[sys.argv.index("--minutes") + 1]) if "--minutes" in sys
 FORCE = set(n.strip() for n in sys.argv[sys.argv.index("--force") + 1].split(",")) if "--force" in sys.argv else set()
 steps, quests, track, base = R.load(DATA, WOW)
 meta = {int(k): v for k, v in json.load(open(QMETA)).items()}
+import os as _os
+_learned = R.apply_learned(meta, _os.path.join(_os.path.dirname(_os.path.abspath(QMETA)), "learned.json"))
+if _learned: print(f"using {_learned} real objective counts learned in game", flush=True)
 dungeons = {d["name"]: d for d in R.load_dungeons(WOW)}
 WORTH_LEVELS = 9
 ALL_ALLIANCE = 1 | 4 | 8 | 64

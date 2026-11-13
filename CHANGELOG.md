@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.15
+- **Learns quest counts and flight times as you play** (settings > Route, on by default). It notes
+  each quest's real objective counts (Questie's data has none, so the planner guessed) and how long
+  flights take. The next route rebuild uses them. Only facts about the game, never your pace: the
+  route stays planned for efficient play. Stored on your PC only.
+
 ## v1.0.14
 - **Re-routes from where you are.** As you move (a few % of the map, or into another zone), the route
   re-plans from your spot.

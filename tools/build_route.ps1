@@ -18,6 +18,8 @@ $root = Split-Path -Parent $tools
 python -I "$tools\decode.py" $WoW "$tools\data.json"
 python -I "$tools\gen_route.py" $tools $WoW "$tools\Data_zones.lua"
 Push-Location $tools
+# What the addon learned in game (real objective counts, flight times) - facts, never your pace.
+& $LupaPython "$tools\learn.py" $WoW "$tools\learned.json"
 & $LupaPython "$tools\plan_route.py" "$tools\Data_zones.lua" $WoW "$tools\plan_greedy.json" "$tools\qmeta.json"
 $seeds = @("$tools\plan_greedy.json")
 if (Test-Path "$tools\plan.json") { $seeds += "$tools\plan.json" }

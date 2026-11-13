@@ -19,6 +19,9 @@ DATA, WOW, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 QMETA = sys.argv[4] if len(sys.argv) > 4 else os.path.join(os.path.dirname(OUT), "qmeta.json")
 steps, quests, track, base = R.load(DATA, WOW)
 meta = {int(k): v for k, v in json.load(open(QMETA)).items()}
+import os as _os
+_learned = R.apply_learned(meta, _os.path.join(_os.path.dirname(_os.path.abspath(QMETA)), "learned.json"))
+if _learned: print(f"using {_learned} real objective counts learned in game", flush=True)
 DUNGEONS_ON = os.environ.get("DUNGEONS", "1") == "1"
 dungeons = R.load_dungeons(WOW) if DUNGEONS_ON else []
 WORTH_LEVELS = 9               # never consider quests this far below you

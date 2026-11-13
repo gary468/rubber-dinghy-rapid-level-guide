@@ -149,13 +149,39 @@ def grind_xph(lv):
     return 3600.0 / KILL_S * mob_xp(lv)
 
 
+ITEM_KILLS = 1.5          # kills per quest item that drops (Classic drop rates are ~50-80%)
+
+
 def quest_cost(meta, lv):
-    """(seconds, kill XP) to do one quest's objectives at level lv, from its objective types."""
+    """(seconds, kill XP) to do one quest's objectives at level lv. Uses the real counts learned in
+    game ("cnt": kills, items, objects) when there are some, else Classic averages per objective type."""
     m = meta or {}
-    kills = (m.get("c", 0) * KILLS["creature"] + m.get("i", 0) * KILLS["item_drop"]
-             + m.get("k", 0) * KILLS["killcredit"])
-    objs = m.get("o", 0) * OBJECTS
+    cnt = m.get("cnt")
+    if cnt:
+        drops = bool(m.get("i"))                     # QuestieDB: the items drop from mobs
+        kills = cnt.get("m", 0) + (cnt.get("i", 0) * ITEM_KILLS if drops else 0)
+        objs = cnt.get("o", 0) + (0 if drops else cnt.get("i", 0))   # items not from mobs: picked up
+    else:
+        kills = (m.get("c", 0) * KILLS["creature"] + m.get("i", 0) * KILLS["item_drop"]
+                 + m.get("k", 0) * KILLS["killcredit"])
+        objs = m.get("o", 0) * OBJECTS
     return QUEST_BASE_S + kills * KILL_S + objs * OBJECT_S, kills * mob_xp(lv)
+
+
+def apply_learned(meta, path):
+    """Fold tools/learned.json (from tools/learn.py) into the model: real objective counts per quest,
+    and real flight times. Never the player's own pace."""
+    import json, os
+    global HOP_SAME_S
+    if not os.path.exists(path): return 0
+    data = json.load(open(path))
+    n = 0
+    for qid, c in data.get("counts", {}).items():
+        meta.setdefault(int(qid), {})["cnt"] = c
+        n += 1
+    if data.get("flight_s"):
+        HOP_SAME_S = float(data["flight_s"]) + 90   # + getting to and from the flight master
+    return n
 
 
 def hop_s(a, b):
