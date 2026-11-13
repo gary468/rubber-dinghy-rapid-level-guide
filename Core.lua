@@ -351,10 +351,11 @@ end
 local STAY_LEVELS = 5
 --- The dungeon you're inside, as the route names it (the journal addon maps the game's instance
 --- names, e.g. "The Temple of Atal'Hakkar" -> "Sunken Temple"), or nil.
-local INSTANCE_DUNGEON = { -- instance map ID -> route dungeon name (Classic IDs)
+-- Instance map IDs that name exactly one route dungeon (Classic IDs). Multi-wing places (Dire Maul,
+-- Stratholme, Scarlet Monastery) share an ID or a name, so they're matched by wing below.
+local INSTANCE_DUNGEON = {
   [70] = "Uldaman", [209] = "Zul'Farrak", [349] = "Maraudon", [109] = "Sunken Temple",
-  [230] = "Blackrock Depths", [229] = "Lower Blackrock Spire", [329] = "Stratholme", [289] = "Scholomance",
-  [429] = "Dire Maul",
+  [230] = "Blackrock Depths", [229] = "Lower Blackrock Spire", [289] = "Scholomance",
 }
 local INSTANCE_NAME = { ["The Temple of Atal'Hakkar"] = "Sunken Temple", ["Temple of Atal'Hakkar"] = "Sunken Temple" }
 function ns.CurrentDungeon()
@@ -371,17 +372,54 @@ function ns.CurrentDungeon()
   return name
 end
 
-local function AutoStep(level)
-  -- Inside a dungeon on the route: its step.
-  local dn = ns.CurrentDungeon()
-  if dn then
-    for i, step in ipairs(ns.steps) do
-      if step.dungeon and (step.dungeon == dn or dn:find(step.dungeon, 1, true) or step.dungeon:find(dn, 1, true)) then
-        return i
-      end
+-- The step for the dungeon you're in. An exact name wins; for a multi-wing place ("Dire Maul" ->
+-- "Dire Maul: East/West/North") the wing you chose and carry quests for, else the first chosen wing.
+local function DungeonStepFor(dn, level)
+  local exact, wings = nil, {}
+  for i, step in ipairs(ns.steps) do
+    if step.dungeon == dn then exact = i end
+    if step.dungeon and step.dungeon:find(dn .. ":", 1, true) == 1 then wings[#wings + 1] = i end
+  end
+  if exact then return exact end
+  local first
+  for _, i in ipairs(wings) do
+    local step = ns.steps[i]
+    if ns.DungeonOn(step.dungeon) then
+      local _, c = ScanStep(step, level)
+      if c[READY] + c[LOG] > 0 then return i end
+      first = first or i
     end
   end
-  -- The zone you're standing in wins if you still have its quests on the go.
+  return first or wings[1]
+end
+
+-- Current step:
+--   1. inside a dungeon: its step;
+--   2. just finished getting ready for a dungeon: that dungeon, while you carry its quests;
+--   3. the zone you're standing in, while you have its quests on the go;
+--   4. a chosen dungeon whose quests you carry (you're on your way there);
+--   5. a zone visit around your level you've just arrived in, if it has quests to pick up;
+--   6. else the first step with work left you haven't out-levelled; if you're a little under-levelled
+--      for everything ahead, the first step whose quests open within two levels.
+-- A step with quests in your log stays current for up to 5 levels past its range, so a level-up
+-- from hand-ins doesn't send you off with quests half done.
+local STAY_LEVELS = 5
+local function AutoStep(level)
+  local dn = ns.CurrentDungeon()
+  if dn then
+    local i = DungeonStepFor(dn, level)
+    if i then return i end
+  end
+  local go = ns.db and ns.db.goDungeon
+  if go then
+    for i, step in ipairs(ns.steps) do
+      if step.dungeon == go then
+        local _, c = ScanStep(step, level)
+        if c[READY] + c[LOG] > 0 and ns.DungeonOn(go) then return i end
+      end
+    end
+    ns.db.goDungeon = nil   -- done (or dropped): back to the normal route
+  end
   local pm = ns.HerePos()
   if pm then
     for i, step in ipairs(ns.steps) do
@@ -390,16 +428,12 @@ local function AutoStep(level)
         if c[READY] + c[LOG] > 0 then return i end
       end
     end
-    -- Carrying a dungeon's quests: that dungeon's step (you're on your way there, e.g. flying into
-    -- Blasted Lands for the Temple of Atal'Hakkar), before any zone you happen to pass through.
     for i, step in ipairs(ns.steps) do
       if step.dungeon and not ns.DungeonOff(step.dungeon) and level <= step.to + STAY_LEVELS then
         local _, c = ScanStep(step, level)
         if c[READY] + c[LOG] > 0 then return i end
       end
     end
-    -- You've arrived in a zone the route visits around your level (e.g. you flew in): that visit,
-    -- if it has quests for you to pick up - rather than sending you back somewhere else.
     for i, step in ipairs(ns.steps) do
       if step.map == pm and not step.dungeon and level >= step.from - 2 and level <= step.to + 2 then
         local _, c = ScanStep(step, level)
@@ -407,22 +441,23 @@ local function AutoStep(level)
       end
     end
   end
+  local soon
   for i, step in ipairs(ns.steps) do
-    -- A grind step (nothing left that beats killing mobs) is current while you're in its levels.
     if step.grind and level >= step.from and level < step.to then return i end
     if step.dungeon and ns.DungeonOff(step.dungeon) then
-      -- skipped dungeon: never the automatic step
+      -- not a chosen dungeon: never the automatic step
     elseif level <= step.to + STAY_LEVELS then
       local _, c = ScanStep(step, level)
       if c[READY] + c[LOG] > 0 then return i end
-      -- Planned visits have tight level windows; allow one level of slack so a little extra XP
-      -- doesn't skip a visit you haven't done yet.
-      if level <= step.to + 1 and c[OPEN] + c[SOON] > 0 then return i end
+      -- one level of slack, so a little extra XP doesn't skip a visit you haven't done yet
+      if level <= step.to + 1 and c[OPEN] > 0 then return i end
+      -- quests only a level or two away don't hold a step on their own (no stops to show)...
+      if not soon and level <= step.to + 1 and c[SOON] > 0 then soon = i end
     end
   end
-  return #ns.steps
+  -- ...unless there's nothing open anywhere ahead: then the step that opens next
+  return soon or #ns.steps
 end
-
 ---------------------------------------------------------------------------
 -- Routing: rows -> stops -> nearest-first order
 ---------------------------------------------------------------------------
@@ -599,14 +634,21 @@ end
 ns.route = { stops = {}, loose = {}, counts = { 0, 0, 0, 0, 0, 0, 0, 0 } }
 
 function ns.Recompute()
-  local level = UnitLevel("player") or 1
   local db = ns.db
-  -- "Get ready for <dungeon>": the prep route replaces the step until you go back to the route.
+  if not db or ns.disabled then return end   -- not logged in yet, or a Horde character
+  local level = UnitLevel("player") or 1
+  -- "Get ready for <dungeon>": the side route replaces the step until it's done or you leave it.
   if db.prep and ns.Prep then
     local ok, r = pcall(ns.Prep.Route, db.prep, level)
     if ok and r and r.allReady then
-      -- every quest you can get for it is picked up: the side route is done, on to the dungeon
+      -- every quest you can get for it is in your log: done - on to the dungeon
       ns.Print(("ready for %s: you have every quest you can get for it. The route now takes you there."):format(db.prep))
+      db.goDungeon, db.prep, db.step = db.prep, nil, nil
+      ok, r = true, nil
+      if ns.Options and ns.Options.RefreshDungeons then ns.Safe("Options", ns.Options.RefreshDungeons) end
+    elseif not ok or not r then
+      -- broken or unknown dungeon (e.g. renamed in an update): leave the side route
+      ns.errors.Prep = ok and ("no dungeon called " .. tostring(db.prep)) or tostring(r)
       db.prep = nil
       ok, r = true, nil
     end
@@ -614,8 +656,6 @@ function ns.Recompute()
       ns.route = r
       for name, fn in pairs(ns.listeners) do ns.Safe(name, fn, ns.route) end
       return
-    elseif not ok then
-      ns.errors.Prep = tostring(r)
     end
   end
   local idx = db.step or AutoStep(level)
@@ -676,6 +716,7 @@ function ns.Queue()
 end
 
 function ns.Step(delta)
+  ns.db.prep = nil    -- changing step leaves a get-ready side route
   local cur = ns.db.step or AutoStep(UnitLevel("player") or 1)
   local n = cur + delta
   if n < 1 then n = 1 elseif n > #ns.steps then n = #ns.steps end
@@ -684,7 +725,7 @@ function ns.Step(delta)
 end
 
 function ns.Auto()
-  ns.db.step = nil
+  ns.db.step, ns.db.prep = nil, nil
   ns.Recompute()
 end
 
@@ -749,6 +790,10 @@ ev:SetScript("OnEvent", function(_, event, arg1)
     end
     RubberDinghyDB = RubberDinghyDB or {}
     ns.db = RubberDinghyDB
+    -- Older versions: "skip dungeon quests" / "skip all dungeons". Dungeons are opt-in now, so the
+    -- old switch just goes (it would otherwise turn dungeons back on when one is ticked).
+    if ns.db.skipDungeons and not ns.db.dungeonsV2 then ns.db.skipDungeons, ns.db.dungeons = nil, {} end
+    ns.db.dungeonsV2 = true
     ReadPlayerBits()
     if hooksecurefunc and TakeTaxiNode then hooksecurefunc("TakeTaxiNode", function(slot) ns.Safe("Taxi", OnTakeTaxi, slot) end) end
     for name, fn in pairs(ns.inits) do ns.Safe(name, fn) end

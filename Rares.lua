@@ -23,7 +23,14 @@ local current                 -- { name=, kind=, at= }
 local pending                 -- alert waiting for combat to end before the button can change
 local btn
 
-local function Enabled() return ns.db and not ns.db.noRares and not ns.disabled end
+-- Off inside dungeons and raids: there "slain: 0/1" targets are bosses, and the skull would fight the
+-- tank's marks (with a raid-warning sound on every pull).
+local function InInstance()
+  if not IsInInstance then return false end
+  local inside, kind = IsInInstance()
+  return inside and (kind == "party" or kind == "raid")
+end
+local function Enabled() return ns.db and not ns.db.noRares and not ns.disabled and not InInstance() end
 local function InCombat() return InCombatLockdown and InCombatLockdown() end
 
 ---------------------------------------------------------------------------
@@ -200,6 +207,11 @@ local function CheckVignette(id)
   if seen[info.name] and now - seen[info.name] < REALERT then return end
   seen[info.name] = now
   Alert(info.name, "Rare")
+end
+
+--- "Reset positions": the Target button back to its default spot.
+function R.ResetPos()
+  if btn and not InCombat() then Place() end
 end
 
 function R.Refresh()

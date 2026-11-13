@@ -116,7 +116,13 @@ local function Apply()
         -- The tracker may be scaled; convert its coordinates to UIParent's.
         local k = (tracker:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
         b:SetSize(SIZE * k, SIZE * k)
-        b:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", left * k - 4 - dx * k, (top - slot.y) * k)
+        -- Tracker docked at the left edge: put the buttons on its right instead (no room on the left).
+        local right = tracker:GetRight()
+        if left * k < (SIZE + 6) * k * 2 and right then
+          b:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", right * k + 4 + dx * k, (top - slot.y) * k)
+        else
+          b:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", left * k - 4 - dx * k, (top - slot.y) * k)
+        end
         b:Show()
       end
     end
@@ -138,7 +144,7 @@ ev:SetScript("OnEvent", function(_, event)
   elseif event == "BAG_UPDATE_COOLDOWN" then
     for _, b in ipairs(pool) do if b.itemId and b:IsShown() then UpdateButtonState(b) end end
   elseif event == "BAG_UPDATE_DELAYED" or event == "BAG_UPDATE" then
-    ns.Queue() -- an item may have appeared or run out
+    if ns.db and not ns.disabled then ns.Queue() end -- an item may have appeared or run out
   end
 end)
 ev:RegisterEvent("BAG_UPDATE_COOLDOWN")

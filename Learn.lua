@@ -29,6 +29,13 @@ local function RecordObjectives(id)
   if not (C_QuestLog and C_QuestLog.GetQuestObjectives) then return end
   local objs = C_QuestLog.GetQuestObjectives(id)
   if not objs then return end
+  -- No objectives may just mean the data hasn't loaded yet: only believe "talk/deliver" (empty)
+  -- after seeing it empty on a later scan too.
+  if #objs == 0 then
+    d.empty = d.empty or {}
+    d.empty[id] = (d.empty[id] or 0) + 1
+    if d.empty[id] < 3 then return end
+  end
   local parts = {}
   for _, o in ipairs(objs) do
     local need = o.numRequired

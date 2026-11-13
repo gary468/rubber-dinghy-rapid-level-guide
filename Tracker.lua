@@ -67,6 +67,7 @@ local function NewLine()
   b.check = b:CreateTexture(nil, "ARTWORK")
   b.check:SetSize(12, 12)
   b.hasCheck = ns.SetAtlasOr(b.check, CHECK, nil) ~= nil
+  b.isRDLine = true
   b.text = b:CreateFontString(nil, "OVERLAY", LINE_FONT)
   b.text:SetJustifyH("LEFT")
   b.text:SetWordWrap(true)
@@ -146,11 +147,15 @@ end
 ---------------------------------------------------------------------------
 local GOLD, WHITE, GREY, GREEN = { 1, 0.82, 0 }, { 1, 1, 1 }, { 0.6, 0.6, 0.6 }, { 0.2, 1, 0.2 }
 
+local blizzHidden
 local function Render(r)
-  if not frame then return end
+  if not frame or not r or not r.step then return end   -- nothing to show yet (e.g. during start-up)
   used, y = 0, 0
   local db = ns.db
   frame:SetShown(not db.noTracker or db.unlocked)
+  -- Blizzard's tracker is hidden only while ours is showing (hide ours: you get Blizzard's back)
+  local wantHidden = not db.keepBlizzard and not db.noTracker
+  if wantHidden ~= blizzHidden then blizzHidden = wantHidden; SetBlizzHidden(wantHidden) end
   collapseBtn:SetCollapsed(db.collapsed)
   local slots = {} -- where quest item buttons go: {qid=, y=pixels below the tracker top}
   local function Slot(qid) slots[#slots + 1] = { qid = qid, y = header:GetHeight() + 4 + y } end
@@ -160,10 +165,13 @@ local function Render(r)
     if ns.Items then ns.Safe("Items", ns.Items.Place, slots, frame) end
     return
   end
+  -- never taller than the screen below the tracker's top
   local maxH = db.maxHeight or 620
+  local top = frame:GetTop()
+  if top and top > 200 then maxH = math.min(maxH, top - 70) end
   local step = r.step
   local range = step.from == step.to and tostring(step.from) or (step.from .. "-" .. step.to)
-  Add(("Step %d/%d: %s (%s)%s"):format(r.idx, #ns.steps, step.name, range, r.manual and " - manual" or ""),
+  Add(("Step %d/%d: %s (%s)%s"):format(r.idx, #ns.steps, step.name, range, (r.manual and not r.prep) and " - manual" or ""),
     { font = HEADER_FONT, color = GOLD, bg = MODULE_BG, height = 22, gap = 2,
       tip = "Leveling route step. Use < and > in the header to change step, A for automatic." })
   local goTo = (r.inZone or step.dungeon or step.grind) and "" or ("Go to " .. step.name .. ". ")
@@ -316,6 +324,14 @@ local function Render(r)
   end
 
   for i = used + 1, #pool do pool[i]:Hide() end
+  -- Lines are reused on every update: a tooltip or skip menu opened on one must follow (or go).
+  local owner = GameTooltip.IsShown and GameTooltip:IsShown() and GameTooltip.GetOwner and GameTooltip:GetOwner()
+  if owner and owner.isRDLine then
+    if owner:IsShown() and owner.IsMouseOver and owner:IsMouseOver() then
+      local fn = owner:GetScript("OnEnter"); if fn then fn(owner) end
+    else GameTooltip:Hide() end
+  end
+  if T.MenuStale then T.MenuStale(r) end
   body:SetHeight(math.max(1, y))
   frame:SetHeight(header:GetHeight() + y + 4)
   if ns.Items then ns.Safe("Items", ns.Items.Place, slots, frame) end
@@ -470,7 +486,8 @@ local function Init()
   T.ApplyScale()
   if ns.db.unlocked then T.SetMoveMode(true) end
 
-  if not ns.db.keepBlizzard then SetBlizzHidden(true) end
+  blizzHidden = not ns.db.keepBlizzard and not ns.db.noTracker
+  if blizzHidden then SetBlizzHidden(true) end
   if Questie and Questie.db and Questie.db.profile and Questie.db.profile.trackerEnabled and not ns.db.toldQuestie then
     ns.db.toldQuestie = true
     ns.Print("Questie's tracker is also on and sits in the same spot. Turn it off in Questie's options "
@@ -526,6 +543,7 @@ function T.SkipMenu(stop, anchor)
   end
   for _, it in ipairs(menu.items) do it:Hide() end
   menu.title:SetText(stop.index .. ". " .. ns.StopTitle(stop))
+  menu.stopKey = stop.map .. ":" .. tostring(stop.name)
   local entries = {}
   if #stop.actions > 1 then
     entries[#entries + 1] = { text = ("Skip this stop (%d quests)"):format(#stop.actions),
@@ -563,9 +581,18 @@ function T.SkipMenu(stop, anchor)
   menu:SetPoint("TOPRIGHT", anchor, "TOPLEFT", -6, 0)
   menu:Show()
 end
+--- After a re-plan: close the skip menu if its stop is gone (its numbers would be wrong).
+function T.MenuStale(r)
+  if not (menu and menu:IsShown() and menu.stopKey) then return end
+  for _, s in ipairs(r.stops or {}) do
+    if (s.map .. ":" .. tostring(s.name)) == menu.stopKey then return end
+  end
+  menu:Hide()
+end
 function T.SetKeepBlizzard(keep)
   ns.db.keepBlizzard = keep and true or nil
-  SetBlizzHidden(not keep)
+  blizzHidden = not keep and not ns.db.noTracker
+  SetBlizzHidden(blizzHidden)
 end
 
 ns.commands.tracker = function()
@@ -586,6 +613,7 @@ ns.commands.reset = function()
   T.ApplyScale()
   Anchor()
   if ns.Arrow then ns.Arrow.Reset() end
+  if ns.Rares and ns.Rares.ResetPos then ns.Safe("Rares", ns.Rares.ResetPos) end
   ns.Queue()
   ns.Print("tracker and arrow are back in their default places and sizes.")
 end

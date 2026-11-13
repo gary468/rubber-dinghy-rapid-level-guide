@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.0.17 - fixes from a full review
+- **Fixes:**
+  - The tracker failed to start after a /reload while it was unlocked for moving.
+  - No more freezes while riding on a get-ready route: it re-plans when you change zone or your quests
+    change, not every time you move.
+  - A get-ready route no longer says "ready" when it simply can't reach anything yet. It stays and
+    shows why ("Not yet: ... opens at level 52"), and ends only when you hold everything you can get.
+  - Get-ready respects your quest log: when it's full, it says so instead of getting stuck on "Get: X".
+  - Get-ready no longer sends you to a lead-in quest meant for another race or class.
+  - The world map shows a get-ready route's stops in whichever zone you open, not just one.
+  - Dire Maul, Stratholme and Scarlet Monastery: the step for the wing you're actually doing.
+  - After a get-ready route finishes, the route really takes you to the dungeon.
+  - A step no longer holds you with nothing to do when you're a level or two short.
+  - Rare alerts are off inside dungeons (no re-skulling bosses over the tank's marks).
+  - The step buttons (< A >) now leave a get-ready route.
+  - Hiding the route tracker brings Blizzard's tracker back.
+  - The old "skip dungeon quests" setting is cleared (dungeons are opt-in now).
+  - No more error on looting for Horde characters.
+- **UI:**
+  - The Dungeons window opens beside the settings window, not over it.
+  - The step text in settings no longer runs into the buttons.
+  - The tracker is never taller than the screen.
+  - Tooltips and the skip menu follow the route when it changes.
+  - Reset positions also resets the rare Target button.
+  - Quest item buttons move to the tracker's right when it's docked at the left edge.
 ## v1.0.16
 - **The route is planned on XP against location only**: every quest that isn't grey, in the order that
   needs the least riding, flying and sailing. Quest and kill times aren't used. In theory: 568 quests,

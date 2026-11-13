@@ -138,7 +138,8 @@ local function Build()
   icon:SetPoint("TOPLEFT", PAD, -32)
   f.stepText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   f.stepText:SetPoint("TOPLEFT", icon, "TOPRIGHT", 10, -2)
-  f.stepText:SetWidth(W - 2 * PAD - 50)
+  f.stepText:SetWidth(2 * W - 2 * PAD - 60)   -- full width: long step names stay on one line
+  if f.stepText.SetWordWrap then f.stepText:SetWordWrap(false) end
   f.stepText:SetJustifyH("LEFT")
   local prevB = Button(f, "<", 30, function() ns.Step(-1) end, "Previous step")
   prevB:SetPoint("TOPLEFT", icon, "BOTTOMRIGHT", 10, 16)
@@ -150,10 +151,8 @@ local function Build()
   COLX = 0
   local y = -92
   Header(f, y, "Route"); y = y - 22
-  Check(f, y, "Skip all dungeons", "No dungeon steps or dungeon quests in the route. If you accept one anyway, it's still tracked.",
-    "skipDungeons", false, "route"); y = y - 26
   local pickB = Button(f, "Dungeons & get ready...", 180, function() O.ToggleDungeons() end,
-    "Tick the dungeons you want in your route, or click Get ready next to one for a route through all its quest chains and pick-ups.")
+    "No dungeons are in the route until you choose them. Tick one to add it (a side route collects its quests first), or click Get ready for that side route alone.")
   pickB:SetPoint("TOPLEFT", PAD + 4, y)
   y = y - 32
   f.skipText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -269,10 +268,11 @@ ns.inits.Options = function()
   ns.Safe("OptionsPanel", RegisterBlizzardPanel)
 end
 ns.listeners.Options = function() if win and win:IsShown() then O.Refresh() end end
-ns.commands.skipdungeons = function()
-  ns.db.skipDungeons = not ns.db.skipDungeons or nil
-  ns.Print("dungeon quests " .. (ns.db.skipDungeons and "skipped" or "back in the route"))
+ns.commands.skipdungeons = function()   -- every dungeon out of the route (they're opt-in)
+  ns.db.dungeons, ns.db.prep, ns.db.skipDungeons = {}, nil, nil
+  ns.Print("no dungeons in the route. Choose them in Dungeons (settings).")
   ns.Recompute()
+  O.RefreshDungeons()
 end
 ns.commands.options = function() O.Toggle() end
 ns.commands.settings = ns.commands.options
@@ -367,7 +367,13 @@ local function PlaceDungeons()
   if p then
     dwin:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", p[1], p[2])
   elseif win and win:IsShown() then
-    dwin:SetPoint("TOPLEFT", win, "TOPRIGHT", 6, 0)
+    -- beside the settings window, on whichever side has room (never on top of it)
+    local sw = UIParent:GetWidth() or 1920
+    local wr, wl = win:GetRight() or 0, win:GetLeft() or 0
+    local dw = dwin:GetWidth() or 660
+    if wr + 6 + dw <= sw then dwin:SetPoint("TOPLEFT", win, "TOPRIGHT", 6, 0)
+    elseif wl - 6 - dw >= 0 then dwin:SetPoint("TOPRIGHT", win, "TOPLEFT", -6, 0)
+    else dwin:SetPoint("TOP", win, "BOTTOM", 0, -6) end
   else
     dwin:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 40, -140)
   end

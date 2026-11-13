@@ -258,9 +258,11 @@ local function Draw()
   local canvas = Canvas()
   if not canvas or not WorldMapFrame:IsShown() then return end
   local cur = WorldMapFrame:GetMapID()
-  local step = route.step
-  local onStep = step and cur == step.map
-  local hlHere = hlStop and hlStop.away and hlStop.map == cur
+  -- Draw whichever of the route's stops are on the map you're looking at (a get-ready route spans
+  -- several zones; its stops in another zone show when you open that zone).
+  local onStep = false
+  for _, s in ipairs(route.stops or {}) do if s.map == cur then onStep = true; break end end
+  local hlHere = hlStop and hlStop.map == cur and not onStep
   if not onStep and not hlHere then return end
   local w, h = canvas:GetWidth(), canvas:GetHeight()
   if not w or w == 0 then return end
@@ -274,7 +276,8 @@ local function Draw()
 
   local li, ai, first = 0, 0, true
   local prevX, prevY
-  if route.start then prevX, prevY = route.start[1], route.start[2] end
+  local pmNow, pxNow, pyNow = ns.PlayerPos()
+  if pmNow == cur and pxNow then prevX, prevY = pxNow, pyNow end   -- the line starts at you
   local hasArea = QuestsWithAreas(cur)
   local mode = ns.db.areaMode or "next"
   local areasLeft = (mode == "all") and 99 or (mode == "off" and 0) or 1
@@ -284,7 +287,7 @@ local function Draw()
     bf:Show()
   end
   for _, s in ipairs(route.stops) do
-    if not s.away then
+    if s.map == cur then
       if prevX then
         li = li + 1
         local x1, y1 = P(prevX, prevY)

@@ -15,7 +15,7 @@ ns.Prep = P
 local HOP_SAME, HOP_OTHER, NO_COORDS, NO_LOC = 60, 160, 40, 250  -- map-% units
 local MAX_TASKS = 80
 local STRATEGIES = { 0, 0.5, 1, 2, 4 }   -- how strongly to favour zones with several tasks waiting
-local SEEDS = 12                         -- variations per strategy
+local SEEDS = 8                          -- variations per strategy
 
 ---------------------------------------------------------------------------
 -- Continents (for travel cost), from the game's own map tree
@@ -104,7 +104,8 @@ local function RealState(id)
 end
 
 -- One simulated run. weight: favour zones with several tasks waiting; rnd: tie-break noise (or nil).
-local function Run(targets, level, start, weight, rnd)
+-- logN/logMax: quests in your log now and how many it holds - pick-ups wait for room.
+local function Run(targets, level, start, weight, rnd, logN, logMax)
   local state, why, touched = {}, {}, {}
   local function St(id)
     touched[id] = true
@@ -127,6 +128,8 @@ local function Run(targets, level, start, weight, rnd)
     local q = ns.quests[id]
     -- You skipped it (right-click > Skip): its chain stops here.
     if skip[id] then why[id] = "skipped"; return nil end
+    -- Not for your race or class (e.g. one of several alternative lead-ins): not this way.
+    if q and ns.Status(id, level) == ns.S.NA then why[id] = "isn't for your race or class"; return nil end
     local s = St(id)
     if s == "done" or s == "held" then return nil end
     if s == "ready" then return q and { id = id, kind = "turn", loc = q.t } end
@@ -168,7 +171,7 @@ local function Run(targets, level, start, weight, rnd)
   end
 
   local pos = { map = start.map, x = start.x, y = start.y }
-  local tasks, total = {}, 0
+  local tasks, total, logFull = {}, 0, false
   for _ = 1, MAX_TASKS do
     -- what can be done next, one task per chain
     local cands, seenTask, perMap = {}, {}, {}
@@ -182,6 +185,13 @@ local function Run(targets, level, start, weight, rnd)
       end
     end
     if #cands == 0 then break end
+    -- a full quest log: only hand-ins and objectives until there's room for the next pick-up
+    if logN >= logMax then
+      local room = {}
+      for _, f in ipairs(cands) do if f.kind ~= "get" then room[#room + 1] = f end end
+      if #room == 0 then logFull = true; break end
+      cands = room
+    end
     local best, bestScore, bestCost
     for _, f in ipairs(cands) do
       local c = Cost(pos, f.loc)
@@ -196,14 +206,16 @@ local function Run(targets, level, start, weight, rnd)
     local q = ns.quests[best.id]
     if best.kind == "get" then
       state[best.id] = (q and q.d) and "held" or ((q and not q.ob) and "ready" or "log")
+      logN = logN + 1
     elseif best.kind == "do" or best.kind == "go" then
       state[best.id] = "ready"
     elseif best.kind == "turn" then
       state[best.id] = "done"
+      logN = logN - 1
     end
     if best.loc and best.loc[2] and best.loc[2] ~= 0 then pos = { map = best.loc[2], x = best.loc[3], y = best.loc[4] } end
   end
-  return tasks, total, state, why, touched
+  return tasks, total, state, why, touched, logFull
 end
 
 -- Small deterministic random numbers (same plan for the same situation).
@@ -228,13 +240,15 @@ function P.Plan(name, level)
   -- from where you are, or where your flight lands (PlayerPos is already in map %)
   local pm, px, py = ns.HerePos()
   local start = { map = pm, x = px, y = py }
+  local logN = #ns.QuestLog()
+  local logMax = (C_QuestLog and C_QuestLog.GetMaxNumQuestsCanAccept and C_QuestLog.GetMaxNumQuestsCanAccept()) or 20
   local best
   for si, w in ipairs(STRATEGIES) do
     for seed = 0, SEEDS - 1 do
       local rnd = seed > 0 and Rng(si * 1000 + seed) or nil
-      local tasks, total, state, why, touched = Run(targets, level, start, w, rnd)
+      local tasks, total, state, why, touched, logFull = Run(targets, level, start, w, rnd, logN, logMax)
       if not best or #tasks > #best.tasks or (#tasks == #best.tasks and total < best.total) then
-        best = { tasks = tasks, total = total, state = state, why = why, touched = touched }
+        best = { tasks = tasks, total = total, state = state, why = why, touched = touched, logFull = logFull }
       end
     end
   end
@@ -243,15 +257,17 @@ function P.Plan(name, level)
     if ns.LogIndex(t) > 0 then ready[#ready + 1] = t
     elseif not best.state[t] then stalled[#stalled + 1] = { id = t, why = best.why[t] or "needs an earlier quest you can't do yet" } end
   end
-  return { tasks = best.tasks, total = best.total, stalled = stalled, ready = ready, step = st, touched = best.touched }
+  return { tasks = best.tasks, total = best.total, stalled = stalled, ready = ready, step = st, touched = best.touched,
+           logFull = best.logFull, logN = logN, logMax = logMax }
 end
 
 -- Re-plan only when something it depends on changed (quest states, level, zone).
 local cache
 local function Signature(name, level, touched)
-  -- where you are, to ~8% of the map: moving on re-plans from your new spot
-  local m, x, y = ns.HerePos()
-  local parts = { name, level, m or 0, x and math.floor(x / 8) or -1, y and math.floor(y / 8) or -1 }
+  -- the zone you're in (or flying to): a new zone re-plans; moving around inside one doesn't
+  -- (that would re-plan every few seconds while riding)
+  local m = ns.HerePos()
+  local parts = { name, level, m or 0, #ns.QuestLog() }
   -- skipping or un-skipping a quest re-plans
   local sk = {}
   for id in pairs((ns.db and ns.db.skip) or {}) do sk[#sk + 1] = id end
@@ -300,11 +316,9 @@ function P.Route(name, level)
     end
   end
   for i, s in ipairs(stops) do s.index = i end
-  -- Everything picked up: off to the entrance.
-  if #stops == 0 and st.ent then
-    stops[1] = { map = st.ent[2], x = st.ent[3], y = st.ent[4], name = st.ent[1], area = false, index = 1,
-                 actions = {}, away = (st.ent[2] ~= pm), ready = true }
-  end
+  -- Ready = nothing left to do AND nothing out of reach AND no full log holding pick-ups back.
+  -- (Nothing doable but quests out of reach is "not yet", not "ready".)
+  local allReady = (#plan.tasks == 0) and (#plan.stalled == 0) and not plan.logFull
   local counts = { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
   -- The rest of your log stays listed under Other Quests.
   local inRoute, other = {}, {}
@@ -312,19 +326,24 @@ function P.Route(name, level)
   for _, e in ipairs(ns.QuestLog()) do if not inRoute[e.id] then other[#other + 1] = e end end
   local zones, lastMap = 0, nil
   for _, s in ipairs(stops) do if s.map ~= lastMap then zones = zones + 1; lastMap = s.map end end
+  local note
+  if plan.logFull then
+    note = ("Your quest log is full (%d/%d): hand in or drop a quest to pick up the rest."):format(plan.logN, plan.logMax)
+    if #plan.tasks > 0 then note = ("%d steps first. "):format(#plan.tasks) .. note end
+  elseif #plan.tasks > 0 then
+    note = ("%d steps across %d zone visits to pick up every %s quest you can, in the quickest order found. %d already in your log.")
+      :format(#plan.tasks, zones, name, #plan.ready)
+  else
+    note = ("Nothing more to pick up for %s yet - see \"Not yet\" below. You can still run it with what you have."):format(name)
+  end
   local pstep = {
     name = "Get ready: " .. name, from = st.from, to = st.to, map = (stops[1] and stops[1].map) or st.map,
-    quests = st.quests, dungeon = name, dj = st.dj, ent = st.ent, prep = true,
-    note = (#plan.tasks > 0)
-      and ("%d steps across %d zone visits to pick up every %s quest you can, in the quickest order found. %d already in your log.")
-        :format(#plan.tasks, zones, name, #plan.ready)
-      or ("Ready: every %s quest you can take is in your log. Head for the entrance."):format(name),
+    quests = st.quests, dungeon = name, dj = st.dj, ent = st.ent, prep = true, note = note,
   }
   return { level = level, idx = select(2, DungeonStep(name)) or 1, step = pstep, counts = counts, stops = stops,
-           loose = loose, stalled = plan.stalled, other = other, manual = true, inZone = (pm == pstep.map), prep = name,
-           allReady = (#plan.tasks == 0) }
+           loose = loose, stalled = plan.stalled, other = other, manual = false, inZone = (pm == pstep.map), prep = name,
+           allReady = allReady }
 end
-
 function ns.StartPrep(name)
   name = name or (ns.route and ns.route.step and ns.route.step.dungeon)
   if not name then ns.Print("pick a dungeon: /rdr prep Sunken Temple (or click \"Get ready\" on a dungeon step)."); return end
