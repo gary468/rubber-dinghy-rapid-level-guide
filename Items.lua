@@ -113,7 +113,10 @@ local function Apply()
         -- Anchored to UIParent, not the tracker, so the tracker itself never becomes protected.
         if slot.y == lastY then dx = dx + SIZE + 2 else dx = 0 end
         lastY = slot.y
-        b:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", left - 4 - dx, top - slot.y)
+        -- The tracker may be scaled; convert its coordinates to UIParent's.
+        local k = (tracker:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
+        b:SetSize(SIZE * k, SIZE * k)
+        b:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", left * k - 4 - dx * k, (top - slot.y) * k)
         b:Show()
       end
     end

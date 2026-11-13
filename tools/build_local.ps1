@@ -14,7 +14,8 @@ $dist = Join-Path $root "dist"
 $out = Join-Path $dist $name
 
 foreach ($lib in "LibStub\LibStub.lua", "CallbackHandler-1.0\CallbackHandler-1.0.lua",
-                 "HereBeDragons\HereBeDragons-2.0.lua", "HereBeDragons\HereBeDragons-Pins-2.0.lua") {
+                 "HereBeDragons\HereBeDragons-2.0.lua", "HereBeDragons\HereBeDragons-Pins-2.0.lua",
+                 "LibDataBroker-1.1\LibDataBroker-1.1.lua", "LibDBIcon-1.0\LibDBIcon-1.0.lua") {
   if (-not (Test-Path (Join-Path $root "Libs\$lib"))) { throw "Missing Libs\$lib - copy the libraries in first." }
 }
 
@@ -23,6 +24,8 @@ New-Item -ItemType Directory -Force $out | Out-Null
 Copy-Item (Join-Path $root "*.lua") $out
 Copy-Item (Join-Path $root "LICENSE.md"), (Join-Path $root "README.md"), (Join-Path $root "CHANGELOG.md") $out
 Copy-Item (Join-Path $root "Libs") (Join-Path $out "Libs") -Recurse
+New-Item -ItemType Directory -Force (Join-Path $out "media") | Out-Null
+Copy-Item (Join-Path $root "media\*.tga") (Join-Path $out "media")
 
 # The packager replaces @project-version@; do the same here. Write without a byte-order mark.
 $toc = [IO.File]::ReadAllText((Join-Path $root "$name.toc")).Replace("@project-version@", $Version)

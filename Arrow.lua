@@ -29,6 +29,13 @@ local function RadiusYards(s)
 end
 
 local function Update()
+  if ns.db.unlocked then
+    -- Move mode: always visible so it can be placed, pointing straight up.
+    frame:Show(); arrow:Show(); arrow:SetRotation(0); arrow:SetVertexColor(1, 1, 1)
+    title:SetText(target and (target.index .. ". " .. ns.StopTitle(target)) or "Arrow to the next stop")
+    dist:SetText("|cff66ccffdrag to move|r")
+    return
+  end
   if not target or ns.db.noArrow or not HBD then frame:Hide(); return end
   local px, py, pinst = HBD:GetPlayerWorldPosition()
   local tx, ty, tinst = HBD:GetWorldCoordinatesFromZone(target.x / 100, target.y / 100, target.map)
@@ -62,6 +69,11 @@ local function Init()
   frame:SetMovable(true)
   frame:RegisterForDrag("LeftButton")
   frame:SetScript("OnDragStart", function() if ns.db.unlocked then frame:StartMoving() end end)
+  -- Move mode highlight behind the arrow.
+  frame.hl = frame:CreateTexture(nil, "BACKGROUND")
+  frame.hl:SetAllPoints()
+  frame.hl:SetColorTexture(0.1, 0.6, 1, 0.25)
+  frame.hl:Hide()
   frame:SetScript("OnDragStop", function()
     frame:StopMovingOrSizing()
     local p, _, rp, x, y = frame:GetPoint(1)
@@ -92,11 +104,23 @@ local function Init()
 end
 
 function Arrow.SetUnlocked(on)
-  if frame then frame:EnableMouse(on and true or false) end
+  if not frame then return end
+  frame:EnableMouse(on and true or false)
+  frame.hl:SetShown(on and true or false)
+  Arrow.ApplyScale()
+  ns.Safe("Arrow", Update)
+end
+
+function Arrow.ApplyScale()
+  if frame then frame:SetScale(ns.db.arrowScale or 1) end
+end
+
+function Arrow.Refresh()
+  if frame then Arrow.ApplyScale(); ns.Safe("Arrow", Update) end
 end
 
 function Arrow.Reset()
-  if frame then Default() end
+  if frame then Arrow.ApplyScale(); Default() end
 end
 
 ns.inits.Arrow = Init

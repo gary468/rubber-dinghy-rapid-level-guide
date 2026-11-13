@@ -47,7 +47,10 @@ end
 -- for every in-progress quest on the route. Same QuestPOIFrame, textures and alphas as Blizzard's
 -- QuestBlobPinTemplate (NaowhForever's QuestAreaTint confirms these on Forever). Quests the game has
 -- no area data for keep our orange circle instead.
-local BLOB_FILL, BLOB_EDGE = "Interface\\WorldMap\\UI-QuestBlob-Inside", "Interface\\WorldMap\\UI-QuestBlob-Outside"
+-- Quest areas in the route's own gold (our 16x16 fill/edge textures, the same format NaowhForever's
+-- Quest Area Tint uses), drawn only for the next stops so the map reads as one route.
+local MEDIA = "Interface\\AddOns\\" .. ADDON .. "\\media\\"
+local AREA_FILL, AREA_EDGE = MEDIA .. "area_fill", MEDIA .. "area_edge"
 local blobFrame, blobOK
 local function Blob()
   if blobOK == false then return nil end
@@ -57,17 +60,54 @@ local function Blob()
     local ok, f = pcall(CreateFrame, "QuestPOIFrame", nil, canvas)
     if not ok or not f or not f.DrawBlob then blobOK = false; return nil end
     f:SetAllPoints(canvas)
-    pcall(function()
-      f:SetFillTexture(BLOB_FILL)
-      f:SetBorderTexture(BLOB_EDGE)
-      f:SetFillAlpha(128)
-      f:SetBorderAlpha(192)
-      f:SetBorderScalar(1.0)
-    end)
     blobFrame, blobOK = f, true
   end
+  local alpha = math.floor((ns.db.areaAlpha or 0.35) * 255 + 0.5)
+  pcall(function()
+    blobFrame:SetFillTexture(AREA_FILL)
+    blobFrame:SetBorderTexture(AREA_EDGE)
+    blobFrame:SetFillAlpha(alpha)
+    blobFrame:SetBorderAlpha(255)
+    blobFrame:SetBorderScalar(1.0)
+  end)
   blobFrame:SetFrameLevel(OVERLAY_LEVEL - 1) -- under our lines and pins, above the map tiles
   return blobFrame
+end
+
+-- Blizzard's own quest markers (the gold "..." / "?" circles and their blue areas) are hidden while
+-- the route is on, so our numbered stops are the quest markers. Pin templates are found at runtime
+-- (any map pin pool named like Quest...Pin / ...QuestBlob..., never quest offers or other addons'
+-- pins); /rdr mapdebug lists what was found.
+local suppressed = false
+local function BlizzQuestTemplates()
+  local list = {}
+  local pools = WorldMapFrame and WorldMapFrame.pinPools
+  if type(pools) == "table" then
+    for name in pairs(pools) do
+      if type(name) == "string" and (name:find("^Quest") or name:find("QuestBlob") or name:find("QuestPin"))
+        and not name:find("Offer") and not name:find("HereBeDragons") then
+        list[#list + 1] = name
+      end
+    end
+  end
+  return list
+end
+Map.BlizzQuestTemplates = BlizzQuestTemplates
+
+local function SuppressBlizzard()
+  if not (WorldMapFrame and WorldMapFrame.EnumeratePinsByTemplate) then return end
+  local on = ns.db and not ns.db.noMap and not ns.db.keepBlizzMap
+  if on then
+    for _, name in ipairs(BlizzQuestTemplates()) do
+      for pin in WorldMapFrame:EnumeratePinsByTemplate(name) do
+        if pin:IsShown() then pin:Hide() end
+      end
+    end
+    suppressed = true
+  elseif suppressed then
+    suppressed = false
+    if WorldMapFrame.RefreshAllDataProviders then pcall(WorldMapFrame.RefreshAllDataProviders, WorldMapFrame) end
+  end
 end
 
 local function QuestsWithAreas(mapID)
@@ -206,7 +246,9 @@ local function Draw()
   local prevX, prevY
   if route.start then prevX, prevY = route.start[1], route.start[2] end
   local hasArea = QuestsWithAreas(cur)
-  local bf = Blob()
+  local mode = ns.db.areaMode or "next"
+  local areasLeft = (mode == "all") and 99 or (mode == "off" and 0) or 2
+  local bf = areasLeft > 0 and Blob() or nil
   if bf then
     if bf.SetMapID then pcall(bf.SetMapID, bf, cur) end
     bf:Show()
@@ -221,23 +263,26 @@ local function Draw()
       end
       first = false
       prevX, prevY = s.x, s.y
-      local blobbed = false
-      if s.area and bf then
-        for _, a in ipairs(s.actions) do
-          if a.kind == "do" and hasArea[a.row.id] then
-            if pcall(bf.DrawBlob, bf, a.row.id, true) then blobbed = true end
+      if s.area and areasLeft > 0 then
+        areasLeft = areasLeft - 1
+        local blobbed = false
+        if bf then
+          for _, a in ipairs(s.actions) do
+            if a.kind == "do" and hasArea[a.row.id] then
+              if pcall(bf.DrawBlob, bf, a.row.id, true) then blobbed = true end
+            end
           end
         end
-      end
-      if s.area and s.r and not blobbed then
-        ai = ai + 1
-        local a = GetArea(ai, canvas)
-        a:SetSize(s.r * 2 / 100 * w, s.r * 2 / 100 * h)
-        a:ClearAllPoints()
-        local cx, cy = P(s.cx or s.x, s.cy or s.y) -- the whole area, not just the nearest spawn
-        a:SetPoint("CENTER", canvas, "TOPLEFT", cx, cy)
-        a:SetVertexColor(1, 0.45, 0, 0.3)
-        a:Show()
+        if s.r and not blobbed then
+          ai = ai + 1
+          local a = GetArea(ai, canvas)
+          a:SetSize(s.r * 2 / 100 * w, s.r * 2 / 100 * h)
+          a:ClearAllPoints()
+          local cx, cy = P(s.cx or s.x, s.cy or s.y) -- the whole area, not just the nearest spawn
+          a:SetPoint("CENTER", canvas, "TOPLEFT", cx, cy)
+          a:SetVertexColor(1, 0.78, 0.16, (ns.db.areaAlpha or 0.35) * 0.9)
+          a:Show()
+        end
       end
       pinN = pinN + 1
       PlacePin(pinN, s, canvas, P, scale)
@@ -254,7 +299,11 @@ local function StartDriver()
   local canvas = WorldMapFrame and WorldMapFrame.GetCanvas and WorldMapFrame:GetCanvas()
   if not canvas then return end
   local driver = CreateFrame("Frame", nil, canvas)
-  driver:SetScript("OnUpdate", function()
+  local sinceSuppress = 0
+  driver:SetScript("OnUpdate", function(_, elapsed)
+    -- Blizzard re-acquires its quest pins on its own schedule; keep them hidden.
+    sinceSuppress = sinceSuppress + (elapsed or 0)
+    if sinceSuppress > 0.2 then sinceSuppress = 0; ns.Safe("MapSuppress", SuppressBlizzard) end
     local m = WorldMapFrame:GetMapID()
     local w, h = canvas:GetWidth(), canvas:GetHeight()
     local s = CanvasScale()
@@ -275,7 +324,7 @@ local MINI_MAX = 8
 local function UpdateMinimap()
   if not HBDP then return end
   HBDP:RemoveAllMinimapIcons(Map)
-  if ns.db.noMap then return end
+  if ns.db.noMap or ns.db.noMiniPins then return end
   local n = 0
   for _, s in ipairs(route.stops) do
     if n >= MINI_MAX then break end
@@ -312,11 +361,17 @@ end
 
 ns.inits.Map = StartDriver
 
-ns.commands.map = function()
-  ns.db.noMap = not ns.db.noMap
-  ns.Print("map route " .. (ns.db.noMap and "off" or "on"))
+--- Re-apply map settings (called by the settings window and /rdr map).
+function Map.Refresh()
   dirty = true
   ns.Safe("Minimap", UpdateMinimap)
+  ns.Safe("MapSuppress", SuppressBlizzard)
+end
+
+ns.commands.map = function()
+  ns.db.noMap = not ns.db.noMap
+  ns.Print("map route " .. (ns.db.noMap and "off - Blizzard's quest markers are back" or "on"))
+  Map.Refresh()
 end
 
 ns.commands.mapdebug = function()
@@ -327,4 +382,6 @@ ns.commands.mapdebug = function()
     tostring(WorldMapFrame and WorldMapFrame:IsShown()), tostring(WorldMapFrame and WorldMapFrame:GetMapID()),
     tostring(route.step and route.step.map), tostring(canvas ~= nil), CanvasScale(), shownPins,
     #route.stops, tostring(HBDP ~= nil), tostring(blobOK), tostring(ns.db.noMap)))
+  local t = BlizzQuestTemplates()
+  ns.Print("Blizzard quest pin types hidden while the route is on: " .. (#t > 0 and table.concat(t, ", ") or "none found"))
 end

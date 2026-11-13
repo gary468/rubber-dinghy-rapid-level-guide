@@ -209,8 +209,13 @@ end
 local function Status(id, level)
   local q = ns.quests[id]
   if not q or not ForMe(q) then return NA end
-  if IsDone(id) then return DONE end
   local index = LogIndex(id)
+  -- Repeatable quests: only part of the route while they're in your log.
+  if q.rep then
+    if index > 0 then return IsReady(id, index) and READY or LOG end
+    return NA
+  end
+  if IsDone(id) then return DONE end
   if index > 0 then return IsReady(id, index) and READY or LOG end
   if not PrereqsMet(q) then return LOCKED end
   if level < (q.r or 0) then
@@ -232,9 +237,23 @@ end
 
 -- Current step: the first one with work left that you haven't out-levelled. Steps with quests in
 -- your log stay current for 3 levels past their range, so you finish what you started.
+-- Finish the zone you're in before moving on: a step with quests in your log (or ready to hand in)
+-- stays current for up to 5 levels past its range, so a level-up from hand-ins doesn't send you to
+-- the next zone with quests half done. Much older leftovers (e.g. 41-44 quests at 50) don't count.
+local STAY_LEVELS = 5
 local function AutoStep(level)
+  -- The zone you're standing in wins if you still have its quests on the go.
+  local pm = ns.PlayerPos()
+  if pm then
+    for i, step in ipairs(ns.steps) do
+      if step.map == pm and level <= step.to + STAY_LEVELS then
+        local _, c = ScanStep(step, level)
+        if c[READY] + c[LOG] > 0 then return i end
+      end
+    end
+  end
   for i, step in ipairs(ns.steps) do
-    if level <= step.to + 3 then
+    if level <= step.to + STAY_LEVELS then
       local _, c = ScanStep(step, level)
       if c[READY] + c[LOG] > 0 then return i end
       if level <= step.to and c[OPEN] + c[SOON] > 0 then return i end
@@ -329,15 +348,17 @@ local function BuildStops(rows, stepMap, current)
   -- Finish what you've started before anything new; distance only decides within a tier.
   --   tier 0: the quest you're making progress on right now (its count went up last)
   --   tier 1: a quest whose mobs are around you (within ~5% of one of its spawns)
-  --   tier 2: other quests you've already started (some progress, not done)
-  --   tier 3: everything else (pick-ups, untouched quests, hand-ins), nearest first
+  --   tier 2: finished quests to hand in here - they give XP and often unlock follow-ups
+  --   tier 3: other quests you've already started (some progress, not done)
+  --   tier 4: everything else (pick-ups, untouched quests), nearest first
   for _, s in ipairs(here) do
-    s.tier = 3
+    s.tier = 4
     for _, a in ipairs(s.actions) do
-      if a.kind ~= "get" and a.row.started and s.tier > 2 then s.tier = 2 end
+      if a.kind ~= "get" and a.row.started and s.tier > 3 then s.tier = 3 end
+      if a.kind == "turn" and s.tier > 2 then s.tier = 2 end
       if a.kind ~= "get" and current and a.row.id == current then s.tier = 0 end
     end
-    if s.area and pm == stepMap and s.tier > 1 then
+    if s.area and pm == stepMap and s.tier > 1 and not s.done then
       local d = Dist(s, px, py)
       if d <= 25 then s.tier = 1 end
     end
@@ -347,7 +368,7 @@ local function BuildStops(rows, stepMap, current)
     local bi, bt, bd, bx, by = 1, math.huge, math.huge, nil, nil
     for i, s in ipairs(here) do
       local d, px2, py2 = Dist(s, cx, cy)
-      if s.area and s.tier == 3 then d = d + 4 end -- same distance: hand-ins and pick-ups first
+      if s.area and s.tier == 4 then d = d + 4 end -- same distance: pick-ups before mob areas
       if s.tier < bt or (s.tier == bt and d < bd) then bi, bt, bd, bx, by = i, s.tier, d, px2, py2 end
     end
     local s = table.remove(here, bi)
@@ -456,6 +477,17 @@ function ns.Auto()
   ns.Recompute()
 end
 
+--- Move mode: the tracker and the arrow get a highlighted "drag to move" overlay; the arrow shows even
+--- with nothing to point at. /rdr unlock (or the settings window) turns it on, /rdr lock turns it off.
+function ns.SetMoveMode(on)
+  ns.db.unlocked = on and true or nil
+  if ns.Tracker and ns.Tracker.SetMoveMode then ns.Safe("Tracker", ns.Tracker.SetMoveMode, on) end
+  if ns.Arrow and ns.Arrow.SetUnlocked then ns.Safe("Arrow", ns.Arrow.SetUnlocked, on) end
+  if ns.Options and ns.Options.Refresh then ns.Safe("Options", ns.Options.Refresh) end
+  ns.Print(on and "Move mode: drag the tracker and the arrow where you want them, then /rdr lock (or the Lock button)."
+    or "Positions locked.")
+end
+
 ---------------------------------------------------------------------------
 -- Events + slash command
 ---------------------------------------------------------------------------
@@ -502,7 +534,8 @@ SlashCmdList.RUBBERDINGHY = function(msg)
   if not ns.db then return end
   local cmd = ns.commands[msg]
   if cmd then cmd(); return end
-  if msg == "next" then ns.Step(1)
+  if msg == "" and ns.Options then ns.Options.Toggle()
+  elseif msg == "next" then ns.Step(1)
   elseif msg == "prev" then ns.Step(-1)
   elseif msg == "auto" or msg == "route" then ns.Auto()
   elseif msg == "debug" then
@@ -511,7 +544,8 @@ SlashCmdList.RUBBERDINGHY = function(msg)
     if not any then ns.Print("no errors recorded") end
     if ns.commands.mapdebug then ns.commands.mapdebug() end
   else
-    ns.Print("/rdr next | prev | auto (back to automatic) | map (route lines on/off) | arrow (on/off) | "
-      .. "tracker (show/hide) | blizzard (give Blizzard's tracker back) | unlock (move tracker/arrow) | reset | debug")
+    ns.Print("/rdr - settings window | /rdr unlock - move the tracker and arrow, /rdr lock when done | "
+      .. "/rdr reset - default places and sizes | /rdr next, prev, auto - change step | "
+      .. "/rdr map, arrow, tracker, minimap - show/hide | /rdr blizzard - Blizzard's tracker back | /rdr debug")
   end
 end

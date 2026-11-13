@@ -34,6 +34,10 @@ off and changes nothing.
 
 Questie is recommended alongside it, since its map icons show every individual mob.
 
+## Settings
+Type `/rdr` or left-click the minimap button to open the settings window. It's also listed under
+Game Menu > Options > AddOns.
+
 ## Commands
 - **Changing step:** `/rdr next`, `/rdr prev`, or `/rdr auto` to go back to the automatic step.
 - **Showing and hiding:**
@@ -41,8 +45,10 @@ Questie is recommended alongside it, since its map icons show every individual m
   - `/rdr arrow` turns the arrow on and off.
   - `/rdr tracker` shows or hides the route tracker.
   - `/rdr blizzard` gives Blizzard's objective tracker back.
-- **Moving things:** Shift + drag the tracker header at any time. `/rdr unlock` lets you drag the
-  tracker header and the arrow. `/rdr reset` puts them back.
+- **Moving things:** `/rdr unlock` highlights the tracker and the arrow so you can drag them. Then
+  `/rdr lock`, or click Lock. Shift + drag on the tracker header works at any time. `/rdr reset`
+  puts both back.
+- **Minimap button:** `/rdr minimap` shows or hides it.
 - **Problems:** `/rdr debug` shows any errors.
 
 `/dinghy` works too.

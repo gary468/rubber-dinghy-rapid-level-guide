@@ -224,7 +224,7 @@ def eligible(qid, q):
     if qid in black: return False
     r = (q.get("requiredRaces") or 0) & 0xFFFF
     if r and not (r & ALLIANCE_RACES): return False
-    if (q.get("specialFlags") or 0) & 1: return False
+    # Repeatable quests stay in (flagged rep=true): the addon only routes them once they're in your log.
     if q.get("requiredSkill"): return False
     if (q.get("requiredLevel") or 0) > 60: return False
     if (q.get("zoneOrSort") or 0) in RAIDS: return False
@@ -243,7 +243,9 @@ for st in STEPS:
     for qid, q in Q.items():
         if qid in used or not eligible(qid, q): continue
         lvl = q.get("questLevel") or 0
-        if not (lo - 6 <= lvl <= max(hi + 6, 62 if hi >= 58 else 0)): continue
+        # Any quest from this zone's NPCs up to 62 belongs to the step (follow-ups like Zorbin's 55s
+        # included); ones far above you just show as "later" in game.
+        if not (lo - 6 <= lvl <= 62): continue
         g = givers.get(qid)
         if not g or g["area"] not in st["zones"]: continue
         if g.get("fac") and "A" not in str(g["fac"]): continue
@@ -290,6 +292,7 @@ for qid in sorted(used):
              f"g={lloc(givers.get(qid))}", f"t={lloc(t)}"]
     if o: parts.append(f"o={lloc(o, True)}")
     if has_objectives(qid): parts.append("ob=true")
+    if (q.get("specialFlags") or 0) & 1: parts.append("rep=true")
     # Candidate quest items for the tracker's item button (Questie's rule): the item the quest gives
     # you, items it requires, and objective items. The addon shows one only if it's in your bags and
     # has a "Use:" effect.

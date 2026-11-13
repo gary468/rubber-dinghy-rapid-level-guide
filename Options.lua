@@ -1,0 +1,236 @@
+-- Rubber Dinghy - settings window (minimap button left-click, /rdr, or Game Menu > Options > AddOns).
+-- Built from Blizzard's own frame/checkbox/button templates so it matches Forever's UI.
+local ADDON, ns = ...
+local O = {}
+ns.Options = O
+
+local win, controls = nil, {}
+local W, PAD = 360, 16
+
+local function Apply(what)
+  if what == "tracker" and ns.Tracker then ns.Tracker.Refresh()
+  elseif what == "blizzard" and ns.Tracker then ns.Tracker.SetKeepBlizzard(ns.db.keepBlizzard)
+  elseif what == "trackerScale" and ns.Tracker then ns.Tracker.ApplyScale(); ns.Queue()
+  elseif what == "map" and ns.Map then ns.Map.Refresh()
+  elseif what == "arrow" and ns.Arrow then ns.Arrow.Refresh()
+  elseif what == "minimap" and ns.MinimapButton then ns.MinimapButton.Refresh()
+  end
+end
+
+-- A checkbox bound to a saved setting. invert = the setting stores "off" (e.g. noMap).
+local function Check(parent, y, label, tip, key, invert, apply)
+  local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
+  cb:SetPoint("TOPLEFT", PAD, y)
+  cb:SetSize(26, 26)
+  local fs = (type(cb.Text) == "table" and cb.Text) or (type(cb.text) == "table" and cb.text) or nil
+  if not fs then fs = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlight"); fs:SetPoint("LEFT", cb, "RIGHT", 2, 0) end
+  fs:SetText(label)
+  cb:SetScript("OnClick", function(self)
+    local v = self:GetChecked() and true or false
+    if invert then v = not v end
+    ns.db[key] = v or nil
+    Apply(apply)
+  end)
+  cb:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT"); GameTooltip:AddLine(label); GameTooltip:AddLine(tip, 1, 1, 1, true); GameTooltip:Show()
+  end)
+  cb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  cb.refresh = function()
+    local v = ns.db[key] and true or false
+    if invert then v = not v end
+    cb:SetChecked(v)
+  end
+  controls[#controls + 1] = cb
+  return cb
+end
+
+-- A classic horizontal slider (built by hand so it works on every client).
+local function Slider(parent, y, label, key, min, max, step, default, fmt, apply)
+  local s = CreateFrame("Slider", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  s:SetOrientation("HORIZONTAL")
+  s:SetPoint("TOPLEFT", PAD + 6, y)
+  s:SetSize(W - 2 * PAD - 70, 16)
+  if s.SetBackdrop then
+    s:SetBackdrop({ bgFile = "Interface\\Buttons\\UI-SliderBar-Background", edgeFile = "Interface\\Buttons\\UI-SliderBar-Border",
+                    tile = true, tileSize = 8, edgeSize = 8, insets = { left = 3, right = 3, top = 6, bottom = 6 } })
+  end
+  s:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
+  s:SetMinMaxValues(min, max)
+  s:SetValueStep(step)
+  if s.SetObeyStepOnDrag then s:SetObeyStepOnDrag(true) end
+  s.label = s:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  s.label:SetPoint("BOTTOMLEFT", s, "TOPLEFT", 0, 2)
+  s.label:SetText(label)
+  s.value = s:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  s.value:SetPoint("LEFT", s, "RIGHT", 8, 0)
+  s:SetScript("OnValueChanged", function(self, v)
+    v = math.floor(v / step + 0.5) * step
+    self.value:SetText(fmt(v))
+    if self.loading then return end
+    ns.db[key] = (math.abs(v - default) < step / 2) and nil or v
+    Apply(apply)
+  end)
+  s.refresh = function()
+    s.loading = true
+    s:SetValue(ns.db[key] or default)
+    s.value:SetText(fmt(ns.db[key] or default))
+    s.loading = false
+  end
+  controls[#controls + 1] = s
+  return s
+end
+
+local function Button(parent, text, w, onClick, tip)
+  local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+  b:SetSize(w, 22)
+  b:SetText(text)
+  b:SetScript("OnClick", onClick)
+  if tip then
+    b:SetScript("OnEnter", function(self) GameTooltip:SetOwner(self, "ANCHOR_RIGHT"); GameTooltip:AddLine(tip, 1, 1, 1, true); GameTooltip:Show() end)
+    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  end
+  return b
+end
+
+local function Header(parent, y, text)
+  local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fs:SetPoint("TOPLEFT", PAD, y)
+  fs:SetText(text)
+  local line = parent:CreateTexture(nil, "ARTWORK")
+  line:SetColorTexture(1, 0.82, 0, 0.35)
+  line:SetPoint("TOPLEFT", fs, "BOTTOMLEFT", 0, -3)
+  line:SetSize(W - 2 * PAD, 1)
+end
+
+local pct = function(v) return ("%d%%"):format(math.floor(v * 100 + 0.5)) end
+local AREA_MODES = { "next", "all", "off" }
+local AREA_TEXT = { next = "Quest areas: next 2 stops", all = "Quest areas: every stop", off = "Quest areas: off" }
+
+local function Build()
+  local ok, f = pcall(CreateFrame, "Frame", "RubberDinghyOptions", UIParent, "BasicFrameTemplateWithInset")
+  if not ok or not f then f = CreateFrame("Frame", "RubberDinghyOptions", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil) end
+  win = f
+  f:SetSize(W, 600)
+  f:SetPoint("CENTER")
+  f:SetFrameStrata("DIALOG")
+  f:SetClampedToScreen(true)
+  f:SetMovable(true)
+  f:EnableMouse(true)
+  f:RegisterForDrag("LeftButton")
+  f:SetScript("OnDragStart", f.StartMoving)
+  f:SetScript("OnDragStop", f.StopMovingOrSizing)
+  local templTitle = (type(f.TitleText) == "table" and f.TitleText) or (type(f.title) == "table" and f.title) or nil
+  if f.SetBackdrop and not templTitle then
+    f:SetBackdrop({ bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background", edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+                    tile = true, tileSize = 32, edgeSize = 24, insets = { left = 6, right = 6, top = 6, bottom = 6 } })
+  end
+  local title = templTitle or f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  if not templTitle then title:SetPoint("TOP", 0, -8) end
+  title:SetText("Rubber Dinghy Rapid Level Guide")
+  tinsert(UISpecialFrames, "RubberDinghyOptions") -- Escape closes it
+
+  local icon = f:CreateTexture(nil, "ARTWORK")
+  icon:SetTexture("Interface\\AddOns\\" .. ADDON .. "\\media\\icon")
+  icon:SetSize(40, 40)
+  icon:SetPoint("TOPLEFT", PAD, -32)
+  f.stepText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  f.stepText:SetPoint("TOPLEFT", icon, "TOPRIGHT", 10, -2)
+  f.stepText:SetWidth(W - 2 * PAD - 50)
+  f.stepText:SetJustifyH("LEFT")
+  local prevB = Button(f, "<", 30, function() ns.Step(-1) end, "Previous step")
+  prevB:SetPoint("TOPLEFT", icon, "BOTTOMRIGHT", 10, 16)
+  local autoB = Button(f, "Automatic", 90, function() ns.Auto() end, "Back to the step the guide picks for you")
+  autoB:SetPoint("LEFT", prevB, "RIGHT", 4, 0)
+  local nextB = Button(f, ">", 30, function() ns.Step(1) end, "Next step")
+  nextB:SetPoint("LEFT", autoB, "RIGHT", 4, 0)
+
+  local y = -92
+  Header(f, y, "Tracker"); y = y - 22
+  Check(f, y, "Show the route tracker", "The step and its stops, where Blizzard's objective tracker normally sits.", "noTracker", true, "tracker"); y = y - 26
+  Check(f, y, "Hide Blizzard's objective tracker", "The route tracker replaces it. Untick to get Blizzard's back.", "keepBlizzard", true, "blizzard"); y = y - 40
+  Slider(f, y, "Tracker size", "trackerScale", 0.7, 1.5, 0.05, 1, pct, "trackerScale"); y = y - 34
+
+  Header(f, y, "Map"); y = y - 22
+  Check(f, y, "Show the route on the map and minimap", "Numbered stops, the route line and quest areas.", "noMap", true, "map"); y = y - 26
+  Check(f, y, "Hide Blizzard's quest markers on the map", "While the route is on, its numbered stops replace Blizzard's quest markers.", "keepBlizzMap", true, "map"); y = y - 26
+  Check(f, y, "Minimap pins for the next stops", "Numbered pins on the minimap; stop 1 rides the edge when far away.", "noMiniPins", true, "map"); y = y - 30
+  local areaB = Button(f, "", 220, function(self)
+    local cur = ns.db.areaMode or "next"
+    local i = 1
+    for k, m in ipairs(AREA_MODES) do if m == cur then i = k end end
+    local nxt = AREA_MODES[i % #AREA_MODES + 1]
+    ns.db.areaMode = (nxt ~= "next") and nxt or nil
+    self:SetText(AREA_TEXT[nxt])
+    Apply("map")
+  end, "Which stops get a shaded quest area on the map. Click to change.")
+  areaB:SetPoint("TOPLEFT", PAD, y)
+  areaB.refresh = function() areaB:SetText(AREA_TEXT[ns.db.areaMode or "next"]) end
+  controls[#controls + 1] = areaB
+  y = y - 40
+  Slider(f, y, "Quest area strength", "areaAlpha", 0.1, 0.8, 0.05, 0.35, pct, "map"); y = y - 34
+
+  Header(f, y, "Arrow"); y = y - 22
+  Check(f, y, "Show the arrow to the next stop", "Points at stop 1 with the distance in yards. Never sets a map marker.", "noArrow", true, "arrow"); y = y - 40
+  Slider(f, y, "Arrow size", "arrowScale", 0.6, 2, 0.05, 1, pct, "arrow"); y = y - 34
+
+  Header(f, y, "Minimap button"); y = y - 22
+  local mm = Check(f, y, "Show the minimap button", "Left-click: this window. Right-click: show or hide the tracker.", "minimapHide", true, "minimap")
+  y = y - 36
+
+  local moveB = Button(f, "", 150, function() ns.SetMoveMode(not ns.db.unlocked) end,
+    "Move the tracker and the arrow: drag them, then click Lock. Shift + drag on the tracker header also works any time.")
+  moveB:SetPoint("TOPLEFT", PAD, y)
+  moveB.refresh = function() moveB:SetText(ns.db.unlocked and "Lock positions" or "Move tracker & arrow") end
+  controls[#controls + 1] = moveB
+  local resetB = Button(f, "Reset positions", 150, function() ns.commands.reset() end,
+    "Puts the tracker and arrow back in their default places and sizes.")
+  resetB:SetPoint("LEFT", moveB, "RIGHT", 10, 0)
+
+  f:SetHeight(-y + 42)
+  f:SetScript("OnShow", function() O.Refresh() end)
+  f:Hide()
+end
+
+function O.Refresh()
+  if not win then return end
+  for _, c in ipairs(controls) do if c.refresh then c.refresh() end end
+  local r = ns.route
+  if r and r.step then
+    win.stepText:SetText(("|cffffd100Step %d/%d:|r %s (%d-%d)%s"):format(r.idx, #ns.steps, r.step.name,
+      r.step.from, r.step.to, r.manual and " |cffff8040manual|r" or ""))
+  end
+end
+
+function O.Toggle()
+  if not win then return end
+  if win:IsShown() then win:Hide() else win:Show() end
+end
+
+-- Also list it under Game Menu > Options > AddOns, with a button that opens this window.
+local function RegisterBlizzardPanel()
+  local panel = CreateFrame("Frame")
+  panel.name = "Rubber Dinghy"
+  local t = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  t:SetPoint("TOPLEFT", 16, -16)
+  t:SetText("Rubber Dinghy Rapid Level Guide")
+  local b = Button(panel, "Open settings", 160, function()
+    if SettingsPanel and SettingsPanel:IsShown() then HideUIPanel(SettingsPanel) end
+    if win then win:Show() end
+  end)
+  b:SetPoint("TOPLEFT", t, "BOTTOMLEFT", 0, -12)
+  if Settings and Settings.RegisterCanvasLayoutCategory and Settings.RegisterAddOnCategory then
+    local cat = Settings.RegisterCanvasLayoutCategory(panel, panel.name)
+    Settings.RegisterAddOnCategory(cat)
+  elseif InterfaceOptions_AddCategory then
+    InterfaceOptions_AddCategory(panel)
+  end
+end
+
+ns.inits.Options = function()
+  Build()
+  ns.Safe("OptionsPanel", RegisterBlizzardPanel)
+end
+ns.listeners.Options = function() if win and win:IsShown() then O.Refresh() end end
+ns.commands.options = function() O.Toggle() end
+ns.commands.settings = ns.commands.options
+ns.commands.config = ns.commands.options

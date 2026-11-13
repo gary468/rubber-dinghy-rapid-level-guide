@@ -14,7 +14,9 @@ local CHECK = { "ui-questtracker-tracker-check", "Tracker-Check" }
 local POI_RING = { "UI-QuestPoi-QuestNumber" }
 local CIRCLE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 
-local frame, header, titleFS, collapseBtn, body
+local T = {}
+ns.Tracker = T
+local frame, header, titleFS, collapseBtn, body, mover
 local pool, used = {}, 0
 local HEADER_FONT, TITLE_FONT, LINE_FONT, SMALL_FONT
 
@@ -144,11 +146,11 @@ local function Render(r)
   if not frame then return end
   used, y = 0, 0
   local db = ns.db
-  frame:SetShown(not db.noTracker)
+  frame:SetShown(not db.noTracker or db.unlocked)
   collapseBtn:SetCollapsed(db.collapsed)
   local slots = {} -- where quest item buttons go: {qid=, y=pixels below the tracker top}
   local function Slot(qid) slots[#slots + 1] = { qid = qid, y = header:GetHeight() + 4 + y } end
-  if db.collapsed or db.noTracker then
+  if db.collapsed or (db.noTracker and not db.unlocked) then
     for i = 1, #pool do pool[i]:Hide() end
     body:SetHeight(1); frame:SetHeight(header:GetHeight())
     if ns.Items then ns.Safe("Items", ns.Items.Place, slots, frame) end
@@ -348,6 +350,37 @@ local function Init()
   body:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -4)
   body:SetSize(WIDTH, 1)
 
+  -- Move mode overlay: a highlighted box over the whole tracker that you drag, with a Lock button.
+  mover = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  mover:SetAllPoints(frame)
+  mover:SetFrameLevel(frame:GetFrameLevel() + 50)
+  if mover.SetBackdrop then
+    mover:SetBackdrop({ bgFile = "Interface\\BUTTONS\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                        tile = true, tileSize = 8, edgeSize = 12, insets = { left = 2, right = 2, top = 2, bottom = 2 } })
+    mover:SetBackdropColor(0.1, 0.6, 1, 0.22)
+    mover:SetBackdropBorderColor(0.3, 0.8, 1, 1)
+  end
+  mover.label = mover:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  mover.label:SetPoint("CENTER", 0, 12)
+  mover.label:SetText("Leveling Route\n|cffffffffdrag to move|r")
+  mover.lock = CreateFrame("Button", nil, mover, "UIPanelButtonTemplate")
+  mover.lock:SetSize(90, 22)
+  mover.lock:SetPoint("TOP", mover.label, "BOTTOM", 0, -8)
+  mover.lock:SetText("Lock")
+  mover.lock:SetScript("OnClick", function() ns.SetMoveMode(false) end)
+  mover:EnableMouse(true)
+  mover:RegisterForDrag("LeftButton")
+  mover:SetScript("OnDragStart", function() frame:StartMoving() end)
+  mover:SetScript("OnDragStop", function()
+    frame:StopMovingOrSizing()
+    local p, _, rp, x, yy = frame:GetPoint(1)
+    ns.db.trackerPos = { p, rp, x, yy }
+    ns.Queue()
+  end)
+  mover:Hide()
+  T.ApplyScale()
+  if ns.db.unlocked then T.SetMoveMode(true) end
+
   if not ns.db.keepBlizzard then SetBlizzHidden(true) end
   if Questie and Questie.db and Questie.db.profile and Questie.db.profile.trackerEnabled and not ns.db.toldQuestie then
     ns.db.toldQuestie = true
@@ -359,25 +392,38 @@ end
 ns.inits.Tracker = Init
 ns.listeners.Tracker = Render
 
+function T.ApplyScale()
+  if frame then frame:SetScale(ns.db.trackerScale or 1) end
+end
+function T.SetMoveMode(on)
+  if not frame then return end
+  if on then frame:Show(); mover:Show() else mover:Hide() end
+  Render(ns.route)
+end
+function T.Refresh() Render(ns.route) end
+function T.SetKeepBlizzard(keep)
+  ns.db.keepBlizzard = keep and true or nil
+  SetBlizzHidden(not keep)
+end
+
 ns.commands.tracker = function()
   ns.db.noTracker = not ns.db.noTracker
   Render(ns.route)
   ns.Print("route tracker " .. (ns.db.noTracker and "hidden" or "shown"))
 end
 ns.commands.blizzard = function()
-  ns.db.keepBlizzard = not ns.db.keepBlizzard
-  SetBlizzHidden(not ns.db.keepBlizzard)
+  T.SetKeepBlizzard(not ns.db.keepBlizzard)
   ns.Print(ns.db.keepBlizzard and "Blizzard's objective tracker is back." or "Blizzard's objective tracker hidden again.")
 end
-ns.commands.unlock = function()
-  ns.db.unlocked = not ns.db.unlocked
-  ns.Print(ns.db.unlocked and "unlocked - drag the tracker header or the arrow to move them; /rdr unlock again to lock."
-    or "locked.")
-  if ns.Arrow then ns.Arrow.SetUnlocked(ns.db.unlocked) end
-end
+ns.commands.unlock = function() ns.SetMoveMode(true) end
+ns.commands.move = function() ns.SetMoveMode(not ns.db.unlocked) end
+ns.commands.lock = function() ns.SetMoveMode(false) end
 ns.commands.reset = function()
   ns.db.trackerPos, ns.db.arrowPos = nil, nil
+  ns.db.trackerScale, ns.db.arrowScale = nil, nil
+  T.ApplyScale()
   Anchor()
   if ns.Arrow then ns.Arrow.Reset() end
-  ns.Print("tracker and arrow moved back to their default places.")
+  ns.Queue()
+  ns.Print("tracker and arrow are back in their default places and sizes.")
 end

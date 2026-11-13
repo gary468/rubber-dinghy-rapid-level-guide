@@ -9,7 +9,12 @@ externals:
   Libs/HereBeDragons:
     url: https://github.com/Nevcairiel/HereBeDragons
     tag: latest
+  Libs/LibDataBroker-1.1:
+    url: https://github.com/tekkub/libdatabroker-1-1
+  Libs/LibDBIcon-1.0:
+    url: https://repos.curseforge.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
 
 ignore:
   - tools
   - SETUP.md
+  - media/logo.png
