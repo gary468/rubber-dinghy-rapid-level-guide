@@ -80,7 +80,19 @@ end
 function ns.ObjText(o, short)
   if not o.src or o.done then return o.text end
   local src = o.src
-  if short then src = src:gsub(",.*$", " +more") end   -- the tracker: first source only
+  if short then
+    -- The tracker: one line that fits. "drops from" goes (the full text is in the line's tooltip),
+    -- and when the item names its mob ("Un'Goro Gorilla Pelt" from the Un'Goro Gorilla) nothing is
+    -- added at all - Gary 14 Nov: "drops from what?" (the mob's name was cut off).
+    local first = src:match("^drops from ([^,]+)")
+    if first then
+      local item = o.text:gsub("^%s*%d+%s*/%s*%d+%s*", "")
+      if item:find(first, 1, true) then return o.text end
+      src = first .. (src:find(",", 1, true) and " +more" or "")
+    else
+      src = src:gsub(",.*$", " +more")
+    end
+  end
   return o.text .. " |cff999999- " .. src .. "|r"
 end
 

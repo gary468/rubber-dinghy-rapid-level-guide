@@ -341,7 +341,7 @@ local function Render(r)
           -- only what's left to do; finished objectives drop off
           for _, o in ipairs(ns.Objectives(a.row.id)) do
             if not o.done then
-              Add(ns.ObjText(o, true), { indent = 30, font = SMALL_FONT, color = { 0.85, 0.85, 0.85 }, stop = s, nowrap = true })
+              Add(ns.ObjText(o, true), { indent = 30, font = SMALL_FONT, color = { 0.85, 0.85, 0.85 }, stop = s, nowrap = true, tip = ns.ObjText(o) })
             end
           end
         end
@@ -362,7 +362,7 @@ local function Render(r)
       onClick = function() if ns.ShowQuestOnMap then ns.ShowQuestOnMap(id) end end })
     for _, o in ipairs(ns.Objectives(id)) do
       if not o.done then
-        Add(ns.ObjText(o, true), { indent = 30, font = SMALL_FONT, color = { 0.85, 0.85, 0.85 }, nowrap = true })
+        Add(ns.ObjText(o, true), { indent = 30, font = SMALL_FONT, color = { 0.85, 0.85, 0.85 }, nowrap = true, tip = ns.ObjText(o) })
       end
     end
   end
