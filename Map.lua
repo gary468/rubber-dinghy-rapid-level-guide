@@ -59,6 +59,8 @@ end
 -- Questie draws its patrol lines at frame level 2015 on this client (map tiles sit below that).
 local OVERLAY_LEVEL, PIN_LEVEL = 2016, 2030
 local CIRCLE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
+-- Quest-mob spawn dots: grey with a dark edge (white read as party members, e.g. a priest's dot)
+local SPAWN_R, SPAWN_G, SPAWN_B = 0.62, 0.62, 0.62
 local POI_RING = { "UI-QuestPoi-QuestNumber" }
 local POI_LIT = { "ui-questpoi-questnumber-supertracked", "UI-QuestPoi-QuestNumber-Pressed" }
 local POI_GLOW = { "UI-QuestPoi-InnerGlow" }
@@ -522,8 +524,8 @@ local function DrawOthers(canvas, cur)
       elseif q.o and q.o[2] == cur then
         local pts = q.o[6]
         if pts and #pts >= 2 then
-          for k = 1, #pts - 1, 2 do Place(e.id, "spawn", pts[k], pts[k + 1], 8, 1, 1, 1, 0.9, false) end
-        elseif q.o[3] then Place(e.id, "spawn", q.o[3], q.o[4], 10, 1, 1, 1, 0.9, false) end
+          for k = 1, #pts - 1, 2 do Place(e.id, "spawn", pts[k], pts[k + 1], 7, SPAWN_R, SPAWN_G, SPAWN_B, 0.95, false) end
+        elseif q.o[3] then Place(e.id, "spawn", q.o[3], q.o[4], 9, SPAWN_R, SPAWN_G, SPAWN_B, 0.95, false) end
         for _, nid in ipairs(q.op or {}) do Path(nid, false) end
       end
     end
@@ -998,7 +1000,7 @@ local function UpdateMinimap()
     p:SetFrameLevel(Minimap:GetFrameLevel() + (c.kind == "spawn" and 4 or 6))
     if c.kind == "spawn" then
       p:SetSize(7, 7)
-      p.tex:SetTexture(CIRCLE); p.tex:SetVertexColor(1, 1, 1, 0.9)
+      p.tex:SetTexture(CIRCLE); p.tex:SetVertexColor(SPAWN_R, SPAWN_G, SPAWN_B, 0.95)
       for k, t in ipairs(p.outline) do
         t:SetTexture(CIRCLE); t:SetVertexColor(0, 0, 0, 0.85)
         if k > 4 then t:Hide() else t:Show() end
