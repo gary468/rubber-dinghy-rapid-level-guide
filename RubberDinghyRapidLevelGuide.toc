@@ -20,6 +20,7 @@ Data.lua
 Core.lua
 Prep.lua
 Learn.lua
+Geo.lua
 XPBar.lua
 Map.lua
 Tracker.lua

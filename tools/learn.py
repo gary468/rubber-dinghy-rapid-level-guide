@@ -9,7 +9,7 @@ import glob, json, statistics, sys
 from lupa import lua51
 
 WOW, OUT = sys.argv[1], sys.argv[2]
-counts, flights, spots = {}, [], {}
+counts, flights, spots, legs = {}, [], {}, {}
 for path in glob.glob(WOW + r"\WTF\Account\*\*\*\SavedVariables\RubberDinghyRapidLevelGuide.lua"):
     L = lua51.LuaRuntime(unpack_returned_tuples=True)
     try:
@@ -42,9 +42,12 @@ for path in glob.glob(WOW + r"\WTF\Account\*\*\*\SavedVariables\RubberDinghyRapi
                 lst.append(pt)
     for i in range(1, len(learn.fl or {}) + 1):
         fl = learn.fl[i]
-        if fl and fl.s: flights.append(int(fl.s))
+        if fl and fl.s:
+            flights.append(int(fl.s))
+            if fl.fn and fl.tn: legs.setdefault(f"{fl.fn}|{fl.tn}", []).append(int(fl.s))
 
-out = {"counts": counts, "spots": {str(k): v for k, v in spots.items() if v}}
+out = {"counts": counts, "spots": {str(k): v for k, v in spots.items() if v},
+       "legs": {k: statistics.median(v) for k, v in legs.items()}}
 if len(flights) >= 3:
     out["flight_s"] = statistics.median(flights)
 json.dump(out, open(OUT, "w"), indent=1)

@@ -89,12 +89,15 @@ local flight
 local function CheckTaxi()
   local on = UnitOnTaxi and UnitOnTaxi("player")
   if on and not flight then
-    flight = { f = ns.PlayerPos(), s = GetTime(), to = ns.taxiDest and ns.taxiDest.map }
+    flight = { f = ns.PlayerPos(), s = GetTime(), to = ns.taxiDest and ns.taxiDest.map,
+               fn = ns.taxiFromNode, tn = ns.taxiDest and ns.taxiDest.name }
   elseif not on and flight then
     local d = DB()
     local secs = GetTime() - flight.s
     if d and secs > 5 then
-      d.fl[#d.fl + 1] = { f = flight.f, t = ns.PlayerPos() or flight.to, s = math.floor(secs + 0.5) }
+      -- fn/tn: the flight masters (node names), so each route gets its own real flight time
+      d.fl[#d.fl + 1] = { f = flight.f, t = ns.PlayerPos() or flight.to, s = math.floor(secs + 0.5),
+                          fn = flight.fn, tn = flight.tn }
       while #d.fl > MAX_FLIGHTS do table.remove(d.fl, 1) end
     end
     flight = nil
