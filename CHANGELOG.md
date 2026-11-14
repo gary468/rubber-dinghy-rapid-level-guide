@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.35
+- **Fixed "Tooltip failed ... UnitGUID ... Secret values" errors in chat.** Forever sometimes hands
+  addons a hidden unit; the tooltip and the rare-mob check now skip it instead of erroring.
+
 ## v1.0.34
 - **More of Forever's own quests have a place on the map.** Where the quest data had nothing, the
   route now uses ForeverChanges' objectives, descriptions and quest maps: Slithering Looters goes to
