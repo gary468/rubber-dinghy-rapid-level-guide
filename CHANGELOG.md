@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.32
+- **Planned for Forever's 40-quest log** (not Classic's 20). About 90 hours played to 60.
+- **A quest whose objectives are far apart gets a stop for each place**, slotted in where the route
+  passes. Expedition Salvation's Crate of Foodstuffs at the eastern camp is now its own stop.
+- **Tracker objective lines fit on one line.** No "drops from", and nothing extra when the item already
+  names its mob (Un'Goro Gorilla Pelt). The full text is in the line's tooltip.
+- **Riverglades:** Proof of Profit's Cubic Draconia is in Gelinda Coppergleam's cave (30,69). Not My
+  Circus (10 Briny Seafood Stew, cooked only) is off the route and not auto-accepted.
+
 ## v1.0.31
 - **Kill areas drop the objectives you've finished.** A quest with two kinds of mob (Beware of
   Pterrordax) used to keep pointing at both; once one count is done, the stop's name, arrow, gold
