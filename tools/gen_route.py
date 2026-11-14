@@ -132,8 +132,11 @@ def pos(v, k):
 
 
 uimap = {}
-for m in re.finditer(r"\[(\d+)\]\s*=\s*(\d+)", open(UIMAP, encoding="utf-8").read()):
+CANON = {}   # uiMap -> its own zone name ("1435 = Swamp of Sorrows"), from the file's comments
+for m in re.finditer(r"\[(\d+)\]\s*=\s*(\d+),?[ \t]*(?:--[ \t]*([^\n]+))?", open(UIMAP, encoding="utf-8").read()):
     uimap.setdefault(int(m.group(1)), int(m.group(2)))
+    if m.group(3) and "->" not in m.group(3):   # "Longshore -> Westfall" is a subzone line
+        CANON.setdefault(int(m.group(2)), m.group(3).strip())
 dungeons = {int(m.group(1)) for m in re.finditer(r'\[(\d+)\]\s*=\s*\{\s*"', open(DUNG, encoding="utf-8").read())}
 
 _cache = {}
@@ -329,7 +332,11 @@ if PLAN:
     for a, m in uimap.items(): map_areas[m].add(a)
     zone_note = {}
     for st in STEPS:
-        zone_note.setdefault(uimap.get(st["zones"][0]), st["note"])
+        # a note belongs to the map whose own name matches the STEPS entry (an entry listing a
+        # neighbour's area, e.g. Zephras Isle + Swamp of Sorrows, must not lend its note to it)
+        for zid in st["zones"]:
+            um = uimap.get(zid)
+            if um and CANON.get(um) == st["name"]: zone_note.setdefault(um, st["note"])
     pool = set(used) | set(track)
     seen = collections.Counter()
     new_steps, new_used = [], {}
@@ -344,6 +351,8 @@ if PLAN:
             ids += [q for q in v.get("all", []) if q in Q and q not in ids and eligible(q, Q[q])]
         pick = [q for q in v.get("pick", []) if q in Q]
         m = v["map"]
+        if v.get("kind") != "dungeon" and CANON.get(m):
+            v["name"] = CANON[m]   # the map's own name (plan names could come from a neighbour)
         lv = (v["lv_in"], max(v["lv_in"], v["lv_out"]))
         if v.get("kind") == "dungeon":
             e = v["entrance"]
