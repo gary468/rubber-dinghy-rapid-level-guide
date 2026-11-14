@@ -94,7 +94,8 @@ DUNGEONS = [
          bosses=["Noxxion", "Razorlash", "Lord Vyletongue", "Celebras the Cursed", "Landslide",
                  "Tinkerer Gizlock", "Rotgrip", "Princess Theradras"]),
     dict(name="Alcaz Prison", key="alcaz", lo=48, hi=53, forever=True, ent=(1445, 75.0, 15.0),
-         bosses=["Tidemistress Ca'zass", "Overseer Wrex", "Katerina the Cleaner", "Zarla Ober", "The Questioner"],
+         # Zarla Ober's fight ends as Blazeroar (Warcraft Tavern: "Zarla Ober/Blazeroar"); Blazeroar dies and drops the loot
+         bosses=["Tidemistress Ca'zass", "Overseer Wrex", "Katerina the Cleaner", "Blazeroar", "The Questioner"],
          quests=["A Bit of Wet Work", "The Dragon's Journal", "The Secret Prison", "The Man in the Iron Chains",
                  "More Valuable Than Gold", "A Little Payback", "Blood Red Bandanas", "No Orc Left Behind",
                  "The Honor of the Kor'kron", "Bad News for Folkar"]),

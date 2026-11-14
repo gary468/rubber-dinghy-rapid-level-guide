@@ -161,9 +161,12 @@ local function Build()
   local pickB = Button(f, "Dungeons & get ready...", 180, function() O.ToggleDungeons() end,
     "No dungeons are in the route until you choose them. Tick one to add it (a side route collects its quests first), or click Get ready for that side route alone.")
   pickB:SetPoint("TOPLEFT", PAD + 4, y)
+  -- only when the separate Dungeon Journal add-on is installed
   local journalB = Button(f, "Dungeon Journal", 140, function() if ns.Journal then ns.Journal.Toggle() end end,
-    "Every dungeon: where its quests start, its bosses, and a log of your runs (time and XP).")
+    "Every dungeon: where its quests start, its bosses, loot, and a log of your runs (time and XP).")
   journalB:SetPoint("LEFT", pickB, "RIGHT", 8, 0)
+  journalB:SetShown(ns.Journal ~= nil)
+  f:HookScript("OnShow", function() journalB:SetShown(ns.Journal ~= nil) end)
   y = y - 32
   f.skipText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   f.skipText:SetPoint("TOPLEFT", PAD + 4, y - 5)
@@ -387,10 +390,12 @@ local function BuildDungeons()
     rb:SetPoint("TOPLEFT", PAD + col * 390 + 222, y)
     rb.refresh = function() rb:SetText(ns.db.prep == name and "Stop" or "Get ready") end
     dcontrols[#dcontrols + 1] = rb
-    -- "Journal": this dungeon's page in our Dungeon Journal (quests, bosses, runs)
-    local jb = Button(f, "Journal", 66, function() if ns.Journal then ns.Journal.OpenDungeon(name) end end,
-      "Open " .. name .. " in the Dungeon Journal: where every quest starts, its bosses and your runs.")
-    jb:SetPoint("TOPLEFT", PAD + col * 390 + 306, y)
+    -- "Journal": this dungeon's page in the Dungeon Journal add-on, when it's installed
+    if ns.Journal then
+      local jb = Button(f, "Journal", 66, function() if ns.Journal then ns.Journal.OpenDungeon(name) end end,
+        "Open " .. name .. " in the Dungeon Journal: where every quest starts, its bosses, loot and your runs.")
+      jb:SetPoint("TOPLEFT", PAD + col * 390 + 306, y)
+    end
     col = col + 1
     if col == 2 then col = 0; y = y - 24 end
   end

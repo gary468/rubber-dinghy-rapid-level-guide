@@ -1,6 +1,6 @@
 -- Rubber Dinghy - minimap button (LibDataBroker + LibDBIcon, the standard addon button: drag it
--- around the minimap). Left-click: settings. Shift + left-click: Dungeon Journal. Right-click: show/hide
--- the tracker.
+-- around the minimap). Left-click: settings. Shift + left-click: the Dungeon Journal add-on (if installed).
+-- Right-click: show/hide the tracker.
 local ADDON, ns = ...
 local M = {}
 ns.MinimapButton = M
@@ -38,7 +38,7 @@ ns.inits.Minimap = function()
       end
       tt:AddLine(" ")
       tt:AddLine("Left-click: settings", 0.4, 0.8, 1)
-      tt:AddLine("Shift + left-click: Dungeon Journal", 0.4, 0.8, 1)
+      if ns.Journal then tt:AddLine("Shift + left-click: Dungeon Journal", 0.4, 0.8, 1) end
       tt:AddLine("Right-click: show/hide the tracker", 0.4, 0.8, 1)
       tt:AddLine("Drag: move this button", 0.4, 0.8, 1)
     end,

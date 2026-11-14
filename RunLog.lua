@@ -9,6 +9,8 @@
 local ADDON, ns = ...
 local RL = {}
 ns.RunLog = RL
+-- Shared with the separate Rubber Dinghy Dungeon Journal add-on (dungeon data, Run Log, settings).
+RubberDinghyNS = ns
 
 local MAX_RUNS = 200
 local SAME_RUN_GAP = 45 * 60   -- back inside the same instance within 45 min (and no reset): same run
