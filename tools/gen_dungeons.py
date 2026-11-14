@@ -178,9 +178,16 @@ def lstr(s):
 def main(wow, out_path):
     db = QDB(wow)
     xp = {}
-    xpfile = wow + r"\Interface\AddOns\QuestieDB\support\Forever\QuestXP\xpDB-classic.lua"
-    for m in re.finditer(r"\[(\d+)\]\s*=\s*\{(\d+),\s*(\d+)\}", open(xpfile, encoding="utf-8").read()):
-        xp[int(m.group(1))] = (int(m.group(2)), int(m.group(3)))
+    # QuestieDB's quest XP: the Classic table, then XP seen in play (traces), which covers Forever's quests
+    for fn in ("xpDB-classic.lua", "xpDB-traces.lua"):
+        xpfile = os.path.join(wow, "Interface", "AddOns", "QuestieDB", "support", "Forever", "QuestXP", fn)
+        if not os.path.isfile(xpfile): continue
+        for m in re.finditer(r"\[(\d+)\]\s*=\s*\{(\d+),\s*(\d+)\}", open(xpfile, encoding="utf-8").read()):
+            xp.setdefault(int(m.group(1)), (int(m.group(2)), int(m.group(3))))
+    by_level = {}
+    for lvl, val in xp.values():
+        if lvl > 0 and val > 0: by_level.setdefault(lvl, []).append(val)
+    typical_xp = {lvl: sorted(v)[len(v) // 2] for lvl, v in by_level.items() if len(v) >= 5}   # median
     qids = db.ids("Quest")
     quests = {q: db.quest(q) for q in qids}
     by_name = {}
@@ -392,6 +399,11 @@ def main(wow, out_path):
         if isinstance(q.get("nextQuestInChain"), int) and q["nextQuestInChain"] > 0:
             p.append(f"nx={q['nextQuestInChain']}")
         if qid in xp: p.append(f"xp={{{xp[qid][0]},{xp[qid][1]}}}")
+        elif (q.get("questLevel") or 0) > 0 and not (q.get("specialFlags") or 0) & 1:
+            # no XP recorded (most of Forever's new quests): the usual XP of a quest of its level,
+            # marked as an estimate (xe) so the journal says "about"
+            est = typical_xp.get(q["questLevel"])
+            if est: p.append(f"xp={{{q['questLevel']},{est}}}, xe=true")
         out.append(f"  [{qid}]={{" + ", ".join(p) + "},")
     # chain quests behind dungeon quests (names for the "needs" lines), one level deep is not enough:
     # walk every prerequisite so the journal can show "step 2 of 4".

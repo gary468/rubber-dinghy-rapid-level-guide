@@ -195,12 +195,16 @@ function J.ScanGame()
   local report = { when = time(), build = select(4, GetBuildInfo()), instances = {}, lfg = {} }
   if type(EJ_GetInstanceByIndex) == "function" and type(EJ_SelectInstance) == "function" then
     report.ej = true
-    local tiers = 1
+    local tiers = 0
     if EJ_GetNumTiers then local ok, n = pcall(EJ_GetNumTiers); if ok and n then tiers = n end end
     report.tiers = tiers
+    -- Forever's client reports no tiers: then read whatever the journal has selected (one pass)
+    local tierList = {}
+    for t = 1, tiers do tierList[#tierList + 1] = t end
+    if #tierList == 0 then tierList[1] = false end
     local prevTier = EJ_GetCurrentTier and select(2, pcall(EJ_GetCurrentTier))
-    for t = 1, tiers do
-      if EJ_SelectTier then pcall(EJ_SelectTier, t) end
+    for _, t in ipairs(tierList) do
+      if t and EJ_SelectTier then pcall(EJ_SelectTier, t) end
       for _, raid in ipairs({ false, true }) do
         for i = 1, 80 do
           local ok, id, name, desc, bg, button, lore, button2, areaMap = pcall(EJ_GetInstanceByIndex, i, raid)
@@ -236,7 +240,7 @@ function J.ScanGame()
               for _, b in ipairs(bosses) do if want[Norm(b.name)] then sub[#sub + 1] = b end end
               if #sub > 0 then mineBosses = sub end
             end
-            ej[d.name] = ej[d.name] or { desc = desc, art = button or bg, bg = bg, bosses = mineBosses }
+            ej[d.name] = ej[d.name] or { id = id, desc = desc, art = button or bg, bg = bg, bosses = mineBosses }
           end
         end
       end
@@ -254,7 +258,8 @@ function J.ScanGame()
           local lo, hi = t.minLevel or t.minLevelSuggestion, t.maxLevelSuggestion or t.maxLevel
           report.lfg[#report.lfg + 1] = { t.fullName, lo, hi }
           for _, d in ipairs(OurDungeonsFor(t.fullName)) do
-            if lo and lo > 0 and hi and hi > 0 then lfgLevels[d.name] = { lo, hi } end
+            -- Forever's group finder gives the top level (its bottom comes back as 0): keep our bottom
+            if hi and hi > 0 then lfgLevels[d.name] = { (lo and lo > 0) and lo or d.lo, hi } end
           end
         end
       end
@@ -318,7 +323,12 @@ local ICON = {
   clock = "Interface\\Icons\\INV_Misc_PocketWatch_01",
   drop = "Interface\\Icons\\INV_Misc_Bag_10",
   done = "Interface\\RaidFrame\\ReadyCheck-Ready",
+  alliance = "Interface\\TargetingFrame\\UI-PVP-Alliance",
+  horde = "Interface\\TargetingFrame\\UI-PVP-Horde",
+  quests = "Interface\\GossipFrame\\AvailableQuestIcon",
 }
+-- the PvP crest textures hold the emblem in their top-left part
+local CREST_TC = { 0, 0.62, 0, 0.62 }
 local function Ico(path, size)
   if not Has(path) then return "" end
   return ("|T%s:%d:%d:0:0|t "):format(path, size or 16, size or 16)
@@ -443,13 +453,16 @@ local function Lines(parent, width, dark)
     fs:SetText((o.icon and Ico(o.icon, o.iconSize) or "") .. text)
     fs:Show()
     local h = math.max(12, fs:GetStringHeight() or 12)
-    if o.onClick or o.tip then
+    if o.onClick or o.tip or o.link then
       self.nb = self.nb + 1
       local b = self.btn[self.nb]
       if not b then
         b = CreateFrame("Button", nil, self.parent)
         local hl = b:CreateTexture(nil, "HIGHLIGHT"); hl:SetAllPoints(); hl:SetColorTexture(1, 0.9, 0.5, dark and 0.25 or 0.12)
-        b:SetScript("OnEnter", function(s) if s.tip then GameTooltip:SetOwner(s, "ANCHOR_RIGHT"); GameTooltip:AddLine(s.tip, 1, 1, 1, true); GameTooltip:Show() end end)
+        b:SetScript("OnEnter", function(s)
+          if s.link then GameTooltip:SetOwner(s, "ANCHOR_RIGHT"); pcall(GameTooltip.SetHyperlink, GameTooltip, s.link); GameTooltip:Show()
+          elseif s.tip then GameTooltip:SetOwner(s, "ANCHOR_RIGHT"); GameTooltip:AddLine(s.tip, 1, 1, 1, true); GameTooltip:Show() end
+        end)
         b:SetScript("OnLeave", function() GameTooltip:Hide() end)
         b:SetScript("OnClick", function(s) if s.onClick then s.onClick() end end)
         self.btn[self.nb] = b
@@ -457,7 +470,7 @@ local function Lines(parent, width, dark)
       b:ClearAllPoints()
       b:SetPoint("TOPLEFT", fs, "TOPLEFT", -2, 1)
       b:SetSize(self.width - (o.indent or 0) - 12, h + 2)
-      b.onClick, b.tip = o.onClick, o.tip
+      b.onClick, b.tip, b.link = o.onClick, o.tip, o.link
       b:Show()
     end
     self.y = self.y - h
@@ -708,18 +721,36 @@ J.Dungeon = Dungeon
 local function Row(i)
   local r = rows[i]
   if r then return r end
-  r = CreateFrame("Button", nil, pageView.list.child)
+  r = CreateFrame("Button", nil, pageView.list.child, BackdropTemplateMixin and "BackdropTemplate" or nil)
   r:SetSize(LIST_W - 30, ROW_H)
+  Backdrop(r, { 0.10, 0.08, 0.05, 0.85 }, { 0.30, 0.24, 0.14, 1 })
   r.sel = r:CreateTexture(nil, "BACKGROUND"); r.sel:SetAllPoints(); Grad(r.sel, "HORIZONTAL", { 1, 0.78, 0.3, 0.35 }, { 1, 0.78, 0.3, 0.02 })
   r.bar = r:CreateTexture(nil, "ARTWORK"); r.bar:SetPoint("TOPLEFT"); r.bar:SetPoint("BOTTOMLEFT"); r.bar:SetWidth(3)
   r.bar:SetColorTexture(1, 0.82, 0.3, 1)
   local hl = r:CreateTexture(nil, "HIGHLIGHT"); hl:SetAllPoints(); hl:SetColorTexture(1, 0.9, 0.6, 0.08)
   r.icon = r:CreateTexture(nil, "ARTWORK"); r.icon:SetSize(22, 22); r.icon:SetPoint("LEFT", 8, 0)
+  -- level badge on a boss portrait
+  r.badge = CreateFrame("Frame", nil, r, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  r.badge:SetSize(20, 16); r.badge:SetPoint("BOTTOMLEFT", r.icon, "BOTTOMLEFT", -4, -3)
+  Backdrop(r.badge, { 0.05, 0.04, 0.03, 0.95 }, GOLD_EDGE, nil, 8)
+  r.badge.text = r.badge:CreateFontString(nil, "OVERLAY"); Font(r.badge.text, { "GameFontHighlightSmall" })
+  r.badge.text:SetPoint("CENTER", 0, 0)
+  r.badge:Hide()
   r.text = r:CreateFontString(nil, "OVERLAY"); Font(r.text, { "GameFontHighlight" })
-  r.text:SetPoint("LEFT", r.icon, "RIGHT", 6, 0); r.text:SetPoint("RIGHT", -34, 0); r.text:SetJustifyH("LEFT")
+  r.text:SetPoint("LEFT", r.icon, "RIGHT", 8, 0); r.text:SetPoint("RIGHT", -52, 0); r.text:SetJustifyH("LEFT")
   if r.text.SetWordWrap then r.text:SetWordWrap(false) end
+  r.sub = r:CreateFontString(nil, "OVERLAY"); Font(r.sub, { "GameFontDisableSmall", "GameFontHighlightSmall" })
+  r.sub:SetPoint("TOPLEFT", r.text, "BOTTOMLEFT", 0, -2); r.sub:SetPoint("RIGHT", -52, 0); r.sub:SetJustifyH("LEFT")
+  if r.sub.SetWordWrap then r.sub:SetWordWrap(false) end
   r.right = r:CreateFontString(nil, "OVERLAY"); Font(r.right, { "GameFontHighlightSmall" })
-  r.right:SetPoint("RIGHT", -6, 0)
+  r.right:SetPoint("RIGHT", -8, 0)
+  r.crestA = r:CreateTexture(nil, "OVERLAY"); r.crestA:SetSize(18, 18)
+  r.crestH = r:CreateTexture(nil, "OVERLAY"); r.crestH:SetSize(18, 18)
+  r.crestH:SetPoint("RIGHT", -8, 0); r.crestA:SetPoint("RIGHT", r.crestH, "LEFT", 0, 0)
+  for _, c in ipairs({ { r.crestA, ICON.alliance }, { r.crestH, ICON.horde } }) do
+    if Has(c[2]) then c[1]:SetTexture(c[2]); c[1]:SetTexCoord(CREST_TC[1], CREST_TC[2], CREST_TC[3], CREST_TC[4]) end
+    c[1]:Hide()
+  end
   r:SetScript("OnClick", function(self) selected = self.key; J.RenderPage() end)
   rows[i] = r
   return r
@@ -747,7 +778,7 @@ local function Bosses(d)
   if e and e.bosses and #e.bosses > 0 then
     for _, b in ipairs(e.bosses) do
       local ours = byName[Norm(b.name)]
-      out[#out + 1] = { name = b.name, desc = b.desc, icon = b.icon, display = b.display, npc = ours and ours[2],
+      out[#out + 1] = { name = b.name, desc = b.desc, icon = b.icon, display = b.display, enc = b.id, npc = ours and ours[2],
                         level = ours and ours[3], drops = ours and ours[4] }
     end
   else
@@ -800,13 +831,14 @@ local function RenderQuestDetail(L, id)
   if nq and nq.dr then
     for _, dr in ipairs(nq.dr) do L:Add(P_MUTED .. dr[1] .. ": " .. dr[2] .. "|r", { indent = 8, font = { "QuestFontNormalSmall", "GameFontHighlightSmall" } }) end
   end
+  local rq = ns.quests and ns.quests[id]
   L:Head("Starts at", ICON.start)
-  local g = q.g
-  L:Add((Where(g, true) or "Not recorded") .. ((g and g[2]) and ("   " .. P_LINK .. "Show on map|r") or ""), { gap = 4,
+  local g = (q.g and q.g[2]) and q.g or (rq and rq.g and rq.g[2] and rq.g) or q.g
+  L:Add((Where(g, true) or (P_MUTED .. "Not in the quest database yet|r")) .. ((g and g[2]) and ("   " .. P_LINK .. "Show on map|r") or ""), { gap = 4,
     onClick = (g and g[2]) and function() ShowSpot(g[1], g[2], g[3], g[4]) end or nil, tip = (g and g[2]) and "Show it on the world map." or nil })
   L:Head("Turn in", ICON.turnin)
-  local t = q.t
-  L:Add((Where(t, true) or "Not recorded") .. ((t and t[2]) and ("   " .. P_LINK .. "Show on map|r") or ""), { gap = 4,
+  local t = (q.t and q.t[2]) and q.t or (rq and rq.t and rq.t[2] and rq.t) or q.t
+  L:Add((Where(t, true) or (P_MUTED .. "Not in the quest database yet|r")) .. ((t and t[2]) and ("   " .. P_LINK .. "Show on map|r") or ""), { gap = 4,
     onClick = (t and t[2]) and function() ShowSpot(t[1], t[2], t[3], t[4]) end or nil, tip = (t and t[2]) and "Show it on the world map." or nil })
   if #chain > 0 then
     L:Head("Quest chain", ICON.chain)
@@ -825,9 +857,57 @@ local function RenderQuestDetail(L, id)
   end
   L:Head("Rewards", ICON.reward)
   local xp = J.QuestXP(id)
-  L:Add(xp and (P_TITLE .. ns.RunLog.Thousands(xp) .. " XP|r" .. P_MUTED .. "  at your level|r") or (P_MUTED .. "XP not recorded|r"), { gap = 4 })
+  L:Add(xp and (P_TITLE .. (q.xe and "about " or "") .. ns.RunLog.Thousands(xp) .. " XP|r" .. P_MUTED .. "  at your level|r")
+    or (P_MUTED .. "No XP|r"), { gap = 4, font = { "QuestTitleFont", "GameFontNormalLarge" },
+    tip = q.xe and "Forever's databases don't have this quest's XP yet: this is what a quest of its level usually gives." or nil })
   L:Add(q.sh and (P_GOOD .. "Shareable|r  -  accept it, then share it with your group.") or (P_MUTED .. "Can't be shared|r"),
     { gap = 6, icon = Has(ICON.share) and ICON.share or nil, iconSize = 16 })
+end
+
+local lootCache = {}
+--- A boss's loot from the game's own Encounter Journal (read when the boss is opened, then kept).
+local function BossLoot(d, b)
+  if not (b.enc and EJ_SelectEncounter and EJ_GetNumLoot) then return nil end
+  local c = lootCache[b.enc]
+  if c and (c.complete or (c.tries or 0) >= 3) then return c end
+  local e = ej and ej[d.name]
+  if e and e.id then pcall(EJ_SelectInstance, e.id) end
+  pcall(EJ_SelectEncounter, b.enc)
+  local ok, n = pcall(EJ_GetNumLoot)
+  local out, complete = {}, true
+  for i = 1, (ok and n or 0) do
+    local info
+    if C_EncounterJournal and C_EncounterJournal.GetLootInfoByIndex then
+      local okI, t = pcall(C_EncounterJournal.GetLootInfoByIndex, i)
+      if okI and type(t) == "table" then info = t end
+    elseif EJ_GetLootInfoByIndex then
+      local okI, itemID, _, name, icon, slot, armor, link = pcall(EJ_GetLootInfoByIndex, i)
+      if okI and itemID then info = { itemID = itemID, name = name, icon = icon, slot = slot, armorType = armor, link = link } end
+    end
+    if info and info.itemID then
+      if not info.name or info.name == "" then
+        local nm, link, q, _, _, _, _, _, _, icon = GetItemInfo(info.itemID)
+        info.name, info.link, info.itemQuality, info.icon = nm, info.link or link, info.itemQuality or q, info.icon or icon
+        if not nm then
+          complete = false   -- the game hasn't loaded this item yet: ask for it, look again shortly
+          if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, info.itemID) end
+        end
+      end
+      out[#out + 1] = info
+    end
+  end
+  out.complete = complete
+  out.tries = ((c and c.tries) or 0) + 1   -- at most 3 looks for items still loading
+  lootCache[b.enc] = out
+  return out
+end
+
+local function QualityHex(q)
+  if q and GetItemQualityColor then
+    local ok, _, _, _, hex = pcall(GetItemQualityColor, q)
+    if ok and hex then return "|c" .. hex end
+  end
+  return P_TITLE
 end
 
 local function RenderBossDetail(L, d, b)
@@ -840,6 +920,23 @@ local function RenderBossDetail(L, d, b)
       local q = Quest(dr[2])
       L:Add(P_TITLE .. dr[1] .. "|r" .. P_MUTED .. "  -  for " .. (q and q.n or "a quest") .. "|r", { indent = 4, gap = 3,
         onClick = function() tab, selected = "quests", dr[2]; J.RenderPage() end, tip = "Click to open the quest." })
+    end
+  end
+  local loot = BossLoot(d, b)
+  if loot and #loot > 0 then
+    L:Head("Loot", ICON.reward)
+    for _, it in ipairs(loot) do
+      local kind = { it.slot, it.armorType }
+      local extra = (#kind > 0 and (kind[1] or "") ~= "") and (P_MUTED .. "   " .. table.concat(kind, ", ") .. "|r") or ""
+      L:Add(QualityHex(it.itemQuality) .. (it.name or ("item " .. it.itemID)) .. "|r" .. extra,
+        { gap = 4, icon = it.icon, iconSize = 22, link = it.link or ("item:" .. it.itemID) })
+    end
+    if not loot.complete and loot.tries < 3 and C_Timer then   -- item names still loading: look again in a moment
+      local want = b.enc
+      C_Timer.After(1.5, function()
+        local cur2 = (cur and Dungeon(cur)) and Bosses(Dungeon(cur))[selected]
+        if frame and frame:IsShown() and tab == "bosses" and cur2 and cur2.enc == want then J.RenderPage() end
+      end)
     end
   end
   local n, best = 0, nil
@@ -957,24 +1054,38 @@ function J.RenderPage()
   local counts = { quests = nQuests, bosses = #Bosses(d), runs = #ns.RunLog.For(d.name) }
   for _, t in ipairs(P.tabs) do
     t:SetActive(t.key == tab)
-    t:SetText(("%s  %s(%d)|r"):format(t.title, GREY, counts[t.key] or 0))
+    t:SetText(("%s%s  %s(%d)|r"):format(Ico(t.icon, 16), t.title, GREY, counts[t.key] or 0))
   end
-  P.factionB:SetShown(tab == "quests")
-  P.factionB:SetText(DB().otherFaction and "Both factions" or "My faction")
+  Me()
+  for _, cb in ipairs(P.crests) do
+    cb:SetShown(tab == "quests")
+    local lit = cb.fa == myFaction or DB().otherFaction
+    cb.tex:SetDesaturated(not lit); cb.tex:SetAlpha(lit and 1 or 0.45)
+  end
 
   -- left list
   local items = {}
   local bosses = Bosses(d)
   if tab == "quests" then
+    local lv = UnitLevel("player")
     for _, it in ipairs(QuestRows(d)) do
-      items[#items + 1] = { key = it.id, text = ST_COLOR[it.s] .. it.q.n .. "|r", right = GREY .. (it.q.l or "") .. "|r", icon = QUEST_ICON[it.s] }
+      local q, sub = it.q, nil
+      if it.s == ST.DONE then sub = "Completed"
+      elseif it.s == ST.READY then sub = "Ready to turn in"
+      elseif it.s == ST.LOG then
+        local have, need = ns.Progress and ns.Progress(it.id)
+        sub = "In your quest log" .. ((need and need > 0) and ("  " .. have .. "/" .. need) or "")
+      elseif it.s == ST.LOCKED then sub = "Needs earlier quests first"
+      elseif (q.r or 0) > lv then sub = "Available from level " .. q.r
+      else sub = "Level " .. (q.l or "?") .. "  -  you can pick it up" end
+      items[#items + 1] = { key = it.id, text = ST_COLOR[it.s] .. q.n .. "|r", sub = sub, icon = QUEST_ICON[it.s], fa = q.fa or "both" }
     end
   elseif tab == "bosses" then
     local run = ns.RunLog.Current()
     for i, b in ipairs(bosses) do
       local killed = run and run.bosses[b.name]
-      items[#items + 1] = { key = i, text = (killed and GREY or WHITE) .. b.name .. "|r", right = GREY .. ((b.level and b.level > 0) and b.level or "") .. "|r",
-                            boss = b }
+      items[#items + 1] = { key = i, text = (killed and GREY or WHITE) .. b.name .. "|r", boss = b,
+                            sub = killed and "Killed this run" or ((b.drops and "Drops quest items") or nil) }
     end
   else
     for _, run in ipairs(ns.RunLog.For(d.name)) do
@@ -983,21 +1094,34 @@ function J.RenderPage()
   end
   if selected == nil or (type(selected) ~= type(items[1] and items[1].key)) then selected = items[1] and items[1].key end
   local found = false
+  local rh = (tab == "runs") and ROW_H or 44
   for i, it in ipairs(items) do
     local r = Row(i)
     r.key = it.key
-    r:ClearAllPoints(); r:SetPoint("TOPLEFT", 0, -(i - 1) * ROW_H)
+    r:SetHeight(rh - 4)
+    r:ClearAllPoints(); r:SetPoint("TOPLEFT", 0, -(i - 1) * rh)
     r.text:SetText(it.text); r.right:SetText(it.right or "")
+    r.sub:SetText(it.sub or ""); r.sub:SetShown(it.sub ~= nil)
+    r.text:ClearAllPoints()
+    r.text:SetPoint(it.sub and "BOTTOMLEFT" or "LEFT", r.icon, it.sub and "RIGHT" or "RIGHT", 8, it.sub and 1 or 0)
+    r.text:SetPoint("RIGHT", -52, 0)
+    local size = it.boss and 32 or 20
+    r.icon:SetSize(size, size)
     if it.boss then PaintPortrait(r.icon, it.boss); r.icon:Show()
     elseif it.icon then r.icon:SetTexture(it.icon); r.icon:SetTexCoord(0, 1, 0, 1); r.icon:Show()
     else r.icon:Hide() end
+    local lvl = it.boss and it.boss.level
+    r.badge:SetShown(lvl ~= nil and lvl > 0)
+    if lvl and lvl > 0 then r.badge.text:SetText(lvl) end
+    r.crestA:SetShown(it.fa == "A" or it.fa == "both")
+    r.crestH:SetShown(it.fa == "H" or it.fa == "both")
     r.sel:SetShown(it.key == selected); r.bar:SetShown(it.key == selected)
     if it.key == selected then found = true end
     r:Show()
   end
   for i = #items + 1, #rows do rows[i]:Hide() end
   if not found then selected = items[1] and items[1].key end
-  P.list.child:SetSize(LIST_W - 30, #items * ROW_H + 4)
+  P.list.child:SetSize(LIST_W - 30, #items * rh + 4)
   P.empty:SetShown(#items == 0)
   P.empty:SetText(tab == "runs" and "No runs logged yet. Runs are recorded on their own when you go in." or
     (tab == "quests" and "No quests recorded for this dungeon." or "No bosses recorded."))
@@ -1297,16 +1421,35 @@ local function Build()
   -- tabs, sitting on top of the pages
   P.tabs = {}
   local tx = 4
-  for _, t in ipairs({ { "quests", "Quests" }, { "bosses", "Bosses" }, { "runs", "Runs" } }) do
-    local b = Tab(P, t[2], 126, function() tab, selected = t[1], nil; J.RenderPage() end)
-    b.key, b.title = t[1], t[2]
+  for _, t in ipairs({ { "quests", "Quests", ICON.quests }, { "bosses", "Bosses", ICON.boss }, { "runs", "Runs", ICON.clock } }) do
+    local b = Tab(P, t[2], 136, function() tab, selected = t[1], nil; J.RenderPage() end)
+    b.key, b.title, b.icon = t[1], t[2], t[3]
     b:SetPoint("TOPLEFT", tx, -(BANNER_H + 8))
-    tx = tx + 130
+    tx = tx + 140
     P.tabs[#P.tabs + 1] = b
   end
-  P.factionB = FlatButton(P, "My faction", 120, function() DB().otherFaction = not DB().otherFaction or nil; selected = nil; J.RenderPage() end,
-    "Show only your faction's quests, or both factions'.", 24)
-  P.factionB:SetPoint("TOPRIGHT", -4, -(BANNER_H + 10))
+  -- faction crests: yours is always on; click the other one to see its quests too
+  P.crests = {}
+  for i, f in ipairs({ { "H", ICON.horde, "Horde" }, { "A", ICON.alliance, "Alliance" } }) do
+    local cb = CreateFrame("Button", nil, P, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    cb:SetSize(30, 28)
+    Backdrop(cb, { 0.12, 0.09, 0.06, 0.95 }, DIM_EDGE)
+    cb:SetPoint("TOPRIGHT", -4 - (i - 1) * 34, -(BANNER_H + 8))
+    cb.tex = cb:CreateTexture(nil, "ARTWORK"); cb.tex:SetPoint("TOPLEFT", 4, -4); cb.tex:SetPoint("BOTTOMRIGHT", -4, 4)
+    if Has(f[2]) then cb.tex:SetTexture(f[2]); cb.tex:SetTexCoord(CREST_TC[1], CREST_TC[2], CREST_TC[3], CREST_TC[4]) end
+    cb.fa = f[1]
+    cb:SetScript("OnClick", function(self)
+      Me()
+      if self.fa ~= myFaction then DB().otherFaction = not DB().otherFaction or nil; selected = nil; J.RenderPage() end
+    end)
+    cb:SetScript("OnEnter", function(self)
+      Me()
+      Tip(self, { f[3] .. " quests", self.fa == myFaction and "Your faction's quests are always shown."
+        or ("Click to " .. (DB().otherFaction and "hide" or "show") .. " the " .. f[3] .. " quests too.") })
+    end)
+    cb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    P.crests[#P.crests + 1] = cb
+  end
   local bodyTop = -(BANNER_H + 36)
   local listBox = Panel(P)
   listBox:SetPoint("TOPLEFT", 0, bodyTop); listBox:SetPoint("BOTTOMLEFT", 0, 0); listBox:SetWidth(LIST_W)
