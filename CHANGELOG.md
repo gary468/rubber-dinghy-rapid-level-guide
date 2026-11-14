@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.31
+- **Kill areas drop the objectives you've finished.** A quest with two kinds of mob (Beware of
+  Pterrordax) used to keep pointing at both; once one count is done, the stop's name, arrow, gold
+  dots and minimap area show only the mobs you still need.
+- **Stop pins land on a real spawn**, never the empty middle of an area whose mobs live in two
+  separate places.
+
 ## v1.0.30
 Restart the game after updating (there's a new file).
 - **The route stops changing as you move.** Each step's stops follow one planned order; where you
