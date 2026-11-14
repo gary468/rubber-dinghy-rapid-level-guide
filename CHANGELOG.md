@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.34
+- **More of Forever's own quests have a place on the map.** Where the quest data had nothing, the
+  route now uses ForeverChanges' objectives, descriptions and quest maps: Slithering Looters goes to
+  Lady Sesspira in the Ruins of Eldarath, Reclaiming Ravencrest to the Spitelash on Azshara's
+  southern tip.
+- **Right-clicking a "Hunt" or "Look for" hint asks first**, with the same skip menu as a stop.
+- **A step you picked with < or > goes back to automatic** once it's finished and the route has
+  moved past it.
+
 ## v1.0.33
 - **No more getting stuck on a finished zone.** When everything at your level is done, the route
   moves on to the next zone and tells you to "Grind to level N" until its quests open.
