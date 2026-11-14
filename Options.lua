@@ -168,7 +168,7 @@ local function Build()
     "Brings every quest you skipped (right-click a stop > Skip) back into the route.")
   unskipB:SetPoint("TOPLEFT", PAD + 170, y)
   y = y - 30
-  Check(f, y, "Learn quest counts and flight times", "Notes each quest's real objective counts and how long flights take, so the route planner uses real numbers instead of averages. Only facts about the game - never your pace. Stays on your PC.",
+  Check(f, y, "Learn quest counts, flights and locations", "Notes each quest's real objective counts, how long flights take, and - for quests no database has a location for (some Forever-only mobs and objects) - where you are when their progress goes up. The route planner then uses real numbers and puts those quests on the map. Only facts about the game - never your pace. Stays on your PC.",
     "noLearn", true, "route"); y = y - 22
   f.learnText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   f.learnText:SetPoint("TOPLEFT", PAD + 30, y)

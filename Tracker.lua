@@ -319,6 +319,25 @@ local function Render(r)
       Add(q.ot, { indent = 30, font = SMALL_FONT, color = GREY })
     end
   end
+  -- Things in other zones that wait (pick-ups until you're there, hand-ins until the route returns)
+  if r.later and #r.later > 0 and y < maxH then
+    for _, l in ipairs(r.later) do
+      if y > maxH then break end
+      local a, st = l.action, l.stop
+      local q = a.row.q
+      local zone = ns.MapName and ns.MapName(st.map) or "?"
+      local text
+      if a.kind == "get" then
+        text = ("Later: pick up %s in %s"):format(q and q.n or "?", zone)
+      else
+        text = ("Later: hand in %s in %s"):format(q and q.n or "?", zone)
+      end
+      Add(text, { indent = 12, font = SMALL_FONT, color = GREY, nowrap = true,
+        tip = (a.kind == "get" and "Picked up in another zone. Not worth the trip now: it joins the route once you're in "
+              or "Handed in in another zone. The route goes back there later, so it waits until then: ")
+              .. zone .. (l.visit and (" (" .. l.visit.name .. ", level " .. l.visit.from .. ")") or "") .. "." })
+    end
+  end
   -- Dungeon step: every quest for this dungeon and where it stands, like the Dungeon Journal shows it
   -- (its pick-up text, notes and required chains are used when the journal addon is loaded).
   if step.dungeon and y < maxH then

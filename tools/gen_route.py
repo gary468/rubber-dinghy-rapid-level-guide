@@ -436,6 +436,21 @@ def npc_path(i):
     paths[i] = res
     return res
 obj_npcs = {}   # creature NPC id -> quests that need it killed
+# Where objectives are for quests no database places, recorded in game (tools/learn.py ->
+# learned.json "spots": {qid: [[uiMap, x, y], ...]}).
+try:
+    LEARNED_SPOTS = {int(k): v for k, v in (json.load(open(HERE + r"\learned.json", encoding="utf-8")).get("spots") or {}).items()}
+except (FileNotFoundError, ValueError):
+    LEARNED_SPOTS = {}
+
+def spots_loc(spots, name):
+    from collections import Counter
+    m = Counter(p[0] for p in spots).most_common(1)[0][0]
+    pts = [(p[1], p[2]) for p in spots if p[0] == m]
+    cx = sum(x for x, _ in pts) / len(pts); cy = sum(y for _, y in pts) / len(pts)
+    rad = max(2.0, min(10.0, max(math.hypot(x - cx, y - cy) for x, y in pts)))
+    flat = ",".join(f"{x:.0f},{y:.0f}" for x, y in pts[:40])
+    return "{" + f"{lstr(name)},{m},{cx:.1f},{cy:.1f},{rad:.1f}" + (",{" + flat + "}" if len(pts) > 1 else "") + "}"
 tip_mob, tip_start, tip_end = {}, {}, {}
 for qid in sorted(set(used) | set(track)):
     q = Q[qid]; st = used.get(qid)
@@ -449,6 +464,9 @@ for qid in sorted(set(used) | set(track)):
     parts = [f"n={lstr(q.get('name'))}", f"l={q.get('questLevel') or 0}", f"r={q.get('requiredLevel') or 0}",
              f"g={lloc(givers.get(qid))}", f"t={lloc(t)}"]
     if o: parts.append(f"o={lloc(o, True)}")
+    elif LEARNED_SPOTS.get(qid):
+        # no location in any database, but players' recorded where its progress went up (Learn.lua)
+        parts.append("o=" + spots_loc(LEARNED_SPOTS[qid], q.get("name") or "Objective"))
     else:
         # no spot for its objectives: keep the quest's own objective text ("...in Wildhammer Keep")
         ot = get(f"X-Quest-{qid}-8")

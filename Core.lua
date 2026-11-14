@@ -666,6 +666,38 @@ local function BuildStops(rows, stepMap, current)
     if s.away then away[#away + 1] = s else here[#here + 1] = s end
   end
   local pm, px, py = ns.HerePos()
+  -- Stops in another zone on a zone step: never a detour mid-zone (Gary flew Hinterlands -> Booty
+  -- Bay for a pick-up whose objective was back in the Hinterlands). A pick-up elsewhere waits until
+  -- you're in that zone; a hand-in elsewhere waits for the route's next visit there. Either way it's
+  -- listed under "Later". Hand-ins in a zone the route never returns to stay as the last stops.
+  -- (Dungeon steps and get-ready routes span zones by design and keep everything.)
+  ns.laterActions = {}
+  if curStep and not curStep.dungeon and not curStep.prep and #away > 0 then
+    local curIdx
+    for i, st in ipairs(ns.steps) do if st == curStep then curIdx = i; break end end
+    local function VisitedLater(map)
+      for i = (curIdx or #ns.steps) + 1, #ns.steps do
+        local st = ns.steps[i]
+        if st.map == map and not (st.dungeon and ns.DungeonOff(st.dungeon)) then return st end
+      end
+    end
+    local keep = {}
+    for _, st in ipairs(away) do
+      local acts = {}
+      for _, a in ipairs(st.actions) do
+        local there = (pm == st.map)
+        local later = (a.kind == "get") and not there
+          or (a.kind == "turn" and not there and VisitedLater(st.map) ~= nil)
+        if later then
+          ns.laterActions[#ns.laterActions + 1] = { action = a, stop = st, visit = VisitedLater(st.map) }
+        else
+          acts[#acts + 1] = a
+        end
+      end
+      if #acts > 0 then st.actions = acts; keep[#keep + 1] = st end
+    end
+    away = keep
+  end
   local cx, cy
   if pm == stepMap then
     cx, cy = px, py
@@ -859,7 +891,8 @@ function ns.Recompute()
   end
   local pm = ns.PlayerPos()
   ns.route = { level = level, idx = idx, step = step, counts = counts, stops = stops, loose = loose,
-               start = start, other = other, manual = db.step ~= nil, inZone = (pm == step.map) }
+               start = start, other = other, manual = db.step ~= nil, inZone = (pm == step.map),
+               later = ns.laterActions or {} }
   for name, fn in pairs(ns.listeners) do ns.Safe(name, fn, ns.route) end
 end
 

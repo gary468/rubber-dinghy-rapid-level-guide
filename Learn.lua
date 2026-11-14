@@ -1,6 +1,8 @@
 -- Rubber Dinghy - learn facts about the game as you play (never your pace):
 --   * each quest's real objective counts ("0/10 ..."), which Questie's database doesn't have;
---   * flights: from which zone to which, and how long they take.
+--   * flights: from which zone to which, and how long they take;
+--   * where a quest's objectives are, for quests no database has a location for (Forever-only mobs
+--     and objects): each time such a quest's progress goes up, the spot you're standing on.
 -- tools/learn.py feeds these into the route planner, so it plans with real counts and real flight
 -- times. Your own speed is deliberately not recorded: the planner keeps an efficient player's pace,
 -- so the route is the fastest one, not a copy of how you happened to play. Stored in this addon's
@@ -45,9 +47,39 @@ local function RecordObjectives(id)
   d.obj[id] = table.concat(parts, ",")   -- e.g. "m10,i8" = kill 10, collect 8; "" = talk/deliver
 end
 
+---------------------------------------------------------------------------
+-- Where objectives are, for quests with no location in the data (no "o" field): the spot you're on
+-- each time the quest's progress goes up. tools/learn.py turns them into the quest's map area.
+---------------------------------------------------------------------------
+local MAX_SPOTS, NEAR = 25, 1.5   -- per quest; spots closer than this (map %) count as one
+local lastProg = {}
+local function RecordSpot(id)
+  local q = ns.quests and ns.quests[id]
+  if not q or q.o or not q.ob then return end   -- has a location already, or nothing to do out there
+  local have = ns.Progress(id)
+  local before = lastProg[id]
+  lastProg[id] = have
+  if not before or have <= before then return end   -- first sight, or no progress
+  local d = DB(); if not d then return end
+  local m, x, y = ns.PlayerPos()
+  if not m then return end
+  d.spots = d.spots or {}
+  local list = d.spots[id] or ""
+  local n = 0
+  for pm, px, py in list:gmatch("(%d+):([%d.]+),([%d.]+)") do
+    n = n + 1
+    if tonumber(pm) == m and math.abs(tonumber(px) - x) < NEAR and math.abs(tonumber(py) - y) < NEAR then return end
+  end
+  if n >= MAX_SPOTS then return end
+  d.spots[id] = list .. (list ~= "" and ";" or "") .. ("%d:%.1f,%.1f"):format(m, x, y)
+end
+
 local function ScanLog()
   if not DB() then return end
-  for _, e in ipairs(ns.QuestLog()) do RecordObjectives(e.id) end
+  for _, e in ipairs(ns.QuestLog()) do
+    RecordObjectives(e.id)
+    RecordSpot(e.id)
+  end
 end
 
 ---------------------------------------------------------------------------
@@ -92,5 +124,8 @@ function L.Summary()
   local d = ns.db and ns.db.learn
   local counts = 0
   for _ in pairs((d and d.obj) or {}) do counts = counts + 1 end
-  return ("Learned so far: %d quests' objective counts, %d flight times."):format(counts, #((d and d.fl) or {}))
+  local spots = 0
+  for _ in pairs((d and d.spots) or {}) do spots = spots + 1 end
+  return ("Learned so far: %d quests' objective counts, %d flight times, %d quest locations."):format(
+    counts, #((d and d.fl) or {}), spots)
 end
