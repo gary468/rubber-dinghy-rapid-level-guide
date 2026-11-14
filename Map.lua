@@ -445,7 +445,7 @@ end
 
 local function DrawOthers(canvas, cur)
   HideIcons()
-  if ns.db.noOtherPins then return end
+  local noOthers = ns.db.noOtherPins
   local w, h = canvas:GetWidth(), canvas:GetHeight()
   if not w or w == 0 then return end
   local scale = CanvasScale()
@@ -517,6 +517,32 @@ local function DrawOthers(canvas, cur)
       l:Show()
     end
   end
+
+  -- The current stop's mobs (the stop you clicked, else the first stop with a kill area): gold dots
+  -- on top of everything, so stop 1's kill area reads at a glance even when its shaded area covers
+  -- half the zone (Gary 14 Nov: "im not really seeing the kill area for 1").
+  if not overview then
+    local current = (hlStop and hlStop.area and hlStop.map == cur) and hlStop or nil
+    if not current then
+      for _, st in ipairs((route and route.stops) or {}) do
+        if st.area and not st.away then current = st; break end
+      end
+    end
+    if current and current.map == cur then
+      local qid = current.actions and current.actions[1] and current.actions[1].row.id
+      local pts = current.pts
+      if pts and #pts >= 2 then
+        for k = 1, #pts - 1, 2 do
+          Place(qid, "spawn", pts[k], pts[k + 1], 10, 1, 0.82, 0, 1, true)
+          Icon(n, canvas):SetFrameLevel(PIN_LEVEL - 6)
+        end
+      elseif current.cx then
+        Place(qid, "spawn", current.cx, current.cy, 12, 1, 0.82, 0, 1, true)
+        Icon(n, canvas):SetFrameLevel(PIN_LEVEL - 6)
+      end
+    end
+  end
+  if noOthers then return end
 
   -- quests in your log that aren't route stops: hand-in "?" or their mobs' spawns
   local inLog = {}
