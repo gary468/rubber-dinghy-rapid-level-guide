@@ -412,14 +412,16 @@ end
 --   1. inside a dungeon: its step;
 --   2. just finished getting ready for a dungeon: that dungeon, while you carry its quests;
 --   3. every step your level fits (its range, one level either side; up to 2 levels past it while
---      you have its quests on the go) is a candidate. Of those: the zone you're in while you have
---      its quests on the go; a chosen dungeon whose quests you carry; the zone you're in; then your
---      continent (quests on the go first); then the route's own order;
+--      you have its quests on the go; 5 for a chosen dungeon) is a candidate. Of those: a dungeon
+--      run that's done with hand-ins left; the zone you're in while you have its quests on the go;
+--      a chosen dungeon whose quests you carry; the zone you're in; then your continent (quests on
+--      the go first); then the route's own order;
 --   4. nothing fits (you're behind or ahead of the plan): the first step with work left you haven't
 --      out-levelled; if you're a little under-levelled for everything ahead, the next to open.
 -- Levelling up therefore moves you on even while you stand in a zone with quests left, and the
 -- zone you're in only wins among steps your level fits.
 local STAY_LEVELS = 2
+local DUNGEON_STAY = 5   -- a chosen dungeon's quests (and hand-ins after the run) hold longer
 local function AutoStep(level)
   local dn = ns.CurrentDungeon()
   if dn then
@@ -441,7 +443,7 @@ local function AutoStep(level)
   local best, bestScore, grind
   for i, step in ipairs(ns.steps) do
     -- cheap level filter first: only the handful of steps around your level get scanned
-    if level >= step.from - 1 and level <= step.to + STAY_LEVELS
+    if level >= step.from - 1 and level <= step.to + (step.dungeon and DUNGEON_STAY or STAY_LEVELS)
       and not (step.dungeon and ns.DungeonOff(step.dungeon)) then
       if step.grind then
         if not grind and level >= step.from and level < step.to then grind = i end
@@ -453,7 +455,9 @@ local function AutoStep(level)
         if fits then
           local here = pm and step.map == pm
           local score
-          if here and going then score = 6
+          if step.dungeon and c[READY] > 0 and c[LOG] == 0 then
+            score = 7   -- run done, only hand-ins left: finish it before anything else
+          elseif here and going then score = 6
           elseif step.dungeon then score = 5          -- carrying its quests: the run comes first
           elseif here then score = 4
           else
@@ -747,6 +751,16 @@ function ns.StopTooltip(owner, s, anchor)
   GameTooltip:AddLine(("%s %.1f, %.1f"):format(ns.MapName(s.map) or "?", s.x, s.y), 0.8, 0.8, 0.8)
   for _, a in ipairs(s.actions) do
     GameTooltip:AddLine(ns.ActionText(a) .. " |cff999999[" .. a.row.q.l .. "]|r", 1, 1, 1)
+  end
+  -- other quests at the same spot (their map icon would sit under this stop's number)
+  if s.alsoHere and #s.alsoHere > 0 then
+    GameTooltip:AddLine("Also here, not on the route:", 0.6, 0.6, 0.6)
+    for _, e in ipairs(s.alsoHere) do
+      local q = ns.quests[e.id]
+      if q then
+        GameTooltip:AddLine(("%s %s |cff999999[%s]|r"):format(e.kind == "turnin" and "Hand in:" or "Pick up:", q.n, q.l or "?"), 0.8, 0.8, 0.8)
+      end
+    end
   end
   GameTooltip:Show()
 end

@@ -121,32 +121,33 @@ Map.BlizzQuestTemplates = BlizzQuestTemplates
 -- your log keeps its Blizzard marker and area, and so does the quest you've picked in the quest log
 -- (or clicked under Other Quests), route or not.
 local routeSet = {}
+-- The game always has some quest "selected" (often just the first in your log), so a selection only
+-- counts once it changes from the one you logged in with - i.e. you clicked a quest.
+local selBaseline, selPicked
 function Map.ChosenQuest()
+  if ns.mapFocusQuest then return ns.mapFocusQuest end   -- clicked under Other Quests
   local id = (C_QuestLog and C_QuestLog.GetSelectedQuest and C_QuestLog.GetSelectedQuest()) or 0
   if (not id or id == 0) and GetQuestLogSelection and GetQuestLogTitle then
     local idx = GetQuestLogSelection()
     if idx and idx > 0 then id = select(8, GetQuestLogTitle(idx)) end
   end
-  if (not id or id == 0) and ns.mapFocusQuest then id = ns.mapFocusQuest end   -- clicked under Other Quests
-  return id or 0
+  id = id or 0
+  if selBaseline == nil then selBaseline = id end
+  if id ~= selBaseline then selPicked = id; selBaseline = -1 end
+  return (selPicked == id) and id or 0
 end
 
 local function SuppressBlizzard()
   if not (WorldMapFrame and WorldMapFrame.EnumeratePinsByTemplate) then return end
   local on = ns.db and not ns.db.noMap and not ns.db.keepBlizzMap
   if on then
-    local chosen = Map.ChosenQuest()
     for _, name in ipairs(BlizzQuestTemplates()) do
       for pin in WorldMapFrame:EnumeratePinsByTemplate(name) do
-        local qid = pin.questID or pin.questId
-        local hide
-        -- only the quest you picked in the quest log keeps Blizzard's marker; the route's own
-        -- quests have our numbered stops, and other quests stay out of the way
-        -- Blizzard's areas are always hidden (route areas are ours, in gold; a chosen off-route quest
-        -- gets ours in green). Its marker stays only for a quest you picked that isn't on the route.
-        if qid then hide = (qid ~= chosen) or routeSet[qid]
-        else hide = true end
-        if hide and pin:IsShown() then pin:Hide() end
+        -- All of Blizzard's quest markers and areas go: route quests have our numbered stops, other
+        -- quests our own "!", "?" and spawn icons, and the quest you pick in the log its area in
+        -- green. (The game always has some quest "selected", so keeping that one's marker left a
+        -- stray Blizzard "?" on the map.)
+        if pin:IsShown() then pin:Hide() end
       end
     end
     suppressed = true
@@ -384,7 +385,26 @@ local function DrawOthers(canvas, cur)
   local hidden = ns.db.hiddenQuests or {}
   local skip = ns.db.skip or {}
   local n, li, pathsDone = 0, 0, {}
+  -- Route stops on this map: a "!" or "?" that would sit under a numbered stop isn't drawn (it
+  -- would hide the number); the stop's tooltip lists it under "Also here" instead.
+  local stopsHere = {}
+  for _, st in ipairs((route and route.stops) or {}) do
+    st.alsoHere = nil
+    if st.map == cur and st.x and st.y then stopsHere[#stopsHere + 1] = st end
+  end
+  local NEAR = 2.2   -- map % (a stop marker is about this wide at normal zoom)
+  local function UnderStop(qid, kind, x, y)
+    for _, st in ipairs(stopsHere) do
+      if math.abs(st.x - x) < NEAR and math.abs(st.y - y) < NEAR then
+        st.alsoHere = st.alsoHere or {}
+        st.alsoHere[#st.alsoHere + 1] = { id = qid, kind = kind }
+        return true
+      end
+    end
+    return false
+  end
   local function Place(qid, kind, x, y, size, r, g, b, a, onRoute)
+    if kind ~= "spawn" and UnderStop(qid, kind, x, y) then return end
     n = n + 1
     local p = Icon(n, canvas)
     p.qid, p.kind, p.onRoute = qid, kind, onRoute
