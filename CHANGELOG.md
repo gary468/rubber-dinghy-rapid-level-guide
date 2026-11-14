@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.0.27
+- **Automation, like Leatrix Plus**, so you can switch Leatrix's off. Settings > Automation has a tick
+  box for each job, all on by default:
+  - accept and hand in quests, and pick them from a quest giver's list (a choice of rewards is left
+    to you; never a quest you skipped or one that costs gold or reagents);
+  - skip gossip: vendors, flight masters, trainers, bankers and stable masters open straight away,
+    any other NPC with Alt held;
+  - accept summons (after 10 seconds) and resurrections, release in battlegrounds;
+  - sell junk (and say what it fetched), repair (guild funds first), faster auto loot.
+  - Hold Shift at an NPC or vendor to do it yourself.
+  - A job Leatrix Plus still has on is left to Leatrix, and the settings show "(Leatrix Plus is doing
+    it)". Turn it off there (/ltp > Automation) and /reload.
+  - Each quest in a giver's list is picked at most once per visit, so a quest the game won't give you
+    can't bounce the window back and forth.
+- **The step follows your level first, where you are second.** Every step your level fits is a
+  candidate, and the nearest wins: the zone you're in, then your continent. Levelling past a zone
+  (more than 2 levels over) moves you on even with its quests still in your log.
+- **How efficient is the route?** Hover the tracker's step header to see:
+  - this step's XP for its travel time, and how that compares with the route average;
+  - whether you're on the planned level, or ahead or behind;
+  - the whole route's totals;
+  - your own XP per hour.
+  The settings window shows the same in one line under the step.
+- Tracker: the step header is one line ("Westfall (16-19)  4/76"), there's more space between stops,
+  and dungeon steps no longer repeat "(dungeon)" on every line.
 ## v1.0.26
 - **The route now runs 10-60:** Teldrassil and Zephras Isle, then Westfall, Loch Modan, Duskwood,
   Redridge, Darkshore, Ashenvale and Wetlands into the 30s and on to 60. In theory that's 1,020

@@ -29,3 +29,4 @@ Options.lua
 Minimap.lua
 Tooltip.lua
 Rares.lua
+Automation.lua

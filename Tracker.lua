@@ -80,7 +80,11 @@ local function NewLine()
       GameTooltip:AddLine("Click: show on the map.  Right-click: skip.", 0.4, 0.8, 1)
       GameTooltip:Show()
     elseif self.tip then
-      GameTooltip:SetOwner(self, "ANCHOR_LEFT"); GameTooltip:AddLine(self.tip, 1, 1, 1, true); GameTooltip:Show()
+      local tip = self.tip
+      if type(tip) == "function" then tip = tip() end
+      GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+      for line in tostring(tip):gmatch("[^\n]+") do GameTooltip:AddLine(line, 1, 1, 1, true) end
+      GameTooltip:Show()
     end
   end)
   b:SetScript("OnLeave", function(self)
@@ -207,7 +211,10 @@ local function Render(r)
   local title = (step.prep and step.name) or step.dungeon or step.name
   Add(("%s (%s)  |cff999999%d/%d%s|r"):format(title, range, r.idx, #ns.steps, (r.manual and not r.prep) and " manual" or ""),
     { font = HEADER_FONT, color = GOLD, bg = MODULE_BG, height = 22, gap = 3, nowrap = true,
-      tip = "Leveling route step. Use < and > in the header to change step, A for automatic." })
+      tip = function()
+        local eff = (not step.prep and ns.EfficiencyText) and ns.EfficiencyText(step, UnitLevel("player")) or ""
+        return (eff ~= "" and (eff .. "\n") or "") .. "|cff999999< and > in the header change step, A goes back to automatic.|r"
+      end })
   local goTo = (r.inZone or step.dungeon or step.grind) and "" or ("Go to " .. step.name .. ". ")
   local note = step.note
   if step.dungeon and not step.prep then

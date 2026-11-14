@@ -345,12 +345,6 @@ local function ScanStep(step, level)
   return rows, counts
 end
 
--- Current step: the first one with work left that you haven't out-levelled. Steps with quests in
--- your log stay current for 3 levels past their range, so you finish what you started.
--- Finish the zone you're in before moving on: a step with quests in your log (or ready to hand in)
--- stays current for up to 5 levels past its range, so a level-up from hand-ins doesn't send you to
--- the next zone with quests half done. Much older leftovers (e.g. 41-44 quests at 50) don't count.
-local STAY_LEVELS = 5
 --- The dungeon you're inside, as the route names it (the journal addon maps the game's instance
 --- names, e.g. "The Temple of Atal'Hakkar" -> "Sunken Temple"), or nil.
 -- Instance map IDs that name exactly one route dungeon (Classic IDs). Multi-wing places (Dire Maul,
@@ -395,17 +389,37 @@ local function DungeonStepFor(dn, level)
   return first or wings[1]
 end
 
--- Current step:
+-- Continent of a map (cached): how "near" two steps are when your level fits both.
+local contCache = {}
+function ns.Continent(m)
+  if not m then return nil end
+  local c = contCache[m]
+  if c == nil then
+    c = false
+    local id, guard = m, 0
+    while id and id > 0 and guard < 8 and C_Map and C_Map.GetMapInfo do
+      local info = C_Map.GetMapInfo(id)
+      if not info then break end
+      if info.mapType == 2 then c = id; break end   -- Enum.UIMapType.Continent
+      id = info.parentMapID; guard = guard + 1
+    end
+    contCache[m] = c
+  end
+  return c or nil
+end
+
+-- Current step - your LEVEL first, where you are second:
 --   1. inside a dungeon: its step;
 --   2. just finished getting ready for a dungeon: that dungeon, while you carry its quests;
---   3. the zone you're standing in, while you have its quests on the go;
---   4. a chosen dungeon whose quests you carry (you're on your way there);
---   5. a zone visit around your level you've just arrived in, if it has quests to pick up;
---   6. else the first step with work left you haven't out-levelled; if you're a little under-levelled
---      for everything ahead, the first step whose quests open within two levels.
--- A step with quests in your log stays current for up to 5 levels past its range, so a level-up
--- from hand-ins doesn't send you off with quests half done.
-local STAY_LEVELS = 5
+--   3. every step your level fits (its range, one level either side; up to 2 levels past it while
+--      you have its quests on the go) is a candidate. Of those: the zone you're in while you have
+--      its quests on the go; a chosen dungeon whose quests you carry; the zone you're in; then your
+--      continent (quests on the go first); then the route's own order;
+--   4. nothing fits (you're behind or ahead of the plan): the first step with work left you haven't
+--      out-levelled; if you're a little under-levelled for everything ahead, the next to open.
+-- Levelling up therefore moves you on even while you stand in a zone with quests left, and the
+-- zone you're in only wins among steps your level fits.
+local STAY_LEVELS = 2
 local function AutoStep(level)
   local dn = ns.CurrentDungeon()
   if dn then
@@ -423,26 +437,36 @@ local function AutoStep(level)
     ns.db.goDungeon = nil   -- done (or dropped): back to the normal route
   end
   local pm = ns.HerePos()
-  if pm then
-    for i, step in ipairs(ns.steps) do
-      if step.map == pm and level <= step.to + STAY_LEVELS and not (step.dungeon and ns.DungeonOff(step.dungeon)) then
+  local pc = pm and ns.Continent(pm)
+  local best, bestScore, grind
+  for i, step in ipairs(ns.steps) do
+    -- cheap level filter first: only the handful of steps around your level get scanned
+    if level >= step.from - 1 and level <= step.to + STAY_LEVELS
+      and not (step.dungeon and ns.DungeonOff(step.dungeon)) then
+      if step.grind then
+        if not grind and level >= step.from and level < step.to then grind = i end
+      else
         local _, c = ScanStep(step, level)
-        if c[READY] + c[LOG] > 0 then return i end
-      end
-    end
-    for i, step in ipairs(ns.steps) do
-      if step.dungeon and not ns.DungeonOff(step.dungeon) and level <= step.to + STAY_LEVELS then
-        local _, c = ScanStep(step, level)
-        if c[READY] + c[LOG] > 0 then return i end
-      end
-    end
-    for i, step in ipairs(ns.steps) do
-      if step.map == pm and not step.dungeon and level >= step.from - 2 and level <= step.to + 2 then
-        local _, c = ScanStep(step, level)
-        if c[OPEN] > 0 then return i end
+        local going = c[READY] + c[LOG] > 0
+        -- a chosen dungeon is a candidate while you carry its quests (picking them up is the zones' job)
+        local fits = going or (not step.dungeon and c[OPEN] > 0 and level <= step.to + 1)
+        if fits then
+          local here = pm and step.map == pm
+          local score
+          if here and going then score = 6
+          elseif step.dungeon then score = 5          -- carrying its quests: the run comes first
+          elseif here then score = 4
+          else
+            local near = pc and ns.Continent(step.map) == pc
+            score = (near and 2 or 0) + (going and 1 or 0)
+          end
+          if not best or score > bestScore then best, bestScore = i, score end
+        end
       end
     end
   end
+  if best then return best end
+  if grind then return grind end
   local soon
   for i, step in ipairs(ns.steps) do
     if step.grind and level >= step.from and level < step.to then return i end
@@ -451,7 +475,6 @@ local function AutoStep(level)
     elseif level <= step.to + STAY_LEVELS then
       local _, c = ScanStep(step, level)
       if c[READY] + c[LOG] > 0 then return i end
-      -- one level of slack, so a little extra XP doesn't skip a visit you haven't done yet
       if level <= step.to + 1 and c[OPEN] > 0 then return i end
       -- quests only a level or two away don't hold a step on their own (no stops to show)...
       if not soon and level <= step.to + 1 and c[SOON] > 0 then soon = i end
@@ -459,6 +482,81 @@ local function AutoStep(level)
   end
   -- ...unless there's nothing open anywhere ahead: then the step that opens next
   return soon or #ns.steps
+end
+
+-- How efficient the route is, from the plan the search settled on (tools/plan.json): XP per minute
+-- of travel. Zone visits: travel time between stops (quest time isn't modelled - XP vs distance).
+-- Dungeons: the run itself. Optional dungeons are left out of the totals.
+local routeStats
+function ns.RouteStats()
+  if routeStats then return routeStats end
+  local xp, secs, n, lo, hi = 0, 0, 0, 99, 0
+  for _, s in ipairs(ns.steps) do
+    if not s.optional and s.xp then
+      xp, secs, n = xp + s.xp, secs + (s.secs or 0), n + 1
+      lo, hi = math.min(lo, s.from), math.max(hi, s.to)
+    end
+  end
+  routeStats = { xp = xp, secs = secs, n = n, from = lo, to = hi, perMin = secs > 0 and xp / secs * 60 or 0 }
+  return routeStats
+end
+
+local function Short(n)
+  if n >= 1000000 then return ("%.1fM"):format(n / 1000000) end
+  if n >= 10000 then return ("%dk"):format(math.floor(n / 1000 + 0.5)) end
+  if n >= 1000 then return ("%.1fk"):format(n / 1000) end
+  return tostring(math.floor(n + 0.5))
+end
+local function Mins(s)
+  if s >= 3600 then return ("%dh %02dm"):format(math.floor(s / 3600), math.floor(s % 3600 / 60)) end
+  return ("%d min"):format(math.max(1, math.floor(s / 60 + 0.5)))
+end
+
+--- One line for the settings window: "This step 2.4k XP/min (110% of average) - on plan".
+function ns.EfficiencyShort(step, level)
+  local rs, parts = ns.RouteStats(), {}
+  if step and step.xp and step.secs and step.secs > 0 and rs.perMin > 0 then
+    local per = step.xp / step.secs * 60
+    local ratio = per / rs.perMin
+    local col = ratio >= 1 and "33ff33" or ratio >= 0.6 and "ffd100" or "ff6040"
+    parts[#parts + 1] = ("This step |cff%s%s XP/min|r (%d%% of the route average)"):format(col, Short(per), math.floor(ratio * 100 + 0.5))
+  end
+  if step and level then
+    local d = level < step.from and (level - step.from) or level > step.to and (level - step.to) or 0
+    parts[#parts + 1] = d == 0 and "|cff33ff33on plan|r" or d > 0 and ("|cff8fd6ff%d ahead of plan|r"):format(d)
+      or ("|cffff6040%d behind plan|r"):format(-d)
+  end
+  return table.concat(parts, "  -  ")
+end
+
+--- Lines for the step's tooltip: how good this visit is, whether you're on the planned level, the
+--- whole route, and your own pace.
+function ns.EfficiencyText(step, level)
+  local rs, out = ns.RouteStats(), {}
+  if step and step.xp and step.secs and step.secs > 0 then
+    local per = step.xp / step.secs * 60
+    local ratio = rs.perMin > 0 and per / rs.perMin or 1
+    local col = ratio >= 1 and "33ff33" or ratio >= 0.6 and "ffd100" or "ff6040"
+    local what = step.dungeon and "a run of about " or "about "
+    out[#out + 1] = ("|cffffd100This step:|r ~%s XP for %s%s %s"):format(Short(step.xp), what, Mins(step.secs),
+      step.dungeon and "" or "of travel")
+    out[#out + 1] = ("  |cff%s%s XP per minute|r - %d%% of the route average (%s)"):format(col, Short(per),
+      math.floor(ratio * 100 + 0.5), Short(rs.perMin))
+  end
+  if step and level then
+    local d = level < step.from and (level - step.from) or level > step.to and (level - step.to) or 0
+    local where = d == 0 and "|cff33ff33on plan|r" or d > 0 and ("|cff8fd6ff%d level%s ahead|r"):format(d, d == 1 and "" or "s")
+      or ("|cffff6040%d level%s behind|r"):format(-d, d == -1 and "" or "s")
+    out[#out + 1] = ("|cffffd100Planned level here:|r %s. You're %d: %s"):format(
+      step.from == step.to and step.from or (step.from .. "-" .. step.to), level, where)
+  end
+  if rs.n > 0 then
+    out[#out + 1] = ("|cffffd100Whole route %d-%d:|r %d steps, ~%s XP for %s of travel"):format(
+      rs.from, rs.to, rs.n, Short(rs.xp), Mins(rs.secs))
+  end
+  local rate = ns.XP and ns.XP.Rate and ns.XP.Rate()
+  if rate then out[#out + 1] = ("|cffffd100Your pace:|r %s XP per hour played"):format(Short(rate)) end
+  return table.concat(out, "\n")
 end
 ---------------------------------------------------------------------------
 -- Routing: rows -> stops -> nearest-first order

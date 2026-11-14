@@ -20,14 +20,20 @@ what order, and keeps track of your progress as you play.
 - **Rare and named mob alerts.** A rare, rare elite or named quest target nearby gets a raid warning,
   a sound and a skull. A Target button (or your key binding) targets it in one press. WoW doesn't let
   addons target by themselves. Turn on enemy nameplates (V) to spot them from further away.
-- **Automatic progress.** It reads your progress from the game, finds the right zone for your level,
-  and moves on when you've done a zone.
+- **Automatic progress.** It reads your progress from the game and picks the step for your level
+  (the zone you're in wins when your level fits more than one). It moves on when you've done a zone
+  or levelled past it.
+- **Route efficiency.** Hover the tracker's step header to see this step's XP per minute of travel
+  against the route average, whether you're on the planned level, and your own XP per hour.
+- **Automation, like Leatrix Plus:** accept and hand in quests, skip gossip, accept summons and
+  resurrections, release in battlegrounds, sell junk, repair, faster loot. Each one is a tick box in
+  settings. Hold Shift to do it yourself. A job Leatrix Plus still has on is left to Leatrix.
 
-**The route is planned for the fastest time to 60** from Questie's database and the DungeonJournal
-addon. Every quest's objectives, follow-up chains, travel time, dungeon runs (with a good group)
-and grinding are timed. A search then picks the order of zones and dungeons that reaches 60 in
-the fewest hours played: about 44 in simulation, including Zul'Farrak, Maraudon and Sunken Temple.
-Dungeon steps link to the Dungeon Journal for where each quest starts.
+**The route is planned on XP against travel** from Questie's database. A search picks the order of
+zone visits that reaches 60 with the least travel between quests: 43 zone visits from Teldrassil at
+10 to Silithus at 59, about 4.1 million XP for 14.5 hours of pure travel, and no grinding. Dungeons
+are optional: tick one in settings and a side route collects its quests first. Dungeon steps link to
+the Dungeon Journal for where each quest starts.
 
 **Alliance only for now.** A Horde route is planned. On Horde characters the addon stays switched
 off and changes nothing.

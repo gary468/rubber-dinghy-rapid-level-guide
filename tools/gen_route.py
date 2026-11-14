@@ -347,6 +347,7 @@ if PLAN:
             if pick: note += " Pick up the dungeon quests here for a later run."
             st = dict(name=v["name"] + ("" if seen[m] == 1 else " (return visit)"), lv=lv,
                       zones=sorted(map_areas.get(m, [])) or [0], map_id=m, note=note, extra=[], pick=pick)
+        st["xp"], st["secs"] = int(v.get("xp") or 0), int(v.get("secs") or 0)
         for q in ids: new_used[q] = st
         new_steps.append((st, ids))
     dungeon_quests = {q for st, ids in new_steps if st.get("dungeon") for q in ids}
@@ -390,6 +391,7 @@ for st, ids in steps_out:
         if st.get("optional"): extra += ", optional=true"
         if st.get("cost") is not None: extra += f", cost={int(st['cost'])}"
     if st.get("grind"): extra += ", grind=true"
+    if st.get("xp"): extra += f", xp={st['xp']}, secs={st['secs']}"
     out.append(f"  {{name={lstr(st['name'])}, from={st['lv'][0]}, to={st['lv'][1]}, map={m}, note={lstr(st['note'])}, quests={{{','.join(map(str, ids))}}}{extra}}},")
 out.append("}")
 out.append("-- Quests only routed once they're in your log (never suggested for pick-up).")
@@ -497,6 +499,19 @@ out.append("-- Rare mobs (open world), [npcId] = name")
 out.append("ns.rareNpcs = {" + ", ".join(f"[{i}]={lstr(n)}" for i, n in sorted(rares.items())) + "}")
 out.append("-- Named quest targets (a mob with 1-3 spawns that a quest needs killed): [npcId] = {name, {questIds}}")
 out.append("ns.namedNpcs = {" + ", ".join(f"[{i}]={{{lstr(n)},{{{','.join(map(str, qs))}}}}}" for i, (n, qs) in sorted(named.items())) + "}")
+# Service NPCs (vendor, flight master, trainer, banker, battlemaster, auctioneer, stable master,
+# repair; QuestieDB's Classic npcFlags), for skipping their one-option gossip. Innkeepers are left
+# out on purpose: their gossip binds your hearthstone.
+SERVICE, INNKEEPER = 4 | 8 | 16 | 256 | 2048 | 4096 | 8192 | 16384, 128
+service = []
+for k in list(meta):
+    mm = re.match(r"X-Npc-(\d+)-S$", k)
+    if not mm: continue
+    fl = pos(get(k) or {}, 15)
+    if isinstance(fl, int) and fl & SERVICE and not fl & INNKEEPER: service.append(int(mm.group(1)))
+out.append("-- NPCs whose single gossip option is a service (vendor, flights, trainer, bank...).")
+out.append('ns.serviceNpcs = "' + ",".join(map(str, sorted(service))) + '"')
+print("service npcs:", len(service))
 print("patrol paths:", sum(1 for v in paths.values() if v), "| rares:", len(rares), "| named quest targets:", len(named))
 open(OUT, "w", encoding="utf-8").write("\n".join(out) + "\n")
 json.dump(qmeta, open(HERE + r"\qmeta.json", "w"))

@@ -29,6 +29,7 @@ local function Check(parent, y, label, tip, key, invert, apply)
   local fs = (type(cb.Text) == "table" and cb.Text) or (type(cb.text) == "table" and cb.text) or nil
   if not fs then fs = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlight"); fs:SetPoint("LEFT", cb, "RIGHT", 2, 0) end
   fs:SetText(label)
+  cb.label = fs
   cb:SetScript("OnClick", function(self)
     local v = self:GetChecked() and true or false
     if invert then v = not v end
@@ -148,6 +149,11 @@ local function Build()
   autoB:SetPoint("LEFT", prevB, "RIGHT", 4, 0)
   local nextB = Button(f, ">", 30, function() ns.Step(1) end, "Next step")
   nextB:SetPoint("LEFT", autoB, "RIGHT", 4, 0)
+  f.effText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  f.effText:SetPoint("LEFT", nextB, "RIGHT", 12, 0)
+  f.effText:SetWidth(2 * W - 2 * PAD - 230)
+  if f.effText.SetWordWrap then f.effText:SetWordWrap(false) end
+  f.effText:SetJustifyH("LEFT")
 
   COLX = 0
   local y = -92
@@ -219,7 +225,24 @@ local function Build()
 
   Header(f, y, "Minimap button"); y = y - 22
   local mm = Check(f, y, "Show the minimap button", "Left-click: this window. Right-click: show or hide the tracker.", "minimapHide", true, "minimap")
-  y = y - 36
+  y = y - 30
+
+  -- Automation: the jobs Leatrix Plus does. A job Leatrix still has on is left to it (and says so).
+  Header(f, y, "Automation"); y = y - 22
+  for _, ft in ipairs((ns.Automation and ns.Automation.FEATURES) or {}) do
+    local cb = Check(f, y, ft.label, ft.tip .. " A job Leatrix Plus still does is left to it: turn it off there (/ltp > Automation) and /reload.", ft.db, true)
+    local base = cb.refresh
+    local fs = cb.label
+    cb.refresh = function()
+      base()
+      if fs and fs.SetText then
+        local lea = ns.Automation.Leatrix(ft.key) and not ns.db[ft.db]
+        fs:SetText(ft.label .. (lea and "  |cffff8040(Leatrix Plus is doing it)|r" or ""))
+      end
+    end
+    y = y - 24
+  end
+  y = y - 12
 
   local moveB = Button(f, "", 150, function() ns.SetMoveMode(not ns.db.unlocked) end,
     "Move the tracker and the arrow: drag them, then click Lock. Shift + drag on the tracker header also works any time.")
@@ -246,6 +269,7 @@ function O.Refresh()
   if r and r.step then
     win.stepText:SetText(("|cffffd100Step %d/%d:|r %s (%d-%d)%s"):format(r.idx, #ns.steps, r.step.name,
       r.step.from, r.step.to, r.manual and " |cffff8040manual|r" or ""))
+    if win.effText and ns.EfficiencyShort then win.effText:SetText(ns.EfficiencyShort(r.step, UnitLevel("player"))) end
   end
 end
 
