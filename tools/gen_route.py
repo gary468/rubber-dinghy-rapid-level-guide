@@ -281,13 +281,23 @@ Q = {int(k): v for k, v in d["quests"].items()}
 black = set(d["blacklist"])
 # Corrections from what players see in Forever (tools/overrides.json): quests that aren't in the game,
 # and chain links QuestieDB is missing.
+NO_ACCEPT = {}
 try:
     for _k, _v in (json.load(open(HERE + r"\overrides.json", encoding="utf-8")).get("quests") or {}).items():
         _q = Q.get(int(_k))
         if _v.get("drop"): black.add(int(_k))
+        if _v.get("noAccept"): NO_ACCEPT[int(_k)] = _v["noAccept"]
         if _q is not None:
             for _f in ("preQuestGroup", "preQuestSingle", "requiredLevel"):
                 if _f in _v: _q[_f] = _v[_f]
+except FileNotFoundError:
+    pass
+# Minimum levels QuestieDB lacks (mostly Forever-only quests), read from ForeverChanges' quest pages
+# by tools/fetch_reqlevels.py ("requires level N", from what players see in game).
+try:
+    for _k, _v in json.load(open(HERE + r"\forever_reqlevels.json", encoding="utf-8")).items():
+        _q = Q.get(int(_k))
+        if _q is not None and _v and not _q.get("requiredLevel"): _q["requiredLevel"] = int(_v)
 except FileNotFoundError:
     pass
 
@@ -465,6 +475,8 @@ for st, ids in steps_out:
 out.append("}")
 out.append("-- Quests only routed once they're in your log (never suggested for pick-up).")
 out.append("ns.track = {" + ",".join(map(str, sorted(track))) + "}")
+out.append("-- Quests the auto-accept leaves alone (tools/overrides.json noAccept): why, shown in chat.")
+out.append("ns.noAccept = {" + ", ".join(f"[{k}]={lstr(v)}" for k, v in sorted(NO_ACCEPT.items())) + "}")
 out.append("ns.quests = {")
 n_obj = 0
 qmeta = {}
@@ -512,7 +524,12 @@ for qid in sorted(set(used) | set(track)):
     else: areas = set()
     o = objective_area(q, qid, areas)
     if o: n_obj += 1
-    parts = [f"n={lstr(q.get('name'))}", f"l={q.get('questLevel') or 0}", f"r={q.get('requiredLevel') or 0}",
+    # Minimum level: QuestieDB has none for many Forever-only quests, which made them look available at
+    # any level (Gary at 52: Hol'anyee Marshal doesn't offer her level-55 quest, which needs 55). Looked
+    # up from ForeverChanges where possible (above); still unknown -> 2 below the quest's level.
+    ql_ = q.get("questLevel") or 0
+    rl_ = q.get("requiredLevel") or (max(1, ql_ - 2) if ql_ >= 10 else 0)
+    parts = [f"n={lstr(q.get('name'))}", f"l={ql_}", f"r={rl_}",
              f"g={lloc(givers.get(qid))}", f"t={lloc(t)}"]
     if o: parts.append(f"o={lloc(o, True)}")
     elif LEARNED_SPOTS.get(qid):

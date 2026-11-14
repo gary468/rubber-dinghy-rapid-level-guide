@@ -26,6 +26,7 @@ XPBar.lua
 Map.lua
 Tracker.lua
 Items.lua
+Starters.lua
 Arrow.lua
 Options.lua
 Minimap.lua

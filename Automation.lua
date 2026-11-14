@@ -128,6 +128,12 @@ end
 local function OnDetail()
   local id = GetQuestID and GetQuestID()
   if Skipped(id) or Blocked("accept") then return end
+  -- off the route on purpose (Chasing A-Me 01 needs a Mithril Casing): left for you to decide
+  local why = id and ns.noAccept and ns.noAccept[id]
+  if why then
+    ns.Print(("Not auto-accepting %s: it %s, so it's off the route."):format(GetTitleText and GetTitleText() or "this quest", why))
+    return
+  end
   if QuestGetAutoAccept and QuestGetAutoAccept() then
     CloseQuest()        -- the game already accepted it
   elseif not LogFull() then

@@ -669,6 +669,40 @@ local function BuildStops(rows, stepMap, current)
   for _, s in ipairs(stops) do
     if s.away then away[#away + 1] = s else here[#here + 1] = s end
   end
+  -- Things picked up off the ground all over the zone (Crystals of Power in Un'Goro): no stop of
+  -- their own while anything else here is left - you pass them anyway (Gary 14 Nov: "you're telling
+  -- me to go all the way here for crystals which are lots of other places"). Listed "As you go";
+  -- once they're all that's left in the zone they become stops again.
+  ns.asYouGo = {}
+  do
+    local function Spread(a)
+      local q = a.row.q
+      if a.kind ~= "do" or not (q and q.o and q.o[6] and q.dr) or #q.o[6] < 30 then return false end
+      for _, d in ipairs(q.dr) do if d[2] ~= "on the ground" then return false end end
+      local p, x0, x1, y0, y1 = q.o[6], 100, 0, 100, 0
+      for k = 1, #p - 1, 2 do
+        x0, x1 = math.min(x0, p[k]), math.max(x1, p[k])
+        y0, y1 = math.min(y0, p[k + 1]), math.max(y1, p[k + 1])
+      end
+      return (x1 - x0) >= 30 and (y1 - y0) >= 30
+    end
+    local keep, moved, others = {}, {}, 0
+    for _, s in ipairs(here) do
+      local acts = {}
+      for _, a in ipairs(s.actions) do
+        if Spread(a) then moved[#moved + 1] = a else acts[#acts + 1] = a end
+      end
+      if #acts > 0 then others = others + 1 end
+      keep[#keep + 1] = { s = s, acts = acts }
+    end
+    if #moved > 0 and others > 0 then
+      here = {}
+      for _, k in ipairs(keep) do
+        if #k.acts > 0 then k.s.actions = k.acts; here[#here + 1] = k.s end
+      end
+      ns.asYouGo = moved
+    end
+  end
   local pm, px, py = ns.HerePos()
   -- Stops in another zone on a zone step: never a detour mid-zone (Gary flew Hinterlands -> Booty
   -- Bay for a pick-up whose objective was back in the Hinterlands). A pick-up elsewhere waits (the
@@ -755,6 +789,24 @@ local function BuildStops(rows, stepMap, current)
       for _, a in ipairs(s.actions) do
         local r = rank[(CODE[a.kind] or "o") .. a.row.id] or (a.kind == "go" and rank["r" .. a.row.id])
         if r and (not s.rank or r < s.rank) then s.rank = r end
+      end
+    end
+    -- A finished quest carried in (Williden's Journal, looted) is handed in when the route passes
+    -- its NPC, not first (Gary 14 Nov: "you're telling me to hand this in straight away" - 750 yd
+    -- back to Marshal's Refuge, where the route ends anyway): it joins the nearest planned stop.
+    for _, s in ipairs(here) do
+      if s.tier == 1 then
+        if not s.rank then
+          local bd, br = math.huge, nil
+          for _, o in ipairs(here) do
+            if o ~= s and o.rank then
+              local d = ((o.cx or o.x) - (s.cx or s.x)) ^ 2 + ((o.cy or o.y) - (s.cy or s.y)) ^ 2
+              if d < bd then bd, br = d, o.rank end
+            end
+          end
+          if br then s.rank = br + 0.5 end
+        end
+        if s.rank then s.tier = 2 end
       end
     end
   end
@@ -936,7 +988,7 @@ function ns.Recompute()
   local pm = ns.PlayerPos()
   ns.route = { level = level, idx = idx, step = step, counts = counts, stops = stops, loose = loose,
                start = start, other = other, manual = db.step ~= nil, inZone = (pm == step.map),
-               later = ns.laterActions or {} }
+               later = ns.laterActions or {}, asYouGo = ns.asYouGo or {} }
   for name, fn in pairs(ns.listeners) do ns.Safe(name, fn, ns.route) end
 end
 

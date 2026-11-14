@@ -252,6 +252,12 @@ local function Render(r)
         lines[#lines + 1] = "|cff999999< and > in the header change step, A goes back to automatic.|r"
         return table.concat(lines, "\n")
       end })
+  -- Items in your bags that start a quest (looted or picked up: A Mangled Journal, Message in a Bottle)
+  for _, it in ipairs(ns.Starters and ns.Starters.List() or {}) do
+    Add(("|cffffd100Starts a quest:|r %s - right-click it in your bags"):format(it.item), {
+      font = SMALL_FONT, color = WHITE, indent = 4, nowrap = true,
+      tip = ("%s starts %s. Right-click it in your bags to read it and take the quest."):format(it.item, it.quest) })
+  end
   local goTo = (r.inZone or step.dungeon or step.grind) and "" or ("Go to " .. step.name .. ". ")
   local note = step.note
   if step.dungeon and not step.prep then
@@ -345,6 +351,21 @@ local function Render(r)
   end
   local more = #r.stops - shown
   if more > 0 then Add(("+%d more stops"):format(more), { font = SMALL_FONT, color = GREY, indent = 22 }) end
+
+  -- Picked up off the ground all over the zone: no stop, grab them as you pass
+  for _, a in ipairs(r.asYouGo or {}) do
+    if y > maxH then break end
+    local id = a.row.id
+    Add("|cffffd100As you go:|r " .. a.row.q.n, { indent = 4, color = WHITE, nowrap = true,
+      tip = "These are on the ground all over the zone - pick them up as you pass your other stops. "
+        .. "It becomes a stop once everything else here is done.",
+      onClick = function() if ns.ShowQuestOnMap then ns.ShowQuestOnMap(id) end end })
+    for _, o in ipairs(ns.Objectives(id)) do
+      if not o.done then
+        Add(ns.ObjText(o, true), { indent = 30, font = SMALL_FONT, color = { 0.85, 0.85, 0.85 }, nowrap = true })
+      end
+    end
+  end
 
   -- Get-ready route: the dungeon's quests it can't reach yet, and why.
   if r.prep and r.stalled and #r.stalled > 0 and y < maxH then
