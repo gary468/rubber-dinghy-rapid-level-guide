@@ -1,5 +1,35 @@
 # Changelog
 
+## v1.0.30
+Restart the game after updating (there's a new file).
+- **The route stops changing as you move.** Each step's stops follow one planned order; where you
+  stand never re-sorts them. Only a finished stop drops off.
+- **Finish the zone you're in.** In the zone of a step that's due for your level (up to 2 levels
+  past it) with quests left, the route finishes it; anywhere else it follows your level.
+- **Real minimum levels** for Forever's own quests (read from ForeverChanges), so the route no longer
+  sends you to quests you can't take yet. Re-planned on them: about 90 hours played to 60.
+- **Hand-ins:**
+  - every finished quest handed in in the step's zone is a stop, planned or not, and it's handed in
+    when the route passes that NPC, not first;
+  - passing through another zone with a hand-in for a finished quest shows "Hand in here".
+- **Quests that start from an item** (A Mangled Journal, Message in a Bottle):
+  - in a zone where you can get one, the tracker says so: "Hunt" a named mob, "Look for" something on
+    the ground, or "Watch for" a random drop;
+  - mob tooltips say "Can drop ... - starts ...";
+  - once the item is in your bags: "Starts a quest: ... - right-click it in your bags".
+- **Pick-ups lying all over the zone** (Crystals of Power) are "As you go" instead of a stop in the
+  far corner; they become a stop once they're all that's left.
+- **Map:**
+  - the current stop's kill area is bright and its nearby mobs are gold dots; other stops' areas are
+    faint, and other quests' dots small and faint;
+  - stop 1 points at the part of its kill area nearest you;
+  - Blizzard's quest areas no longer show on the minimap.
+- **Quest targets:** a quest that names its target (Gor'tesh's head) goes to that mob, not others
+  that happen to drop the item.
+- **Auto-accept** leaves out Chasing A-Me 01 part 2 (it needs a Mithril Casing nothing in Un'Goro
+  drops) and says why in chat.
+- **Rare pop-up:** hides once clicked; no raid-warning text.
+
 ## v1.0.29
 - **The Dungeon Journal is no longer part of this addon.** v1.0.28 included it by mistake. The
   leveling route still knows every dungeon, its quests and your runs (the tracker shows a run's time,
