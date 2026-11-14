@@ -6,6 +6,31 @@ local Map = {}
 ns.Map = Map
 
 local HBDP = LibStub and LibStub("HereBeDragons-Pins-2.0", true)
+local HBDW = LibStub and LibStub("HereBeDragons-2.0", true)
+
+-- A place given on its own zone map (x, y 0-100), on the map you're looking at: the same map, or a
+-- continent / the world map that contains it. nil when it isn't on that map.
+local function ToCur(m, x, y, cur)
+  if not (m and x and y) then return nil end
+  if m == cur then return x, y end
+  if not (HBDW and HBDW.TranslateZoneCoordinates) then return nil end
+  local tx, ty = HBDW:TranslateZoneCoordinates(x / 100, y / 100, m, cur, false)
+  if tx and ty and tx >= 0 and tx <= 1 and ty >= 0 and ty <= 1 then return tx * 100, ty * 100 end
+  return nil
+end
+Map.ToCur = ToCur
+
+-- Looking at a continent or the whole world (not a zone): quest icons there are smaller and fewer.
+local overviewCache = {}
+local function IsOverview(cur)
+  local v = overviewCache[cur]
+  if v == nil then
+    local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(cur)
+    v = info and info.mapType and info.mapType <= 2 or false
+    overviewCache[cur] = v
+  end
+  return v
+end
 
 -- Questie draws its patrol lines at frame level 2015 on this client (map tiles sit below that).
 local OVERLAY_LEVEL, PIN_LEVEL = 2016, 2030
@@ -270,7 +295,7 @@ local function GetArea(i, canvas)
   return a
 end
 
-local function PlacePin(n, s, canvas, P, scale)
+local function PlacePin(n, s, canvas, P, scale, vx, vy)
   local p = mapPins[n]
   if not p then p = NewPin(canvas, 24); mapPins[n] = p end
   local lit = (s == hlStop)
@@ -278,7 +303,7 @@ local function PlacePin(n, s, canvas, P, scale)
   -- Scaled against the zoom so it keeps one size on screen; anchor offsets are in its own units.
   p:SetScale((lit and 1.25 or 1) / scale)
   p:ClearAllPoints()
-  local cx, cy = P(s.x, s.y)
+  local cx, cy = P(vx or s.x, vy or s.y)
   local k = scale / (lit and 1.25 or 1)
   p:SetPoint("CENTER", canvas, "TOPLEFT", cx * k, cy * k)
   p:SetFrameLevel(PIN_LEVEL + (lit and 5 or 0))
@@ -396,12 +421,15 @@ local function DrawOthers(canvas, cur)
   local stopsHere = {}
   for _, st in ipairs((route and route.stops) or {}) do
     st.alsoHere = nil
-    if st.map == cur and st.x and st.y then stopsHere[#stopsHere + 1] = st end
+    local vx, vy = ToCur(st.map, st.x, st.y, cur)
+    if vx then stopsHere[#stopsHere + 1] = { st = st, x = vx, y = vy } end
   end
+  local overview = IsOverview(cur)
   local NEAR = 2.2   -- map % (a stop marker is about this wide at normal zoom)
   local function UnderStop(qid, kind, x, y)
-    for _, st in ipairs(stopsHere) do
-      if math.abs(st.x - x) < NEAR and math.abs(st.y - y) < NEAR then
+    for _, sh in ipairs(stopsHere) do
+      if math.abs(sh.x - x) < NEAR and math.abs(sh.y - y) < NEAR then
+        local st = sh.st
         st.alsoHere = st.alsoHere or {}
         st.alsoHere[#st.alsoHere + 1] = { id = qid, kind = kind }
         return true
@@ -460,8 +488,9 @@ local function DrawOthers(canvas, cur)
     local q = ns.quests[e.id]
     if q and not routeSet[e.id] and not hidden[e.id] and not skip[e.id] then
       if ns.IsReady(e.id) then
-        if q.t and q.t[2] == cur and q.t[3] then Place(e.id, "turnin", q.t[3], q.t[4], 20, 1, 1, 1, 1, false) end
-        if q.tp then Path(q.tp, false) end
+        local tx, ty = q.t and ToCur(q.t[2], q.t[3], q.t[4], cur)
+        if tx then Place(e.id, "turnin", tx, ty, overview and 14 or 20, 1, 1, 1, 1, false) end
+        if q.tp and not overview then Path(q.tp, false) end
       elseif q.o and q.o[2] == cur then
         local pts = q.o[6]
         if pts and #pts >= 2 then
@@ -471,16 +500,28 @@ local function DrawOthers(canvas, cur)
       end
     end
   end
-  -- quests you can pick up here: "!" at the giver (faded when it's well below your level)
-  for _, id in ipairs(GiverIndex()[cur] or {}) do
-    if not inLog[id] and not routeSet[id] and not hidden[id] and not skip[id] then
-      local q = ns.quests[id]
-      if ns.Status(id, level) == ns.S.OPEN then
-        local low = (q.l or 0) < level - 5
-        Place(id, "avail", q.g[3], q.g[4], 20, low and 0 or 1, 1, 1, low and 0.6 or 1, false)
-        if q.gp then Path(q.gp, false) end
+  -- quests you can pick up here: "!" at the giver (faded when it's well below your level). On a
+  -- continent or the world map: every zone it contains, quests near your level only, no low ones.
+  local function Givers(list, m)
+    for _, id in ipairs(list or {}) do
+      if not inLog[id] and not routeSet[id] and not hidden[id] and not skip[id] then
+        local q = ns.quests[id]
+        local near = not overview or ((q.r or 0) <= level and (q.l or 0) >= level - 5)
+        if near and ns.Status(id, level) == ns.S.OPEN then
+          local gx, gy = ToCur(m, q.g[3], q.g[4], cur)
+          if gx then
+            local low = (q.l or 0) < level - 5
+            Place(id, "avail", gx, gy, overview and 14 or 20, low and 0 or 1, 1, 1, low and 0.6 or 1, false)
+            if q.gp and not overview then Path(q.gp, false) end
+          end
+        end
       end
     end
+  end
+  if overview then
+    for m, list in pairs(GiverIndex()) do Givers(list, m) end
+  else
+    Givers(GiverIndex()[cur], cur)
   end
   -- patrol paths for the route's own NPCs and mobs, in gold
   for _, s in ipairs((route and route.stops) or {}) do
@@ -517,8 +558,13 @@ local function Draw()
   -- Draw whichever of the route's stops are on the map you're looking at (a get-ready route spans
   -- several zones; its stops in another zone show when you open that zone).
   local onStep = false
-  for _, s in ipairs(route.stops or {}) do if s.map == cur then onStep = true; break end end
-  local hlHere = hlStop and hlStop.map == cur and not onStep
+  local view = {}   -- stop -> {x, y} on the map you're looking at
+  for _, s in ipairs(route.stops or {}) do
+    local vx, vy = ToCur(s.map, s.x, s.y, cur)
+    if vx then view[s] = { vx, vy }; onStep = true end
+  end
+  local hlx, hly = hlStop and ToCur(hlStop.map, hlStop.x, hlStop.y, cur)
+  local hlHere = hlx and not onStep
   if not onStep and not hlHere then return end
   local w, h = canvas:GetWidth(), canvas:GetHeight()
   if not w or w == 0 then return end
@@ -527,13 +573,13 @@ local function Draw()
   local function P(x, y) return x / 100 * w, -y / 100 * h end
 
   local pinN = 0
-  if hlHere then pinN = 1; PlacePin(pinN, hlStop, canvas, P, scale) end
+  if hlHere then pinN = 1; PlacePin(pinN, hlStop, canvas, P, scale, hlx, hly) end
   if not onStep then return end
 
   local li, ai, first = 0, 0, true
   local prevX, prevY
   local pmNow, pxNow, pyNow = ns.PlayerPos()
-  if pmNow == cur and pxNow then prevX, prevY = pxNow, pyNow end   -- the line starts at you
+  if pxNow then prevX, prevY = ToCur(pmNow, pxNow, pyNow, cur) end   -- the line starts at you
   local hasArea = QuestsWithAreas(cur)
   local mode = ns.db.areaMode or "next"
   local areasLeft = (mode == "all") and 99 or (mode == "off" and 0) or 1
@@ -543,15 +589,17 @@ local function Draw()
     bf:Show()
   end
   for _, s in ipairs(route.stops) do
-    if s.map == cur then
+    local v = view[s]
+    if v then
+      local sx, sy = v[1], v[2]
       if prevX then
         li = li + 1
         local x1, y1 = P(prevX, prevY)
-        local x2, y2 = P(s.x, s.y)
+        local x2, y2 = P(sx, sy)
         PlaceLine(GetLine(li, canvas), canvas, x1, y1, x2, y2, thick, first and 0.95 or 0.65)
       end
       first = false
-      prevX, prevY = s.x, s.y
+      prevX, prevY = sx, sy
       -- The next stop's area, plus the area of a stop you clicked (even if areas are off).
       if s.area and (areasLeft > 0 or s == hlStop) then
         if s ~= hlStop then areasLeft = areasLeft - 1 end
@@ -559,26 +607,30 @@ local function Draw()
         if bf and bf.SetMapID then pcall(bf.SetMapID, bf, cur) end
         if bf then bf:Show() end
         local blobbed = false
-        if bf then
+        if bf and s.map == cur then   -- Blizzard's shapes only on the stop's own zone map
           for _, a in ipairs(s.actions) do
             if a.kind == "do" and hasArea[a.row.id] then
               if pcall(bf.DrawBlob, bf, a.row.id, true) then blobbed = true end
             end
           end
         end
-        if s.r and not blobbed then
+        -- the area as a circle (on a continent view, its radius scaled to that map)
+        local acx, acy = ToCur(s.map, s.cx or s.x, s.cy or s.y, cur)
+        local ex = acx and ToCur(s.map, (s.cx or s.x) + (s.r or 0), s.cy or s.y, cur)
+        local rr = acx and ex and math.abs(ex - acx) or s.r
+        if s.r and not blobbed and acx and rr then
           ai = ai + 1
           local a = GetArea(ai, canvas)
-          a:SetSize(s.r * 2 / 100 * w, s.r * 2 / 100 * h)
+          a:SetSize(rr * 2 / 100 * w, rr * 2 / 100 * w)
           a:ClearAllPoints()
-          local cx, cy = P(s.cx or s.x, s.cy or s.y) -- the whole area, not just the nearest spawn
+          local cx, cy = P(acx, acy) -- the whole area, not just the nearest spawn
           a:SetPoint("CENTER", canvas, "TOPLEFT", cx, cy)
           a:SetVertexColor(1, 0.78, 0.16, (ns.db.areaAlpha or 0.2) * 0.9)
           a:Show()
         end
       end
       pinN = pinN + 1
-      PlacePin(pinN, s, canvas, P, scale)
+      PlacePin(pinN, s, canvas, P, scale, sx, sy)
     end
   end
 end
