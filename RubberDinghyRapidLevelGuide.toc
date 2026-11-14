@@ -17,6 +17,7 @@ Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 
 Data.lua
+Data_Dungeons.lua
 Core.lua
 Prep.lua
 Learn.lua
@@ -30,4 +31,6 @@ Options.lua
 Minimap.lua
 Tooltip.lua
 Rares.lua
+RunLog.lua
+Journal.lua
 Automation.lua

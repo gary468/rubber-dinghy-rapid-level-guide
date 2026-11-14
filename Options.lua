@@ -161,6 +161,9 @@ local function Build()
   local pickB = Button(f, "Dungeons & get ready...", 180, function() O.ToggleDungeons() end,
     "No dungeons are in the route until you choose them. Tick one to add it (a side route collects its quests first), or click Get ready for that side route alone.")
   pickB:SetPoint("TOPLEFT", PAD + 4, y)
+  local journalB = Button(f, "Dungeon Journal", 140, function() if ns.Journal then ns.Journal.Toggle() end end,
+    "Every dungeon: where its quests start, its bosses, and a log of your runs (time and XP).")
+  journalB:SetPoint("LEFT", pickB, "RIGHT", 8, 0)
   y = y - 32
   f.skipText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   f.skipText:SetPoint("TOPLEFT", PAD + 4, y - 5)
@@ -320,7 +323,7 @@ local function BuildDungeons()
   local ok, f = pcall(CreateFrame, "Frame", "RubberDinghyDungeons", UIParent, "BasicFrameTemplateWithInset")
   if not ok or not f then f = CreateFrame("Frame", "RubberDinghyDungeons", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil) end
   dwin = f
-  local DW = 660
+  local DW = 800
   f:SetSize(DW, 200)
   f:SetFrameStrata("DIALOG")
   f:SetClampedToScreen(true)
@@ -357,7 +360,7 @@ local function BuildDungeons()
   for _, st in ipairs(list) do
     local name = st.dungeon
     local cb = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
-    cb:SetPoint("TOPLEFT", PAD + col * 320, y)
+    cb:SetPoint("TOPLEFT", PAD + col * 390, y)
     cb:SetSize(22, 22)
     local fs = (type(cb.Text) == "table" and cb.Text) or (type(cb.text) == "table" and cb.text) or nil
     if not fs then fs = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"); fs:SetPoint("LEFT", cb, "RIGHT", 1, 0) end
@@ -382,9 +385,13 @@ local function BuildDungeons()
       O.RefreshDungeons()
     end, "Plan the quickest route, from where you are, through every quest chain and pick-up for " .. name
       .. ". The tracker follows it until you click Stop (or Back to the route).")
-    rb:SetPoint("TOPLEFT", PAD + col * 320 + 222, y)
+    rb:SetPoint("TOPLEFT", PAD + col * 390 + 222, y)
     rb.refresh = function() rb:SetText(ns.db.prep == name and "Stop" or "Get ready") end
     dcontrols[#dcontrols + 1] = rb
+    -- "Journal": this dungeon's page in our Dungeon Journal (quests, bosses, runs)
+    local jb = Button(f, "Journal", 66, function() if ns.Journal then ns.Journal.OpenDungeon(name) end end,
+      "Open " .. name .. " in the Dungeon Journal: where every quest starts, its bosses and your runs.")
+    jb:SetPoint("TOPLEFT", PAD + col * 390 + 306, y)
     col = col + 1
     if col == 2 then col = 0; y = y - 24 end
   end

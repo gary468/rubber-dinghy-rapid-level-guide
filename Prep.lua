@@ -91,9 +91,11 @@ local function PrereqsRaw(id)
     for _, p in ipairs(q.ps or {}) do if p > 0 then any[#any + 1] = p end end
   end
   if #all == 0 and #any == 0 then
-    local fdj = _G.ForeverDungeonJournal_NS
-    local chain = fdj and fdj.QUEST_PREREQ_CHAINS and fdj.QUEST_PREREQ_CHAINS[id]
-    if chain then for _, c in ipairs(chain) do if c.id then all[#all + 1] = c.id end end end
+    -- not in the route's data: our Dungeon Journal's (Data_Dungeons.lua)
+    local dq = ns.dungeonQuests and ns.dungeonQuests[id]
+    local ch = ns.dungeonChain and ns.dungeonChain[id]
+    for _, p in ipairs((dq and dq.pg) or (ch and ch[4]) or {}) do if p > 0 then all[#all + 1] = p end end
+    for _, p in ipairs((dq and dq.ps) or {}) do if p > 0 then any[#any + 1] = p end end
   end
   return all, any
 end

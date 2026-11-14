@@ -25,6 +25,17 @@ what order, and keeps track of your progress as you play.
   or levelled past it.
 - **Route efficiency.** Hover the tracker's step header to see this step's XP per minute of travel
   against the route average, whether you're on the planned level, and your own XP per hour.
+- **Dungeon Journal.** Every 10-60 dungeon on one page of cards (levels, "4/5 quests", a tick when
+  they're all done), with search, filters and Hide Dungeons. Each dungeon has:
+  - **Quests**: live status, where each one starts, its objective, where to hand it in, the chain
+    before it ("step 2 of 4"), XP at your level, and whether it can be shared.
+  - **Bosses**: from the game's own Encounter Journal when it has the dungeon, plus the quest items
+    each boss drops.
+  - **Runs**: your Run Log.
+  Open it from the settings window, Shift + click on the minimap button, a Journal button in the
+  Dungeons window, or "Open in the Dungeon Journal" on a dungeon step.
+- **Run Log.** Every dungeon run is recorded on its own: time, mob XP, kills, bosses, deaths, money
+  and time outside. Character Logs in the journal lists every run.
 - **Automation, like Leatrix Plus:** accept and hand in quests, skip gossip, accept summons and
   resurrections, release in battlegrounds, sell junk, repair, faster loot. Each one is a tick box in
   settings. Hold Shift to do it yourself. A job Leatrix Plus still has on is left to Leatrix.
@@ -32,8 +43,8 @@ what order, and keeps track of your progress as you play.
 **The route is planned on XP against travel** from Questie's database. A search picks the order of
 zone visits that reaches 60 with the least travel between quests: 43 zone visits from Teldrassil at
 10 to Silithus at 59, about 4.1 million XP for 14.5 hours of pure travel, and no grinding. Dungeons
-are optional: tick one in settings and a side route collects its quests first. Dungeon steps link to
-the Dungeon Journal for where each quest starts.
+are optional: tick one in settings and a side route collects its quests first. Dungeon steps open
+our own Dungeon Journal, which shows where each quest starts.
 
 **Alliance only for now.** A Horde route is planned. On Horde characters the addon stays switched
 off and changes nothing.
@@ -80,10 +91,18 @@ Game Menu > Options > AddOns.
   and contributors. This addon is not part of or endorsed by Questie.
 - **Map maths and minimap pins:** [HereBeDragons](https://github.com/Nevcairiel/HereBeDragons) by
   Nevcairiel. The **LibStub** and **CallbackHandler** libraries are also used.
-- **Dungeon levels, quest lists and entrance points** used for planning come from the DungeonJournal
-  addon by Exehn, read from the local install at build time. Only the dungeon names and entrance
-  points end up in the route. The addon opens the journal (`/dj`) when it's installed, and bundles
-  none of its code.
+- **Dungeon Journal data** (`Data_Dungeons.lua`, built by `tools/gen_dungeons.py`):
+  - **From QuestieDB:** dungeon areas, instance IDs, entrances, every quest and its chain, objective
+    text, shareable flags and quest XP.
+  - **Classic dungeons' level ranges and bosses:** [Wowhead Classic](https://www.wowhead.com/classic).
+  - **WoW Forever's new dungeons:** Blizzard's dungeon announcement, as reported by
+    [Icy Veins](https://www.icy-veins.com/wow-forever/) and
+    [PC Games](https://www.pcgames.de/World-of-Warcraft-Spiel-42971/Tipps/WoW-Forever-Dungeons-Uebersicht-zum-Start-1553853/),
+    plus [Warcraft Tavern's Forever dungeon guides](https://www.warcrafttavern.com/forever/guides/dungeons/)
+    for entrances, bosses and quest lists.
+  - **In game:** the journal reads boss descriptions, portraits and art from the game's own
+    Encounter Journal, and level ranges from the group finder.
+  - It's our own work. Nothing is taken from the DungeonJournal addon.
 - **Licence:** GNU GPL v3 or later (see `LICENSE.md`).
 
 ## Rebuilding the route data
@@ -98,5 +117,7 @@ This decodes QuestieDB, builds the zone data, makes a first plan (`tools/plan_ro
 for the fastest order of zones and dungeons (`tools/optimize.py`, `-Minutes` to search longer,
 `-Force "Sunken Temple"` for dungeons that must be in it) and writes `Data.lua`. The time model's
 numbers (kill time, flights, boats, dungeon runs) are in `tools/routelib.py`. Dungeon run times and
-kill XP come from the DungeonJournal addon's Run Log when it has one. Zone notes are in `STEPS` in
+kill XP come from the DungeonJournal addon's Run Log when it has one. The Dungeon Journal's data
+(`Data_Dungeons.lua`) is rebuilt with `python -I tools/gen_dungeons.py "<WoW>/_forever_" Data_Dungeons.lua`
+when QuestieDB updates. Zone notes are in `STEPS` in
 `tools/gen_route.py`.

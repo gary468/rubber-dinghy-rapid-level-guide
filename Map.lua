@@ -564,7 +564,8 @@ local function Draw()
     if vx then view[s] = { vx, vy }; onStep = true end
   end
   local hlx, hly = hlStop and ToCur(hlStop.map, hlStop.x, hlStop.y, cur)
-  local hlHere = hlx and not onStep
+  -- (a spot shown from the Dungeon Journal is drawn even on a map with route stops)
+  local hlHere = hlx and (not onStep or hlStop.journal)
   if not onStep and not hlHere then return end
   local w, h = canvas:GetWidth(), canvas:GetHeight()
   if not w or w == 0 then return end
