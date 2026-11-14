@@ -702,15 +702,15 @@ local function BuildStops(rows, stepMap, current)
     end
     away = keep
   end
+  -- One fixed order per step (Gary: "it should just have an optimal efficient route and stop
+  -- changing"): ordered from the zone's hub (its busiest stop), never from where you stand.
   local cx, cy
-  if pm == stepMap then
-    cx, cy = px, py
-  else
+  do
     local hub
     for _, s in ipairs(here) do
-      if not hub or #s.actions > #hub.actions then hub = s end
+      if not hub or #s.actions > #hub.actions or (#s.actions == #hub.actions and (s.name or "") < (hub.name or "")) then hub = s end
     end
-    if hub then cx, cy = hub.x, hub.y end
+    if hub then cx, cy = hub.cx or hub.x, hub.cy or hub.y end
   end
   -- Distance to a stop: to its nearest spawn for mob areas, else to the NPC. Returns the point too.
   local function Dist(s, x, y)
@@ -727,24 +727,16 @@ local function BuildStops(rows, stepMap, current)
     return bd, bx, by
   end
 
-  -- Order: what you're on first, then by distance from where you are.
-  --   tier 0: the quest you're making progress on right now (its count went up last)
-  --   tier 1: a quest whose mobs are around you (within ~5% of one of its spawns)
-  --   tier 2: everything else, nearest first - with a head start for hand-ins (XP, follow-ups)
-  --           and quests you've started, but never a cross-zone detour: a hand-in on the far
-  --           side waits until the route gets there (it used to jump the queue and zigzag).
-  local HANDIN_W, STARTED_W = 0.5, 0.75   -- weights on squared distance
+  -- Order: the plan's order (route v2 ranks below), then by distance along the route from the hub,
+  -- with a head start for hand-ins. Nothing about where you stand or what you're working on right
+  -- now moves a stop: the only change is a finished stop dropping off. Finished quests carried in
+  -- from earlier steps come first (tier 1).
+  local HANDIN_W = 0.5   -- weight on squared distance
   for _, s in ipairs(here) do
     s.tier, s.w = 2, 1
     for _, a in ipairs(s.actions) do
-      if a.kind ~= "get" and a.row.started and s.w > STARTED_W then s.w = STARTED_W end
       if a.kind == "turn" and s.w > HANDIN_W then s.w = HANDIN_W end
-      if a.kind ~= "get" and current and a.row.id == current then s.tier = 0 end
-      if a.row.carried and s.tier > 1 then s.tier = 1 end   -- finished quests from steps you passed: first
-    end
-    if s.area and pm == stepMap and s.tier > 1 and not s.done then
-      local d = Dist(s, px, py)
-      if d <= 25 then s.tier = 1 end
+      if a.row.carried and s.tier > 1 then s.tier = 1 end
     end
   end
   -- Route v2: the planned order of every action (step.ord, "a916,o916,r916"): a stop's rank is its
