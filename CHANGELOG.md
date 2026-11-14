@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased (route v2)
+- **A new route, planned action by action on real time.** Every pick-up, objective and hand-in is
+  placed in order using Forever's real geography (zone positions and flight masters read from the
+  game), flights, boats and the tram, kill and collect times, quest chains, levels and the 20-quest
+  log. Pick-ups and hand-ins are fitted in where you pass anyway (46 pick-ups and 48 hand-ins on the
+  way), and quests slower than grinding are left out. On the same clock the route reaches 60 in about
+  87 hours played against 120 for the old route as the addon played it (28% faster), with the same
+  number of quests. Zones are kept together (53 zone visits).
+- **One set route by level.** The step follows your level alone - never where you stand or what's
+  left in your log - and stops within a step follow the planned order instead of re-sorting as you
+  move. Grinding or a dungeon run that levels you past steps moves the route ahead.
+- Steps that grind a level or two to unlock their quests say so in their note.
+- Rare alerts: no automatic skull (Forever forbids addons from setting raid markers), just the
+  pop-up you click to target.
 ## v1.0.27
 - **Automation, like Leatrix Plus**, so you can switch Leatrix's off. Settings > Automation has a tick
   box for each job, all on by default:

@@ -105,7 +105,14 @@ def travel_s(a, b, level=60):
     if a is None or b is None: return 0.0
     if a[0] == b[0] and abs(a[1] - b[1]) < 1e-9 and abs(a[2] - b[2]) < 1e-9: return 0.0
     A, B = world(a), world(b)
-    if not A or not B: return UNKNOWN_HOP_S
+    if not A or not B:
+        # a zone not on either continent's map (an island like Zephras Isle): inside it, straight
+        # distance from its size; in or out of it, a flat guess (boat or flight + waiting)
+        if a[0] == b[0]:
+            import routelib as R
+            speed = MOUNT_YDS if level >= MOUNT_LEVEL else RUN_YDS
+            return R.yards(a[0], (a[1], a[2]), (b[1], b[2])) * WALK_DETOUR / speed
+        return UNKNOWN_HOP_S
     if A[0] == B[0]:
         return same_continent_s(A[0], A[1:], B[1:], level)[0]
     best = float("inf")

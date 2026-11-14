@@ -387,6 +387,8 @@ if PLAN:
                     "pick up quests for later" if pick else "", "hand in finished quests" if turn else "") if x) + "."
             elif seen[m] > 1: note = "Back for the quests that have opened up at your level. " + note
             if pick and ids: note += " Pick up quests here for later in the route."
+            if (v.get("grind_s") or 0) >= 300:   # route v2: levels ground here to unlock this zone's quests
+                note += f" Includes about {round(v['grind_s'] / 60)} min of grinding: some quests here need a level or two more."
             st = dict(name=v["name"] + ("" if seen[m] == 1 else " (return visit)"), lv=lv,
                       zones=sorted(map_areas.get(m, [])) or [0], map_id=m, note=note, extra=[], pick=pick,
                       turn=turn, ord=v.get("order"))

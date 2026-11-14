@@ -503,9 +503,9 @@ local function AutoStep(level)
   return last > 0 and last or #ns.steps
 end
 
--- How efficient the route is, from the plan the search settled on (tools/plan.json): XP per minute
--- of travel. Zone visits: travel time between stops (quest time isn't modelled - XP vs distance).
--- Dungeons: the run itself. Optional dungeons are left out of the totals.
+-- How efficient the route is, from the plan the search settled on (tools/plan_v2.json): XP per minute
+-- played - travel, objectives, hand-ins and any grinding the plan does there. Dungeons: the run
+-- itself. Optional dungeons are left out of the totals.
 local routeStats
 function ns.RouteStats()
   if routeStats then return routeStats end
@@ -558,7 +558,7 @@ function ns.EfficiencyText(step, level)
     local col = ratio >= 1 and "33ff33" or ratio >= 0.6 and "ffd100" or "ff6040"
     local what = step.dungeon and "a run of about " or "about "
     out[#out + 1] = ("|cffffd100This step:|r ~%s XP for %s%s %s"):format(Short(step.xp), what, Mins(step.secs),
-      step.dungeon and "" or "of travel")
+      step.dungeon and "" or "played")
     out[#out + 1] = ("  |cff%s%s XP per minute|r - %d%% of the route average (%s)"):format(col, Short(per),
       math.floor(ratio * 100 + 0.5), Short(rs.perMin))
   end
@@ -570,7 +570,7 @@ function ns.EfficiencyText(step, level)
       step.from == step.to and step.from or (step.from .. "-" .. step.to), level, where)
   end
   if rs.n > 0 then
-    out[#out + 1] = ("|cffffd100Whole route %d-%d:|r %d steps, ~%s XP for %s of travel"):format(
+    out[#out + 1] = ("|cffffd100Whole route %d-%d:|r %d steps, ~%s XP for %s played"):format(
       rs.from, rs.to, rs.n, Short(rs.xp), Mins(rs.secs))
   end
   local rate = ns.XP and ns.XP.Rate and ns.XP.Rate()
@@ -658,8 +658,9 @@ local function BuildStops(rows, stepMap, current)
   end
   local pm, px, py = ns.HerePos()
   -- Stops in another zone on a zone step: never a detour mid-zone (Gary flew Hinterlands -> Booty
-  -- Bay for a pick-up whose objective was back in the Hinterlands). A pick-up elsewhere waits until
-  -- you're in that zone; a hand-in elsewhere waits for the route's next visit there. Either way it's
+  -- Bay for a pick-up whose objective was back in the Hinterlands). A pick-up elsewhere waits (the
+  -- route plan puts pick-ups where you pass anyway); a hand-in elsewhere waits for the route's next
+  -- visit there. Either way it's
   -- listed under "Later". Hand-ins in a zone the route never returns to stay as the last stops.
   -- (Dungeon steps and get-ready routes span zones by design and keep everything.)
   ns.laterActions = {}
@@ -676,9 +677,8 @@ local function BuildStops(rows, stepMap, current)
     for _, st in ipairs(away) do
       local acts = {}
       for _, a in ipairs(st.actions) do
-        local there = (pm == st.map)
-        local later = (a.kind == "get") and not there
-          or (a.kind == "turn" and not there and VisitedLater(st.map) ~= nil)
+        -- never decided by where you stand (Gary: one set route): pick-ups elsewhere always wait
+        local later = (a.kind == "get") or (a.kind == "turn" and VisitedLater(st.map) ~= nil)
         if later then
           ns.laterActions[#ns.laterActions + 1] = { action = a, stop = st, visit = VisitedLater(st.map) }
         else
