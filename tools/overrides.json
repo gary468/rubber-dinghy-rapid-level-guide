@@ -42,6 +42,15 @@
       "drop": true,
       "noAccept": "needs 10 Briny Seafood Stew (Cooking 200 - recipe from Fimbo Greasemitz in Riverglades - or the Auction House)",
       "note": "Not My Circus: 10 Briny Seafood Stew, cooked only (2 Murloc Eye, Tender Crab Meat, Hot Spices each). Not worth routing. A friend of Gary's was sent to it with nowhere to go, 14 Nov 2026."
+    },
+    "89228": {
+      "drop": true,
+      "noAccept": "means fishing up 10 Winter Squid (or buying them)",
+      "note": "Winter Frontier Fishery: a fishing quest, not offered by Berdun Cliffbrew to Gary (level 53, Fishing 330, Gettin' Buzzed in his log). Not worth routing either way. Seen in game 14 Nov 2026."
+    },
+    "89015": {
+      "drop": true,
+      "note": "Deadliest Catch: Berdun Cliffbrew doesn't offer it (Gary, 14 Nov 2026) and ForeverChanges has no page for it - probably not in the game."
     }
   }
 }

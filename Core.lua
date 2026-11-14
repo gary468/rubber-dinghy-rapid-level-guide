@@ -698,8 +698,15 @@ local function Target(r)
   if r.s == LOG and q.d and curStep and curStep.ent then return curStep.ent, "dungeon" end
   if r.s == LOG then
     if q.o then return q.o, "do" end
-    -- No mobs/objects to find (talk-to and delivery quests): head for the hand-in NPC.
-    if q.t and not q.ob then return q.t, "go" end
+    -- No mobs/objects to find (talk-to and delivery quests): head for the hand-in NPC. Unless the
+    -- quest log lists objectives still to do that our data doesn't know about (Reclaiming Ravencrest:
+    -- Spitelash to kill, power stones to find) - then it's listed without a stop, never "Finish" at
+    -- the hand-in.
+    if q.t and not q.ob then
+      local open = false
+      for _, ob in ipairs(ns.RawObjectives(r.id)) do if not ob.done then open = true end end
+      if not open then return q.t, "go" end
+    end
     -- Has objectives but the database has no location for them: listed without a stop.
     return nil, "do"
   end
