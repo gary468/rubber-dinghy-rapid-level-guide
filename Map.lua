@@ -61,6 +61,8 @@ local OVERLAY_LEVEL, PIN_LEVEL = 2016, 2030
 local CIRCLE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 -- Quest-mob spawn dots: grey with a dark edge (white read as party members, e.g. a priest's dot)
 local SPAWN_R, SPAWN_G, SPAWN_B = 0.62, 0.62, 0.62
+-- Spawns of quests in your log that aren't on the route: small and faint, behind the route.
+local OTHER_A = 0.5
 local POI_RING = { "UI-QuestPoi-QuestNumber" }
 local POI_LIT = { "ui-questpoi-questnumber-supertracked", "UI-QuestPoi-QuestNumber-Pressed" }
 local POI_GLOW = { "UI-QuestPoi-InnerGlow" }
@@ -482,7 +484,7 @@ local function DrawOthers(canvas, cur)
     p:SetSize(size, size)
     p.edge:SetSize(size + 3, size + 3)
     if kind == "spawn" then
-      p.tex:SetTexture(CIRCLE); p.tex:SetVertexColor(r, g, b, a); p.edge:Show()
+      p.tex:SetTexture(CIRCLE); p.tex:SetVertexColor(r, g, b, a); p.edge:SetVertexColor(0, 0, 0, 0.85 * a); p.edge:Show()
       for _, t in ipairs(p.outline) do t:Hide() end
     else
       local tex = kind == "avail" and ICON_AVAIL or ICON_TURNIN
@@ -532,8 +534,16 @@ local function DrawOthers(canvas, cur)
       local qid = current.actions and current.actions[1] and current.actions[1].row.id
       local pts = current.pts
       if pts and #pts >= 2 then
+        -- Only the spawns around where the stop sends you (its pin): a mob found all over the zone
+        -- lit up half the map in gold ("ehh not great"). Within 12% of the map, else the nearest 8.
+        local near = {}
         for k = 1, #pts - 1, 2 do
-          Place(qid, "spawn", pts[k], pts[k + 1], 10, 1, 0.82, 0, 1, true)
+          near[#near + 1] = { x = pts[k], y = pts[k + 1], d = (pts[k] - current.x) ^ 2 + (pts[k + 1] - current.y) ^ 2 }
+        end
+        table.sort(near, function(a, b) return a.d < b.d end)
+        for i, p in ipairs(near) do
+          if i > 8 and p.d > 144 then break end
+          Place(qid, "spawn", p.x, p.y, 10, 1, 0.82, 0, 1, true)
           Icon(n, canvas):SetFrameLevel(PIN_LEVEL - 6)
         end
       elseif current.cx then
@@ -558,8 +568,8 @@ local function DrawOthers(canvas, cur)
       elseif q.o and q.o[2] == cur then
         local pts = q.o[6]
         if pts and #pts >= 2 then
-          for k = 1, #pts - 1, 2 do Place(e.id, "spawn", pts[k], pts[k + 1], 7, SPAWN_R, SPAWN_G, SPAWN_B, 0.95, false) end
-        elseif q.o[3] then Place(e.id, "spawn", q.o[3], q.o[4], 9, SPAWN_R, SPAWN_G, SPAWN_B, 0.95, false) end
+          for k = 1, #pts - 1, 2 do Place(e.id, "spawn", pts[k], pts[k + 1], 6, SPAWN_R, SPAWN_G, SPAWN_B, OTHER_A, false) end
+        elseif q.o[3] then Place(e.id, "spawn", q.o[3], q.o[4], 9, SPAWN_R, SPAWN_G, SPAWN_B, OTHER_A, false) end
         for _, nid in ipairs(q.op or {}) do Path(nid, false) end
       end
     end
