@@ -884,26 +884,17 @@ function ns.Recompute()
   -- not part of the plan) stays under Other Quests and shows as a grey dot on the map - it never
   -- becomes a numbered stop.
   local logList = ns.QuestLog()
-  -- One exception (Gary 14 Nov): finished quests from steps you've levelled past. A hand-in is quick,
-  -- sure XP, so they join this step as stops ("carried") instead of waiting under Other Quests.
-  if not step.prep and not step.dungeon and idx > 1 then
+  -- One exception (Gary 14 Nov): any quest you've finished that's handed in in this step's zone,
+  -- planned or not (from steps you levelled past, or picked up along the way like March of the
+  -- Silithid). A hand-in is quick, sure XP, so it joins this step as a stop ("carried"). Hand-ins in
+  -- other zones wait for the route's visit there (far ones first "can't be efficient"), or stay under
+  -- Other Quests. Skipped quests never come back this way (their status is SKIP, not READY).
+  if not step.prep and not step.dungeon then
     local here = {}
     for _, r in ipairs(rows) do here[r.id] = true end
-    -- every other step the route expects you to have reached by your level: earlier ones, and the
-    -- others starting at or below your level (several start at the same level, e.g. 51)
-    local earlier = {}
-    for i, st in ipairs(ns.steps) do
-      if i ~= idx and (i < idx or st.from <= level) and not (st.dungeon and ns.DungeonOff(st.dungeon)) then
-        for _, list in ipairs({ st.quests or {}, st.turn or {}, st.pick or {} }) do
-          for _, id in ipairs(list) do earlier[id] = true end
-        end
-      end
-    end
     for _, e in ipairs(logList) do
-      -- only hand-ins in this step's own zone (Gary: far ones first "can't be efficient"); the rest
-      -- wait for the route's visit to their zone, or stay under Other Quests
       local t = ns.quests[e.id] and ns.quests[e.id].t
-      if earlier[e.id] and not here[e.id] and t and t[2] == step.map and Status(e.id, level) == READY then
+      if not here[e.id] and t and t[2] == step.map and Status(e.id, level) == READY then
         rows[#rows + 1] = { id = e.id, s = READY, q = ns.quests[e.id], carried = true }
         counts[READY] = counts[READY] + 1
         here[e.id] = true

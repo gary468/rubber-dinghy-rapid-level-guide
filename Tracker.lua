@@ -370,6 +370,28 @@ local function Render(r)
       Add(q.ot, { indent = 30, font = SMALL_FONT, color = GREY })
     end
   end
+  -- Finished quests handed in in the zone you're passing through (Gary 14 Nov: March of the Silithid
+  -- in Gadgetzan on the way to Un'Goro). Only a reminder: the step and its stops don't change.
+  if y < maxH and not step.dungeon then
+    local pm = ns.PlayerPos and ns.PlayerPos()
+    if pm and pm ~= step.map then
+      local shown = {}
+      for _, s in ipairs(r.stops or {}) do
+        for _, a in ipairs(s.actions or {}) do shown[a.row.id] = true end
+      end
+      for _, e in ipairs(ns.QuestLog()) do
+        local q = ns.quests[e.id]
+        if not shown[e.id] and q and q.t and q.t[2] == pm and ns.Status(e.id, r.level) == ns.S.READY then
+          if y > maxH then break end
+          local id = e.id
+          Add(("|cff33ff33Hand in here:|r %s - %s"):format(q.n, q.t[1] or "?"), { indent = 12, font = SMALL_FONT,
+            color = WHITE, nowrap = true,
+            tip = ("You're in its hand-in zone: %s, %.0f, %.0f. Hand it in on your way through."):format(q.t[1] or "?", q.t[3] or 0, q.t[4] or 0),
+            onClick = function() if ns.ShowQuestOnMap then ns.ShowQuestOnMap(id) end end })
+        end
+      end
+    end
+  end
   -- Things in other zones that wait (pick-ups until you're there, hand-ins until the route returns)
   if r.later and #r.later > 0 and y < maxH then
     for _, l in ipairs(r.later) do
