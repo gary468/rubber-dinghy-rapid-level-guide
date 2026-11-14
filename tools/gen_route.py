@@ -418,6 +418,7 @@ def npc_path(i):
     paths[i] = res
     return res
 obj_npcs = {}   # creature NPC id -> quests that need it killed
+tip_mob, tip_start, tip_end = {}, {}, {}
 for qid in sorted(set(used) | set(track)):
     q = Q[qid]; st = used.get(qid)
     fb = get(f"X-Quest-{qid}-3")
@@ -460,6 +461,15 @@ for qid in sorted(set(used) | set(track)):
     if objp: parts.append("op={" + ",".join(map(str, objp[:6])) + "}")
     for c in (pos(get(f"X-Quest-{qid}-10") or {}, 1) or []):
         if isinstance(c, list) and c and isinstance(c[0], int): obj_npcs.setdefault(c[0], []).append(qid)
+    # For unit tooltips (by NPC ID - Forever hides unit names): mobs to kill or loot, givers, enders.
+    for c in (pos(get(f"X-Quest-{qid}-10") or {}, 1) or []):
+        if isinstance(c, list) and c and isinstance(c[0], int): tip_mob.setdefault(c[0], set()).add(qid)
+    for it in (pos(get(f"X-Quest-{qid}-10") or {}, 3) or []):
+        if isinstance(it, list) and it and isinstance(it[0], int):
+            for npc in (get(f"X-Item-{it[0]}-2") or [])[:40]:
+                if isinstance(npc, int): tip_mob.setdefault(npc, set()).add(qid)
+    if gid: tip_start.setdefault(gid, set()).add(qid)
+    if tid: tip_end.setdefault(tid, set()).add(qid)
     out.append(f"  [{qid}]={{{', '.join(parts)}}},")
     # Objective types for the planner's time model (QuestieDB has no counts, only what kind).
     obj = get(f"X-Quest-{qid}-10") or {}
@@ -509,6 +519,13 @@ for k in list(meta):
     if not mm: continue
     fl = pos(get(k) or {}, 15)
     if isinstance(fl, int) and fl & SERVICE and not fl & INNKEEPER: service.append(int(mm.group(1)))
+def tipmap(d):
+    return ";".join(f"{n}:" + ",".join(map(str, sorted(qs))) for n, qs in sorted(d.items()))
+out.append("-- Unit tooltips by NPC ID, \"npc:quest,quest;...\": mobs to kill or loot, quest givers, quest enders.")
+out.append('ns.tipMobs = "' + tipmap(tip_mob) + '"')
+out.append('ns.tipStarts = "' + tipmap(tip_start) + '"')
+out.append('ns.tipEnds = "' + tipmap(tip_end) + '"')
+print("tooltip npcs: mobs", len(tip_mob), "givers", len(tip_start), "enders", len(tip_end))
 out.append("-- NPCs whose single gossip option is a service (vendor, flights, trainer, bank...).")
 out.append('ns.serviceNpcs = "' + ",".join(map(str, sorted(service))) + '"')
 print("service npcs:", len(service))
