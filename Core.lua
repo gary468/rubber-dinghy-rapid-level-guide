@@ -610,7 +610,8 @@ ns.C = { TURN = "|cff33ff33", DO = "|cffffd100", GET = "|cffffffff", SOON = "|cf
 function ns.ActionText(a)
   local q = a.row.q
   -- "(dungeon)" marks dungeon quests on the leveling route; on a get-ready route they all are
-  local nm = q.n .. ((q.d and not a.row.prep) and " (dungeon)" or "")
+  -- "(dungeon)" marks dungeon quests on a zone step; on a dungeon step or get-ready route they all are
+  local nm = q.n .. ((q.d and not a.row.prep and not (curStep and curStep.dungeon)) and " (dungeon)" or "")
   local C = ns.C
   if a.kind == "turn" then return C.TURN .. "Hand in: " .. nm .. "|r" end
   if a.kind == "get" and a.row.pick then return C.GET .. "Get for later: " .. nm .. "|r" end

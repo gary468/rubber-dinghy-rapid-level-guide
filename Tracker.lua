@@ -104,6 +104,7 @@ local function Add(text, opts)
   local indent = opts.indent or 0
   b.stop, b.tip, b.onClick = opts.stop, opts.tip, opts.onClick
   b.text:SetFontObject(opts.font or LINE_FONT)
+  if b.text.SetWordWrap then b.text:SetWordWrap(not opts.nowrap) end
   b.text:ClearAllPoints()
   -- badge (numbered stop) or check mark in front of the text
   local left = indent
@@ -202,8 +203,10 @@ local function Render(r)
   if top and top > 200 then maxH = math.min(maxH, top - 70) end
   local step = r.step
   local range = step.from == step.to and tostring(step.from) or (step.from .. "-" .. step.to)
-  Add(("Step %d/%d: %s (%s)%s"):format(r.idx, #ns.steps, step.name, range, (r.manual and not r.prep) and " - manual" or ""),
-    { font = HEADER_FONT, color = GOLD, bg = MODULE_BG, height = 22, gap = 2,
+  -- One line: "Sunken Temple (50)  53/76" (no "Step", no "Dungeon:" - the lines below say what it is)
+  local title = (step.prep and step.name) or step.dungeon or step.name
+  Add(("%s (%s)  |cff999999%d/%d%s|r"):format(title, range, r.idx, #ns.steps, (r.manual and not r.prep) and " manual" or ""),
+    { font = HEADER_FONT, color = GOLD, bg = MODULE_BG, height = 22, gap = 3, nowrap = true,
       tip = "Leveling route step. Use < and > in the header to change step, A for automatic." })
   local goTo = (r.inZone or step.dungeon or step.grind) and "" or ("Go to " .. step.name .. ". ")
   local note = step.note
@@ -213,8 +216,17 @@ local function Render(r)
       local st = ns.Status(id, r.level)
       if st == ns.S.LOG or st == ns.S.READY then held = held + 1 elseif st == ns.S.OPEN then open = open + 1 end
     end
-    note = ("Run it with a group - %d of its quests in your log%s."):format(held,
-      open > 0 and (", " .. open .. " more you could pick up first") or "")
+    local ready, inLog = 0, 0
+    for _, id in ipairs(step.quests) do
+      local st = ns.Status(id, r.level)
+      if st == ns.S.READY then ready = ready + 1 elseif st == ns.S.LOG then inLog = inLog + 1 end
+    end
+    if ready > 0 and inLog == 0 then
+      note = ("Run done - hand in %d quest%s."):format(ready, ready == 1 and "" or "s")
+    else
+      note = ("Run it with a group - %d of its quests in your log%s."):format(held,
+        open > 0 and (", " .. open .. " more you could pick up first") or "")
+    end
     step._open = open
   end
   Add(goTo .. note, { font = SMALL_FONT, color = GREY, gap = 4 })
@@ -270,7 +282,7 @@ local function Render(r)
           end
         end
       end
-      y = y + 3
+      y = y + 6   -- room between stops
     end
   end
   local more = #r.stops - shown
@@ -366,9 +378,9 @@ local function Render(r)
   -- Quests in the log outside this step: Blizzard's tracker would have shown them.
   local n = #r.other
   if n > 0 then
-    Add(("%s Other Quests (%d) |cff999999- not on the route|r"):format(db.otherOpen and "-" or "+", n), {
-      font = HEADER_FONT, color = GOLD, bg = MODULE_BG, height = 22, gap = 2,
-      tip = "Quests in your log that aren't part of this step. Click to show or hide.",
+    Add(("%s Other Quests (%d)"):format(db.otherOpen and "-" or "+", n), {
+      font = HEADER_FONT, color = GOLD, bg = MODULE_BG, height = 22, gap = 2, nowrap = true,
+      tip = "Quests in your log that aren't on the route. Click to show or hide them.",
       onClick = function() db.otherOpen = not db.otherOpen; Render(ns.route) end })
     if db.otherOpen then
       for _, e in ipairs(r.other) do
