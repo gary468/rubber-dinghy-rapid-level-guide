@@ -786,6 +786,10 @@ local function BuildStops(rows, stepMap, current)
     local bx, by = s.cx or s.x, s.cy or s.y
     if not x then return 0, bx, by end
     local bd = (bx - x) ^ 2 + (by - y) ^ 2
+    -- with spawn points, only a real spawn counts: an area's middle can be empty ground between
+    -- two groups (regular Pterrordax on the north and south rims put stop 1 at 51,60, where there
+    -- are none)
+    if s.pts and #s.pts >= 2 then bd = math.huge end
     if s.pts then
       for k = 1, #s.pts - 1, 2 do
         local u, v = s.pts[k], s.pts[k + 1]
