@@ -349,7 +349,7 @@ local function Icon(i, canvas)
     else
       GameTooltip:AddLine((q.o and q.o[1]) or "Objective", 1, 1, 1)
       for _, o in ipairs(ns.Objectives(self.qid)) do
-        if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. o.text, 1, 1, 1) end
+        if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. ns.ObjText(o), 1, 1, 1) end
       end
     end
     GameTooltip:AddLine(self.onRoute and "On your route" or "Not on the route", 0.7, 0.7, 0.7)
@@ -651,7 +651,7 @@ local function AreaHover()
     local objs = ns.Objectives(a.id)
     if #objs == 0 and q.o[1] then GameTooltip:AddLine(q.o[1], 1, 1, 1) end
     for _, o in ipairs(objs) do
-      if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. o.text, 1, 1, 1) end
+      if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. ns.ObjText(o), 1, 1, 1) end
     end
   end
   GameTooltip:Show()
@@ -729,7 +729,7 @@ local function MiniIcon(i)
     else
       GameTooltip:AddLine((q.o and q.o[1]) or "Objective", 1, 1, 1)
       for _, o in ipairs(ns.Objectives(self.qid)) do
-        if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. o.text, 1, 1, 1) end
+        if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. ns.ObjText(o), 1, 1, 1) end
       end
     end
     GameTooltip:AddLine("Not on the route", 0.6, 0.6, 0.6)
@@ -740,11 +740,13 @@ local function MiniIcon(i)
   return p
 end
 
+local miniStops, MiniStops, MiniHide = {}   -- minimap route line/areas (defined below)
 local function UpdateMinimap()
   if not HBDP then return end
   HBDP:RemoveAllMinimapIcons(Map)
-  if ns.db.noMap or ns.db.noMiniPins then return end
+  if ns.db.noMap or ns.db.noMiniPins then miniStops = {}; MiniHide(); return end
   SuppressMinimap()
+  MiniStops()
   -- the route's next stops, numbered (stop 1 rides the edge when it's off the minimap)
   local n = 0
   local stopAt = {}
@@ -830,6 +832,140 @@ local function UpdateMinimap()
   end
 end
 Map.UpdateMinimap = UpdateMinimap
+
+---------------------------------------------------------------------------
+-- Minimap route line and kill areas, like the world map: a gold line from you through the next
+-- stops, and the gold areas of the stops (per "Quest areas" in settings). Same maths HereBeDragons
+-- uses for minimap pins (world yards -> minimap pixels), clipped to the minimap.
+---------------------------------------------------------------------------
+local HBD = LibStub and LibStub("HereBeDragons-2.0", true)
+local MINI_SIZE = {
+  indoor = { [0] = 300, 240, 180, 120, 80, 50 },
+  outdoor = { [0] = 466 + 2 / 3, 400, 333 + 1 / 3, 266 + 2 / 6, 200, 133 + 1 / 3 },
+}
+local miniBox, miniMask, miniLines, miniAreas = nil, nil, {}, {}
+-- miniStops: { wx, wy, inst, ryd (area radius in yards) or nil }
+
+local function MiniRadius()
+  if C_Minimap and C_Minimap.GetViewRadius then return C_Minimap.GetViewRadius() end
+  local zoom = Minimap:GetZoom() or 0
+  local indoors = (GetCVar and tonumber(GetCVar("minimapZoom")) == zoom) and "outdoor" or "indoor"
+  return (MINI_SIZE[indoors][zoom] or 466) / 2
+end
+
+local function MiniBox()
+  if miniBox then return miniBox end
+  miniBox = CreateFrame("Frame", nil, Minimap)
+  miniBox:SetAllPoints(Minimap)
+  if miniBox.SetClipsChildren then miniBox:SetClipsChildren(true) end
+  local shape = GetMinimapShape and GetMinimapShape()
+  if (not shape or shape == "ROUND") and miniBox.CreateMaskTexture then
+    miniMask = miniBox:CreateMaskTexture()
+    if miniMask then
+      miniMask:SetTexture(CIRCLE, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+      miniMask:SetAllPoints(miniBox)
+    end
+  end
+  return miniBox
+end
+
+local function Masked(t)
+  if miniMask and t.AddMaskTexture then pcall(t.AddMaskTexture, t, miniMask) end
+  return t
+end
+
+MiniHide = function()
+  for _, l in ipairs(miniLines) do l:Hide() end
+  for _, a in ipairs(miniAreas) do a:Hide() end
+end
+
+-- Where the next stops are in world yards, worked out once per route update.
+MiniStops = function()
+  miniStops = {}
+  if not HBD then return end
+  local mode = ns.db.areaMode or "next"
+  for i, s in ipairs(route.stops or {}) do
+    if i > MINI_MAX then break end
+    local wx, wy, inst = HBD:GetWorldCoordinatesFromZone(s.x / 100, s.y / 100, s.map)
+    if wx then
+      local ryd
+      if s.area and s.r and mode ~= "off" and (mode == "all" or i == 1) then
+        local w, h
+        if HBD.GetZoneSize then w, h = HBD:GetZoneSize(s.map) end
+        if w and w > 0 then ryd = s.r / 100 * (w + (h or w)) / 2 end
+      end
+      miniStops[#miniStops + 1] = { wx = wx, wy = wy, inst = inst, ryd = ryd }
+    end
+  end
+end
+
+local function MiniDraw()
+  MiniHide()
+  if not HBD or #miniStops == 0 or ns.db.noMap or ns.db.noMiniPins then return end
+  local px, py, pinst = HBD:GetPlayerWorldPosition()
+  if not px then return end
+  local box = MiniBox()
+  box:SetFrameLevel(Minimap:GetFrameLevel() + 2)
+  local R = MiniRadius()
+  local hw, hh = Minimap:GetWidth() / 2, Minimap:GetHeight() / 2
+  if not R or R <= 0 or hw <= 0 then return end
+  local sinf, cosf
+  if GetCVar and GetCVar("rotateMinimap") == "1" then
+    local f = GetPlayerFacing and GetPlayerFacing()
+    if not f then return end
+    sinf, cosf = math.sin(f), math.cos(f)
+  end
+  local function XY(wx, wy)
+    local dx, dy = px - wx, py - wy
+    if sinf then dx, dy = dx * cosf - dy * sinf, dx * sinf + dy * cosf end
+    return dx / R * hw, -dy / R * hh
+  end
+  local alphaArea = (ns.db.areaAlpha or 0.2) * 1.2
+  local nl, na = 0, 0
+  local lx, ly = 0, 0   -- the line starts at you (the minimap centre)
+  for _, st in ipairs(miniStops) do
+    if st.inst ~= pinst then break end
+    local x, y = XY(st.wx, st.wy)
+    if box.CreateLine then
+      nl = nl + 1
+      local l = miniLines[nl]
+      if not l then l = Masked(box:CreateLine(nil, "ARTWORK")); miniLines[nl] = l end
+      l:SetThickness(2)
+      l:SetColorTexture(1, 0.82, 0, 0.75)
+      l:SetStartPoint("CENTER", box, lx, ly)
+      l:SetEndPoint("CENTER", box, x, y)
+      l:Show()
+    end
+    if st.ryd then
+      na = na + 1
+      local a = miniAreas[na]
+      if not a then
+        a = Masked(box:CreateTexture(nil, "BORDER"))
+        a:SetTexture(CIRCLE)
+        miniAreas[na] = a
+      end
+      local rp = st.ryd / R * hw
+      a:SetSize(rp * 2, rp * 2)
+      a:ClearAllPoints()
+      a:SetPoint("CENTER", box, "CENTER", x, y)
+      a:SetVertexColor(1, 0.78, 0.16, math.min(0.6, alphaArea))
+      a:Show()
+    end
+    lx, ly = x, y
+  end
+end
+Map.MiniDraw = MiniDraw
+
+do
+  local f = CreateFrame("Frame")
+  local t = 0
+  f:SetScript("OnUpdate", function(_, e)
+    t = t + (e or 0)
+    if t < 0.05 then return end
+    t = 0
+    if ns.db and not ns.disabled then ns.Safe("MinimapRoute", MiniDraw) end
+  end)
+end
 
 -- Questie draws its own minimap icons; with both on, the minimap shows two sets. Say so once.
 ns.inits.MapQuestieNote = function()

@@ -63,8 +63,32 @@ local function IsReady(id, index)
   return false
 end
 
---- Objective lines for a quest in the log: { {text=, done=} }.
+-- Where an objective item comes from ("drops from Vilebranch Soothsayer"), from the quest's dr list.
+local function Annotate(id, out)
+  local q = ns.quests and ns.quests[id]
+  if not (q and q.dr) then return out end
+  for _, o in ipairs(out) do
+    for _, d in ipairs(q.dr) do
+      if o.text:find(d[1], 1, true) then o.src = d[2]; break end
+    end
+  end
+  return out
+end
+
+--- An objective's line: "4/12 Vilebranch Totem - drops from Vilebranch Soothsayer" (source only
+--- while it's not done).
+function ns.ObjText(o, short)
+  if not o.src or o.done then return o.text end
+  local src = o.src
+  if short then src = src:gsub(",.*$", " +more") end   -- the tracker: first source only
+  return o.text .. " |cff999999- " .. src .. "|r"
+end
+
+--- Objective lines for a quest in the log: { {text=, done=, src=} }.
 function ns.Objectives(id)
+  return Annotate(id, ns.RawObjectives(id))
+end
+function ns.RawObjectives(id)
   local out = {}
   if C_QuestLog and C_QuestLog.GetQuestObjectives then
     for _, o in ipairs(C_QuestLog.GetQuestObjectives(id) or {}) do

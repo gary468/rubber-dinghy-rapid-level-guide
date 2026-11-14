@@ -285,7 +285,7 @@ local function Render(r)
         if (a.kind == "do" or a.kind == "turn" or a.kind == "go" or a.kind == "dungeon") and not objShown[a.row.id] then
           objShown[a.row.id] = true
           for _, o in ipairs(ns.Objectives(a.row.id)) do
-            Add(o.text, { indent = 30, font = SMALL_FONT, color = o.done and GREY or WHITE, check = o.done, stop = s })
+            Add(ns.ObjText(o, true), { indent = 30, font = SMALL_FONT, color = o.done and GREY or WHITE, check = o.done, stop = s })
           end
         end
       end
@@ -398,7 +398,7 @@ local function Render(r)
         local tip = "Click: show it on the map (Blizzard's marker and area)."
         Add(("[%s] %s"):format(e.level or "?", e.title or "?"), { font = TITLE_FONT, color = GOLD, indent = 4, onClick = show, tip = tip })
         for _, o in ipairs(ns.Objectives(e.id)) do
-          Add(o.text, { indent = 14, font = SMALL_FONT, color = o.done and GREY or WHITE, check = o.done, onClick = show, tip = tip })
+          Add(ns.ObjText(o, true), { indent = 14, font = SMALL_FONT, color = o.done and GREY or WHITE, check = o.done, onClick = show, tip = tip })
         end
       end
     end

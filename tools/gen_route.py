@@ -469,6 +469,28 @@ for qid in sorted(set(used) | set(track)):
             for npc in (get(f"X-Item-{it[0]}-2") or [])[:40]:
                 if isinstance(npc, int): tip_mob.setdefault(npc, set()).add(qid)
     if gid: tip_start.setdefault(gid, set()).add(qid)
+    # Where each objective item comes from (Gary: progress should say what to kill for it):
+    # dr={{"Item","Mob A, Mob B, Mob C"}, ...} - up to 3 mobs, else the objects it's picked from.
+    drops = []
+    for it in (pos(get(f"X-Quest-{qid}-10") or {}, 3) or []):
+        if not (isinstance(it, list) and it and isinstance(it[0], int)): continue
+        iname = pos(get(f"X-Item-{it[0]}-S") or {}, 1)
+        if not iname: continue
+        names, objs = [], []
+        for npc in (get(f"X-Item-{it[0]}-2") or []):
+            nm = isinstance(npc, int) and pos(get(f"X-Npc-{npc}-S") or {}, 1)
+            if nm and nm not in names: names.append(nm)
+        for ob in (get(f"X-Item-{it[0]}-3") or []):
+            nm = isinstance(ob, int) and pos(get(f"X-Object-{ob}-S") or {}, 1)
+            if nm and nm not in objs: objs.append(nm)
+        if names:
+            src = "drops from " + ", ".join(names[:3]) + (", ..." if len(names) > 3 else "")
+        elif objs:
+            src = "on the ground" if objs == [iname] else "from " + ", ".join(objs[:3]) + (", ..." if len(objs) > 3 else "")
+        else:
+            src = None
+        if src: drops.append("{" + lstr(iname) + "," + lstr(src) + "}")
+    if drops: parts.append("dr={" + ",".join(drops) + "}")
     if tid: tip_end.setdefault(tid, set()).add(qid)
     out.append(f"  [{qid}]={{{', '.join(parts)}}},")
     # Objective types for the planner's time model (QuestieDB has no counts, only what kind).

@@ -67,7 +67,7 @@ local function AddLines(tt)
         seen[id] = true
         Line(Title(id))
         for _, o in ipairs(ns.Objectives(id)) do
-          if o.done then Line("  " .. o.text, 0.4, 1, 0.4) else Line("  " .. o.text, 1, 1, 1) end
+          if o.done then Line("  " .. o.text, 0.4, 1, 0.4) else Line("  " .. ns.ObjText(o), 1, 1, 1) end
         end
       end
     end
