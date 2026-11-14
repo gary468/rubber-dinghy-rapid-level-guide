@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (route v2)
+## v1.0.28
 - **A new route, planned action by action on real time.** Every pick-up, objective and hand-in is
   placed in order using Forever's real geography (zone positions and flight masters read from the
   game), flights, boats and the tram, kill and collect times, quest chains, levels and the 20-quest
@@ -14,6 +14,22 @@
 - Steps that grind a level or two to unlock their quests say so in their note.
 - Rare alerts: no automatic skull (Forever forbids addons from setting raid markers), just the
   pop-up you click to target.
+- **Our own Dungeon Journal and Run Log**, replacing the DungeonJournal addon: every dungeon's
+  quests, bosses (portraits and a 3D model), runs and logs, in the game's own art and styling. The
+  route's dungeon steps link to it, and the route planner uses its data.
+- **Maps:**
+  - the route shows on every map, including continent and world views;
+  - the minimap shows the route line, numbered stops, kill areas and nearby quest icons, with
+    Blizzard's own minimap quest markers hidden;
+  - hovering a mob area or spawn dot shows the quest and your progress, and "!" and "?" icons are
+    outlined.
+- **Tooltips:** mobs, quest givers and hand-in NPCs show the quest and your progress, matched by NPC
+  ID because Forever hides unit names. Objectives say what drops each item.
+- **Forever data:** spawn points from Wowhead for Forever-only quest objects (Fledgling Rescue, Treaty
+  Obligations and others). Quests still without a location show their own objective text, and
+  learning records where they progress. Swamp of Sorrows visits are no longer labelled Zephras Isle.
+  Removed innkeeper breadcrumbs are dropped, and Sisters In Duty waits for Eyes of the Sentinels.
+- **Tracker:** keeps its top-right corner in place as the list grows.
 ## v1.0.27
 - **Automation, like Leatrix Plus**, so you can switch Leatrix's off. Settings > Automation has a tick
   box for each job, all on by default:
