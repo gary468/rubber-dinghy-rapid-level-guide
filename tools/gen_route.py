@@ -514,7 +514,48 @@ def spots_loc(spots, name):
     rad = max(2.0, min(10.0, max(math.hypot(x - cx, y - cy) for x, y in pts)))
     flat = ",".join(f"{x:.0f},{y:.0f}" for x, y in pts[:40])
     return "{" + f"{lstr(name)},{m},{cx:.1f},{cy:.1f},{rad:.1f}" + (",{" + flat + "}" if len(pts) > 1 else "") + "}"
+def start_item(qid):
+    """A quest started by an item (looted or picked up): where the item comes from, as Lua
+    {itemId, itemName, kind, source, uiMap, x, y} plus the NPC IDs that drop it. kind: "mob" = one named
+    mob (or a few, all with 1-3 spawns) - worth hunting; "obj" = an object on the ground; "drop" = a
+    random drop from ordinary mobs - keep an eye out. None if nothing in the open world gives it."""
+    from collections import Counter
+    g = get(f"X-Quest-{qid}-2")
+    items = pos(g, 3) if g else None
+    if not items: return None, []
+    iid = items[0]
+    iname = pos(get(f"X-Item-{iid}-S") or {}, 1) or "an item"
+    npcs = [n for n in (get(f"X-Item-{iid}-2") or []) if isinstance(n, int)]
+    objs = [o for o in (get(f"X-Item-{iid}-3") or []) if isinstance(o, int)]
+    count, where, spawns = Counter(), {}, {}
+    for kind, lst in (("npc", npcs), ("obj", objs)):
+        for i in lst[:80]:
+            e = ent(kind, i)
+            for a, x, y in pts(e) or []:
+                m = uimap.get(a)
+                if not m or a in dungeons: continue
+                count[m] += 1
+                where.setdefault(m, []).append((x, y))
+                spawns[(kind, i)] = spawns.get((kind, i), 0) + 1
+    if not count: return None, []
+    m = count.most_common(1)[0][0]
+    x, y = where[m][0]
+    names = [ent("npc", n)["name"] for n in npcs if ent("npc", n)["name"]]
+    onames = [ent("obj", o)["name"] for o in objs if ent("obj", o)["name"]]
+    if npcs and not objs and len(npcs) <= 3 and all(0 < spawns.get(("npc", n), 0) <= 3 for n in npcs):
+        kind, src = "mob", " / ".join(names[:3])
+    elif objs and not npcs:
+        kind, src = "obj", onames[0] if onames else iname
+        if len(where[m]) > 1:      # the middle of where it lies
+            x = sum(u for u, _ in where[m]) / len(where[m]); y = sum(v for _, v in where[m]) / len(where[m])
+    else:
+        kind = "drop"
+        src = ", ".join(names[:2]) + (", ..." if len(names) > 2 else "")
+    lua = "{" + f"{iid},{lstr(iname)},{lstr(kind)},{lstr(src)},{m},{x:.1f},{y:.1f}" + "}"
+    return lua, (npcs if kind != "obj" else [])
+
 tip_mob, tip_start, tip_end = {}, {}, {}
+tip_drop = {}
 for qid in sorted(set(used) | set(track)):
     q = Q[qid]; st = used.get(qid)
     fb = get(f"X-Quest-{qid}-3")
@@ -531,6 +572,11 @@ for qid in sorted(set(used) | set(track)):
     rl_ = q.get("requiredLevel") or (max(1, ql_ - 2) if ql_ >= 10 else 0)
     parts = [f"n={lstr(q.get('name'))}", f"l={ql_}", f"r={rl_}",
              f"g={lloc(givers.get(qid))}", f"t={lloc(t)}"]
+    if (givers.get(qid) or {}).get("name") == "(item drop)":
+        si, si_npcs = start_item(qid)
+        if si:
+            parts.append("si=" + si)
+            for n in si_npcs: tip_drop.setdefault(n, set()).add(qid)
     if o: parts.append(f"o={lloc(o, True)}")
     elif LEARNED_SPOTS.get(qid):
         # no location in any database, but players' recorded where its progress went up (Learn.lua)
@@ -658,6 +704,7 @@ out.append("-- Unit tooltips by NPC ID, \"npc:quest,quest;...\": mobs to kill or
 out.append('ns.tipMobs = "' + tipmap(tip_mob) + '"')
 out.append('ns.tipStarts = "' + tipmap(tip_start) + '"')
 out.append('ns.tipEnds = "' + tipmap(tip_end) + '"')
+out.append('ns.tipDrops = "' + tipmap(tip_drop) + '"')   # mobs that can drop an item that starts a quest
 print("tooltip npcs: mobs", len(tip_mob), "givers", len(tip_start), "enders", len(tip_end))
 out.append("-- NPCs whose single gossip option is a service (vendor, flights, trainer, bank...).")
 out.append('ns.serviceNpcs = "' + ",".join(map(str, sorted(service))) + '"')

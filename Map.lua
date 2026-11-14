@@ -103,27 +103,34 @@ end
 local MEDIA = "Interface\\AddOns\\" .. ADDON .. "\\media\\"
 local AREA_FILL, AREA_EDGE = MEDIA .. "area_fill", MEDIA .. "area_edge"
 local blobFrame, blobOK
-local function Blob()
+-- Areas of the stops after the current one, when every stop's area is shown: faint, so the stop
+-- you're on stands out (Gary 14 Nov: "only show the kill zone of the current part with the rest
+-- faintly showing until you choose the next stop or get to it").
+local FAINT = 0.3
+local fadedFrame
+local function Blob(faint)
   if blobOK == false then return nil end
   local canvas = WorldMapFrame and WorldMapFrame.GetCanvas and WorldMapFrame:GetCanvas()
   if not canvas then return nil end
-  if not blobFrame then
-    local ok, f = pcall(CreateFrame, "QuestPOIFrame", nil, canvas)
-    if not ok or not f or not f.DrawBlob then blobOK = false; return nil end
-    f:SetAllPoints(canvas)
-    blobFrame, blobOK = f, true
+  local f = faint and fadedFrame or blobFrame
+  if not f then
+    local ok, nf = pcall(CreateFrame, "QuestPOIFrame", nil, canvas)
+    if not ok or not nf or not nf.DrawBlob then blobOK = false; return nil end
+    nf:SetAllPoints(canvas)
+    f, blobOK = nf, true
+    if faint then fadedFrame = nf else blobFrame = nf end
   end
   -- Subtle on purpose: a light fill and a thin, soft edge.
-  local alpha = math.floor((ns.db.areaAlpha or 0.2) * 255 + 0.5)
+  local alpha = math.floor((ns.db.areaAlpha or 0.2) * (faint and FAINT or 1) * 255 + 0.5)
   pcall(function()
-    blobFrame:SetFillTexture(AREA_FILL)
-    blobFrame:SetBorderTexture(AREA_EDGE)
-    blobFrame:SetFillAlpha(alpha)
-    blobFrame:SetBorderAlpha(math.min(255, alpha * 2))
-    blobFrame:SetBorderScalar(0.2) -- a thin rim, not Blizzard's thick glow
+    f:SetFillTexture(AREA_FILL)
+    f:SetBorderTexture(AREA_EDGE)
+    f:SetFillAlpha(alpha)
+    f:SetBorderAlpha(math.min(255, alpha * 2))
+    f:SetBorderScalar(0.2) -- a thin rim, not Blizzard's thick glow
   end)
-  blobFrame:SetFrameLevel(OVERLAY_LEVEL - 1) -- under our lines and pins, above the map tiles
-  return blobFrame
+  f:SetFrameLevel(OVERLAY_LEVEL - (faint and 2 or 1)) -- under our lines and pins, above the map tiles
+  return f
 end
 
 -- The area of a quest you picked that ISN'T on the route: green (Blizzard's own quest-area look), so
@@ -232,6 +239,7 @@ local function HideMap()
   for _, l in ipairs(mapLines) do l:Hide() end
   for _, a in ipairs(mapAreas) do a:Hide() end
   if blobFrame then pcall(blobFrame.DrawNone, blobFrame) end
+  if fadedFrame then pcall(fadedFrame.DrawNone, fadedFrame) end
   if chosenBlob then pcall(chosenBlob.DrawNone, chosenBlob) end
 end
 
@@ -719,6 +727,12 @@ local function Draw()
     if bf.SetMapID then pcall(bf.SetMapID, bf, cur) end
     bf:Show()
   end
+  -- The current kill area is bright: the stop you clicked, else the first stop with an area. With
+  -- every stop's area shown, the others are faint.
+  local current = (hlStop and view[hlStop] and hlStop.area) and hlStop or nil
+  if not current then
+    for _, s in ipairs(route.stops) do if s.area and view[s] then current = s; break end end
+  end
   for _, s in ipairs(route.stops) do
     local v = view[s]
     if v then
@@ -734,14 +748,15 @@ local function Draw()
       -- The next stop's area, plus the area of a stop you clicked (even if areas are off).
       if s.area and (areasLeft > 0 or s == hlStop) then
         if s ~= hlStop then areasLeft = areasLeft - 1 end
-        bf = bf or Blob()
-        if bf and bf.SetMapID then pcall(bf.SetMapID, bf, cur) end
-        if bf then bf:Show() end
+        local faint = (s ~= current)
+        local f = Blob(faint)
+        if f and f.SetMapID then pcall(f.SetMapID, f, cur) end
+        if f then f:Show() end
         local blobbed = false
-        if bf and s.map == cur then   -- Blizzard's shapes only on the stop's own zone map
+        if f and s.map == cur then   -- Blizzard's shapes only on the stop's own zone map
           for _, a in ipairs(s.actions) do
             if a.kind == "do" and hasArea[a.row.id] then
-              if pcall(bf.DrawBlob, bf, a.row.id, true) then blobbed = true end
+              if pcall(f.DrawBlob, f, a.row.id, true) then blobbed = true end
             end
           end
         end
@@ -756,7 +771,7 @@ local function Draw()
           a:ClearAllPoints()
           local cx, cy = P(acx, acy) -- the whole area, not just the nearest spawn
           a:SetPoint("CENTER", canvas, "TOPLEFT", cx, cy)
-          a:SetVertexColor(1, 0.78, 0.16, (ns.db.areaAlpha or 0.2) * 0.9)
+          a:SetVertexColor(1, 0.78, 0.16, (ns.db.areaAlpha or 0.2) * 0.9 * (faint and FAINT or 1))
           a:Show()
         end
       end

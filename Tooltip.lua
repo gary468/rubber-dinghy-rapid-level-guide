@@ -78,8 +78,17 @@ local function AddLines(tt)
         Line("|cff33ff33?|r Hand in: " .. Title(id))
       end
     end
-    -- a quest giver: quests you can pick up now
     local level = UnitLevel("player") or 1
+    -- a mob that can drop an item that starts a quest you haven't done
+    for _, id in ipairs(Map("tipDrops")[npc] or {}) do
+      local q = ns.quests[id]
+      local st = ns.Status(id, level)
+      if q and q.si and not seen[id] and not skip[id] and (st == ns.S.OPEN or st == ns.S.SOON) then
+        seen[id] = true
+        Line(GOLD .. "!|r Can drop " .. q.si[2] .. GREY .. " - starts " .. q.n .. " [" .. (q.l or "?") .. "]|r")
+      end
+    end
+    -- a quest giver: quests you can pick up now
     for _, id in ipairs(Map("tipStarts")[npc] or {}) do
       if not seen[id] and not skip[id] and ns.Status(id, level) == ns.S.OPEN then
         seen[id] = true

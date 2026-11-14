@@ -838,6 +838,15 @@ local function BuildStops(rows, stepMap, current)
     for i = #carriedAway, 1, -1 do table.insert(ordered, 1, carriedAway[i]) end
   end
   for _, s in ipairs(restAway) do ordered[#ordered + 1] = s end
+  -- Stop 1 is a mob area and you're in its zone: aim for its spawn nearest you, not the end nearest
+  -- the previous stop (Gary 14 Nov: "its telling me to run to 1 but the kill area is huge" - the
+  -- Stegodons came right up to him while the arrow said 1,482 yd). Only the aim point inside the
+  -- area follows you; the order of the stops doesn't change.
+  local first = ordered[1]
+  if first and first.area and not first.away and first.map == pm and px then
+    local _, bx, by = Dist(first, px, py)
+    if bx then first.x, first.y = bx, by end
+  end
   for i, s in ipairs(ordered) do s.index = i end
   return ordered, loose, (pm == stepMap) and { px, py } or nil
 end

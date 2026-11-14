@@ -391,6 +391,23 @@ local function Render(r)
       Add(q.ot, { indent = 30, font = SMALL_FONT, color = GREY })
     end
   end
+  -- Quests started by an item you can get in this zone: named mobs to hunt, things on the ground,
+  -- random drops to look out for (Gary 14 Nov)
+  if ns.Starters and y < maxH then
+    local watch = ns.Starters.Watch(step, r.level)
+    for i, w in ipairs(watch) do
+      if y > maxH then break end
+      if i > 3 then
+        local rest = {}
+        for j = 4, #watch do rest[#rest + 1] = (ns.Starters.WatchText(watch[j])) end
+        Add(("|cff999999+%d more quests from items here|r"):format(#watch - 3), { indent = 4, font = SMALL_FONT,
+          tip = table.concat(rest, "\n") })
+        break
+      end
+      local text, tip = ns.Starters.WatchText(w)
+      Add(text, { indent = 4, font = SMALL_FONT, color = WHITE, nowrap = true, tip = tip })
+    end
+  end
   -- Finished quests handed in in the zone you're passing through (Gary 14 Nov: March of the Silithid
   -- in Gadgetzan on the way to Un'Goro). Only a reminder: the step and its stops don't change.
   if y < maxH and not step.dungeon then
