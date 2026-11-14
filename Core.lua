@@ -278,18 +278,19 @@ function ns.SetDungeon(name, on)
   if ns.Options and ns.Options.RefreshDungeons then ns.Safe("Options", ns.Options.RefreshDungeons) end
 end
 
---- Our Dungeon Journal's entry for a quest (Data_Dungeons.lua): where it starts, its objective
---- text and the chain before it ({ {id, name}, ... }, earliest first).
+--- The dungeon journal addon's entry for a quest (pickup text, note, required chain), if it's loaded.
 function ns.JournalQuest(id, dungeon)
-  local q = ns.dungeonQuests and ns.dungeonQuests[id]
-  if not q then return nil end
-  local out = { objective = q.ot }
-  local g = q.g
-  if g then out.pickup = g[2] and (g[1] .. ", " .. (ns.MapName(g[2]) or "?")) or g[1] end
-  if ns.Journal and ns.Journal.StaticChain then
-    local chain = ns.Journal.StaticChain(id)   -- cached, no game calls (the tracker redraws often)
-    if #chain > 0 then out.chain = chain end
+  local fdj = _G.ForeverDungeonJournal_NS
+  if not fdj or not fdj.DB then return nil end
+  local out = {}
+  local d = dungeon and fdj.DB[dungeon]
+  if d and type(d.quests) == "table" then
+    for _, q in ipairs(d.quests) do
+      if q.id == id then out.pickup, out.note, out.objective = q.pickup, q.note, q.objective; break end
+    end
   end
+  out.chain = fdj.QUEST_PREREQ_CHAINS and fdj.QUEST_PREREQ_CHAINS[id]
+  out.map = fdj.QUEST_START_MAPS and fdj.QUEST_START_MAPS[id]
   return out
 end
 
@@ -383,10 +384,10 @@ function ns.CurrentDungeon()
   if kind ~= "party" or not name then return nil end
   if id and INSTANCE_DUNGEON[id] then return INSTANCE_DUNGEON[id] end
   if INSTANCE_NAME[name] then return INSTANCE_NAME[name] end
-  -- our Dungeon Journal's data: the game's instance ID, or its name for the dungeon
-  for _, d in ipairs(ns.dungeonDB or {}) do
-    if (id and d.inst == id) or d.name == name then return d.place or d.name end
-    for _, n in ipairs(d.ej or {}) do if n == name then return d.place or d.name end end
+  local fdj = _G.ForeverDungeonJournal_NS
+  if fdj and fdj.DungeonFromInstanceName then
+    local ok, mapped = pcall(fdj.DungeonFromInstanceName, name)
+    if ok and mapped then return mapped end
   end
   return name
 end
@@ -789,12 +790,17 @@ function ns.StopTitle(s)
   return s.name or "?"
 end
 
---- Open our Dungeon Journal (Journal.lua) on a dungeon step's page, or on the dungeon list.
+--- Open the dungeon journal addon (DungeonJournal, /dj) on a dungeon, if it's installed.
 function ns.OpenJournal(step)
   step = step or (ns.route and ns.route.step)
-  if not ns.Journal then return false end
-  if step and step.dungeon then ns.Journal.OpenDungeon(step.dungeon) else ns.Journal.Toggle() end
-  return true
+  local dj = step and step.dj
+  local open = SlashCmdList and SlashCmdList.FOREVERDUNGEONJOURNAL
+  if open then
+    open(dj or "")
+    return true
+  end
+  ns.Print("install the DungeonJournal addon to see where every dungeon quest starts (/dj).")
+  return false
 end
 
 function ns.StopTooltip(owner, s, anchor)

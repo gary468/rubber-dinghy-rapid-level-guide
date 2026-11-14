@@ -213,35 +213,34 @@ RAID_LIKE = {"Upper Blackrock Spire"}   # 10-man in Classic: not a leveling run
 
 
 def load_dungeons(wow, lo=10, hi=60):
-    """Dungeons from our own journal data (Data_Dungeons.lua, built by tools/gen_dungeons.py from
-    QuestieDB and public facts): name, levels, bosses, entrance, Alliance quest IDs."""
+    """Dungeons from the installed dungeon journal addon: name, levels, bosses, entrance, quest IDs."""
     import os
-    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Data_Dungeons.lua")
-    if not os.path.isfile(path): return []
+    A = wow + r"\Interface\AddOns\ForeverDungeonJournal"
+    if not os.path.isdir(A): return []
     L = lua51.LuaRuntime(unpack_returned_tuples=True)
-    ns = L.eval("{}")
-    L.eval("function(src, ns) return assert(loadstring(src, 'Data_Dungeons.lua'))('RubberDinghy', ns) end")(
-        open(path, encoding="utf-8").read(), ns)
-    DQ = ns.dungeonQuests
+    L.execute('FDJ = {Constants = setmetatable({}, {__index=function() return "" end})}; ForeverDungeonJournal_NS = FDJ')
+    run = L.eval("function(src, name) local f = assert(loadstring(src, name)); return f('ForeverDungeonJournal', FDJ) end")
+    for fn in ("Data\\Dungeons.lua", "Data\\DungeonEntrances.lua"):
+        run(open(A + "\\" + fn, encoding="utf-8", errors="replace").read(), fn)
+    DB = L.globals().FDJ.DB
     out = []
-    for i in range(1, len(ns.dungeonDB) + 1):
-        d = ns.dungeonDB[i]
-        name = str(d.name)
-        if d.raidlike or d.horde or name in RAID_LIKE: continue
-        dlo, dhi = int(d.lo), int(d.hi)
+    for name in list(DB.keys()):
+        d = DB[name]
+        m = re.match(r"(\d+)\s*-\s*(\d+)", str(d.level or ""))
+        if not m or name in RAID_LIKE: continue
+        dlo, dhi = int(m.group(1)), int(m.group(2))
         if dhi < lo or dlo > hi: continue
-        e = d.ent
-        if not e: continue
+        e = d.entrance
+        if not e or not e.mapID: continue
         qs = []
         if d.quests:
-            for j in range(1, len(d.quests) + 1):
-                qid = int(d.quests[j])
-                q = DQ[qid]
-                if q is not None and q.fa != "H": qs.append(qid)
+            for i in range(1, len(d.quests) + 1):
+                q = d.quests[i]
+                if q.faction in ("Alliance", "Both") and q.id: qs.append(int(q.id))
         bosses = len(d.bosses) if d.bosses else 6
-        out.append(dict(name=name, lo=dlo, hi=dhi, bosses=bosses,
-                        entrance=(name + " Entrance", int(e[1]), round(float(e[2]), 1), round(float(e[3]), 1)),
-                        quests=qs, dj=str(d.key),
+        out.append(dict(name=str(name), lo=dlo, hi=dhi, bosses=bosses,
+                        entrance=(str(e.label or name), int(e.mapID), round(float(e.x) * 100, 1), round(float(e.y) * 100, 1)),
+                        quests=qs, dj=DJ_KEY.get(str(name)),
                         run_s=RUN_BASE_S + BOSS_S * min(bosses, MAX_BOSSES), kill_rate=DUNGEON_KILL_RATE, logged=0))
     # Calibrate from logged runs: each dungeon's own run time; one kill-XP rate for all of them.
     runs = load_run_log(wow)
@@ -260,25 +259,9 @@ def load_dungeons(wow, lo=10, hi=60):
 
 
 def load_run_log(wow):
-    """Every logged dungeon run, all characters: dungeon, secs, kill_xp, kill_secs.
-    Our own Run Log (RunLog.lua, in RubberDinghyDB.runs), plus runs the old DungeonJournal addon logged
-    before ours existed (read as history only)."""
+    """Every dungeon run in the journal's Run Log, all characters: dungeon, secs, kill_xp, kill_secs."""
     import glob
     out = []
-    for path in glob.glob(wow + r"\WTF\Account\*\*\*\SavedVariables\RubberDinghyRapidLevelGuide.lua"):
-        try:
-            L = lua51.LuaRuntime(unpack_returned_tuples=True)
-            L.execute(open(path, encoding="utf-8", errors="replace").read())
-            db = L.globals().RubberDinghyDB
-            runs = db and db.runs
-            if not runs: continue
-            for i in range(1, len(runs) + 1):
-                r = runs[i]
-                if (r.kills or 0) < 20 or not r.k0 or not r.k1: continue      # too short to say anything
-                xp = max(0, (r.xp or 0) - (r.qxp or 0))
-                out.append(dict(dungeon=str(r.d), secs=r.k1 - r.k0, kill_xp=xp, kill_secs=r.k1 - r.k0))
-        except Exception:
-            continue
     for path in glob.glob(wow + r"\WTF\Account\*\*\*\SavedVariables\ForeverDungeonJournal.lua"):
         try:
             L = lua51.LuaRuntime(unpack_returned_tuples=True)
@@ -289,7 +272,7 @@ def load_run_log(wow):
             for i in range(1, len(runs) + 1):
                 r = runs[i]
                 ks = r.kills
-                if not ks or len(ks) < 20: continue
+                if not ks or len(ks) < 20: continue          # too short to say anything
                 ts = [ks[j].t for j in range(1, len(ks) + 1)]
                 xp = sum(ks[j].x or 0 for j in range(1, len(ks) + 1))
                 start = r.created or min(ts)

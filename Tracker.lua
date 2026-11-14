@@ -248,11 +248,8 @@ local function Render(r)
       onClick = function() ns.StartPrep(step.dungeon) end })
   end
   if step.dungeon and not step.prep then
-    -- inside it: this run's time, XP and bosses (our Run Log)
-    local runLine = ns.RunLog and ns.RunLog.Line and ns.RunLog.Line()
-    if runLine then Add(runLine, { font = SMALL_FONT, color = WHITE, gap = 2 }) end
     Add("|cff66ccffOpen in the Dungeon Journal|r", { font = SMALL_FONT, gap = 1,
-      tip = "Where every quest for this dungeon starts, the chain before it, its bosses and your runs.",
+      tip = "Where every quest for this dungeon starts, its bosses and map (DungeonJournal addon).",
       onClick = function() ns.OpenJournal(step) end })
     local on = ns.DungeonOn(step.dungeon)
     Add(on and "|cff999999Skip this dungeon|r" or ("|cffff8040Not in your route|r - click to add " .. step.dungeon),

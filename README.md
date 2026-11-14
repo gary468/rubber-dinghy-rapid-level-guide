@@ -35,9 +35,7 @@ what order, and keeps track of your progress as you play.
   Open it from the settings window, Shift + click on the minimap button, a Journal button in the
   Dungeons window, or "Open in the Dungeon Journal" on a dungeon step.
 - **Run Log.** Every dungeon run is recorded on its own: time, mob XP, kills, bosses, deaths, money
-  and time outside. While you're inside, the tracker shows "This run 23:10 - 8,450 XP - bosses 3/5".
-  Character Logs in the journal lists every run. The route planner uses your runs to calibrate
-  dungeon XP and time.
+  and time outside. Character Logs in the journal lists every run.
 - **Automation, like Leatrix Plus:** accept and hand in quests, skip gossip, accept summons and
   resurrections, release in battlegrounds, sell junk, repair, faster loot. Each one is a tick box in
   settings. Hold Shift to do it yourself. A job Leatrix Plus still has on is left to Leatrix.
@@ -119,7 +117,7 @@ This decodes QuestieDB, builds the zone data, makes a first plan (`tools/plan_ro
 for the fastest order of zones and dungeons (`tools/optimize.py`, `-Minutes` to search longer,
 `-Force "Sunken Temple"` for dungeons that must be in it) and writes `Data.lua`. The time model's
 numbers (kill time, flights, boats, dungeon runs) are in `tools/routelib.py`. Dungeon run times and
-kill XP come from your Run Log (and runs the old DungeonJournal addon logged, as history).
-Dungeons come from `Data_Dungeons.lua`. Rebuild it with
-`python -I tools/gen_dungeons.py "<WoW>/_forever_" Data_Dungeons.lua` when QuestieDB updates. Zone notes are in `STEPS` in
+kill XP come from the DungeonJournal addon's Run Log when it has one. The Dungeon Journal's data
+(`Data_Dungeons.lua`) is rebuilt with `python -I tools/gen_dungeons.py "<WoW>/_forever_" Data_Dungeons.lua`
+when QuestieDB updates. Zone notes are in `STEPS` in
 `tools/gen_route.py`.

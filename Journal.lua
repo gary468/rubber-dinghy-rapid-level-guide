@@ -1072,3 +1072,44 @@ function J.OpenDungeon(name, toTab, sel)
   ShowView("page")
   J.RenderPage()
 end
+
+---------------------------------------------------------------------------
+-- Hooks into the route (Core.lua stays as it is): the route's dungeon steps, the get-ready route and
+-- the tracker ask these three; they now answer from our journal instead of the old DungeonJournal addon.
+---------------------------------------------------------------------------
+--- Open the journal on a dungeon step's page (the tracker's "Open in the Dungeon Journal"), or the list.
+function ns.OpenJournal(step)
+  step = step or (ns.route and ns.route.step)
+  if step and step.dungeon then J.OpenDungeon(step.dungeon) else J.Toggle() end
+  return true
+end
+
+--- A quest's entry for the tracker: where it starts, its objective, and the chain before it
+--- ({ {id, name}, ... }, cached, no game calls; the tracker redraws often).
+function ns.JournalQuest(id)
+  local q = Quest(id)
+  if not q then return nil end
+  local out = { objective = q.ot }
+  local g = q.g
+  if g then out.pickup = g[2] and (g[1] .. ", " .. (ns.MapName(g[2]) or "?")) or g[1] end
+  local chain = J.StaticChain(id)
+  if #chain > 0 then out.chain = chain end
+  return out
+end
+
+--- The dungeon you're in: the route's own answer when it knows it, else ours (the game's instance ID,
+--- or its name for the dungeon, as in the Encounter Journal).
+local routeCurrent = ns.CurrentDungeon
+function ns.CurrentDungeon()
+  local r = routeCurrent and routeCurrent()
+  if not r then return nil end
+  for _, d in ipairs(ns.dungeonDB or {}) do
+    if d.name == r or d.place == r then return r end
+  end
+  local _, _, _, _, _, _, _, id = GetInstanceInfo()
+  for _, d in ipairs(ns.dungeonDB or {}) do
+    if (id and d.inst == id) then return d.place or d.name end
+    for _, n in ipairs(d.ej or {}) do if n == r then return d.place or d.name end end
+  end
+  return r
+end
