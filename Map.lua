@@ -518,7 +518,8 @@ local function Draw()
   -- several zones; its stops in another zone show when you open that zone).
   local onStep = false
   for _, s in ipairs(route.stops or {}) do if s.map == cur then onStep = true; break end end
-  local hlHere = hlStop and hlStop.map == cur and not onStep
+  -- (a spot shown from the Dungeon Journal is drawn even on a map with route stops)
+  local hlHere = hlStop and hlStop.map == cur and (not onStep or hlStop.journal)
   if not onStep and not hlHere then return end
   local w, h = canvas:GetWidth(), canvas:GetHeight()
   if not w or w == 0 then return end
