@@ -278,7 +278,7 @@ end
 
 function O.Toggle()
   if not win then return end
-  if win:IsShown() then win:Hide() else win:Show() end
+  if win:IsShown() then win:Hide() else win:Show(); win:Raise() end   -- in front of the journal
 end
 
 -- Also list it under Game Menu > Options > AddOns, with a button that opens this window.
@@ -423,7 +423,7 @@ end
 
 function O.ToggleDungeons()
   if not dwin then BuildDungeons() end
-  if dwin:IsShown() then dwin:Hide() else PlaceDungeons(); dwin:Show() end
+  if dwin:IsShown() then dwin:Hide() else PlaceDungeons(); dwin:Show(); dwin:Raise() end
 end
 function O.RefreshDungeons()
   if dwin and dwin:IsShown() then for _, c in ipairs(dcontrols) do c.refresh() end end

@@ -385,6 +385,69 @@ J.ShowSpot = ShowSpot
 local cards = {}
 local LEVEL_TINT = { { 0.20, 0.35, 0.18 }, { 0.18, 0.28, 0.40 }, { 0.36, 0.26, 0.14 }, { 0.38, 0.16, 0.14 } }
 
+-- Card art: the game's own pictures, checked in the client before use. First the Encounter Journal's
+-- art for the dungeon (if the client has it), then Blizzard's loading screen for the dungeon (one per
+-- Classic dungeon; spellings vary, so a few are tried), then one named after the dungeon (in case
+-- Forever ships one for its new dungeons), then the loading screen of the continent it's on.
+local LS = "Interface\\Glues\\LoadingScreens\\"
+local LOADSCREEN = {
+  ["Ragefire Chasm"] = { "LoadScreenRagefireChasm" },
+  ["Wailing Caverns"] = { "LoadScreenWailingCaverns" },
+  ["The Deadmines"] = { "LoadScreenDeadmines" },
+  ["Shadowfang Keep"] = { "LoadScreenShadowfangKeep" },
+  ["Blackfathom Deeps"] = { "LoadScreenBlackfathomDeeps" },
+  ["The Stockade"] = { "LoadScreenStormwindStockades", "LoadScreenStockades", "LoadScreenStockade" },
+  ["Gnomeregan"] = { "LoadScreenGnomeregan" },
+  ["Razorfen Kraul"] = { "LoadScreenRazorfenKraul" },
+  ["Scarlet Monastery"] = { "LoadScreenScarletMonastery", "LoadScreenMonastery" },
+  ["Razorfen Downs"] = { "LoadScreenRazorfenDowns", "LoadScreenRazorfenDown" },
+  ["Uldaman"] = { "LoadScreenUldaman" },
+  ["Zul'Farrak"] = { "LoadScreenZulFarrak" },
+  ["Maraudon"] = { "LoadScreenMaraudon" },
+  ["Sunken Temple"] = { "LoadScreenSunkenTemple", "LoadScreenTempleOfAtalHakkar" },
+  ["Blackrock Depths"] = { "LoadScreenBlackrockDepths", "LoadScreenBlackrock" },
+  ["Blackrock Spire"] = { "LoadScreenBlackrockSpire", "LoadScreenBlackrock" },
+  ["Dire Maul"] = { "LoadScreenDireMaul" },
+  ["Stratholme"] = { "LoadScreenStratholme" },
+  ["Scholomance"] = { "LoadScreenScholomance" },
+}
+local CONTINENT_SCREEN = { [1415] = { "LoadScreenEasternKingdom", "LoadScreenEasternKingdoms" },
+                           [1414] = { "LoadScreenKalimdor" } }
+local cardArt = {}   -- [dungeon name] = { path, isLoadingScreen } or false
+
+local function ArtExists(path, tex)
+  if GetFileIDFromPath then
+    local ok, id = pcall(GetFileIDFromPath, path)
+    if ok then return id ~= nil and id ~= 0 end
+  end
+  -- older clients: SetTexture says whether the file loaded
+  local ok, set = pcall(tex.SetTexture, tex, path)
+  return ok and set and true or false
+end
+
+local function CardArt(d, tex)
+  local a = cardArt[d.name]
+  if a ~= nil then return a end
+  a = false
+  local e = ej and ej[d.name]
+  if e and (e.art or e.bg) then a = { e.art or e.bg, false } end
+  if not a then
+    local tries = {}
+    for _, n in ipairs(LOADSCREEN[d.place or d.name] or LOADSCREEN[d.name] or {}) do tries[#tries + 1] = n end
+    local camel = (d.place or d.name):gsub("^The ", ""):gsub("[^%w ]", ""):gsub("(%w+)", function(w) return w:sub(1, 1):upper() .. w:sub(2) end):gsub(" ", "")
+    tries[#tries + 1] = "LoadScreen" .. camel
+    local cont = d.ent and ns.Continent and ns.Continent(d.ent[1])
+    for _, n in ipairs(CONTINENT_SCREEN[cont] or {}) do tries[#tries + 1] = n end
+    for _, n in ipairs(tries) do
+      if ArtExists(LS .. n, tex) then a = { LS .. n, true }; break end
+    end
+  end
+  cardArt[d.name] = a
+  local rep = ns.db and ns.db.journalReport
+  if rep then rep.art = rep.art or {}; rep.art[d.name] = a and a[1] or "none" end
+  return a
+end
+
 local function Visible(d)
   local o = DB()
   if d.horde and myFaction ~= "H" then return false end
@@ -460,11 +523,14 @@ local function RenderHome()
     c:SetSize(cw, CARD_H)
     c:ClearAllPoints()
     c:SetPoint("TOPLEFT", homeView.scroll.child, "TOPLEFT", ((i - 1) % 2) * (cw + 10), -math.floor((i - 1) / 2) * (CARD_H + 10))
-    local e = ej and ej[d.name]
-    local art = e and (e.art or e.bg)
+    local art = CardArt(d, c.art)
     if art then
-      c.art:SetTexture(art); c.art:SetTexCoord(0, 1, 0, 1); c.art:SetVertexColor(1, 1, 1)
+      c.art:SetTexture(art[1])
+      -- a loading screen is 4:3: show a band across its middle; journal art fits as it is
+      if art[2] then c.art:SetTexCoord(0, 1, 0.33, 0.67) else c.art:SetTexCoord(0, 1, 0, 1) end
+      c.art:SetVertexColor(1, 1, 1)
     else
+      c.art:SetTexCoord(0, 1, 0, 1)
       local lo = Levels(d)
       local t = LEVEL_TINT[math.min(4, math.max(1, math.floor((lo - 10) / 13) + 1))]
       c.art:SetColorTexture(t[1], t[2], t[3], 1)
@@ -879,7 +945,7 @@ local function Build()
   if not ok or not f then f = CreateFrame("Frame", "RubberDinghyJournal", UIParent) end
   frame = f
   f:SetSize(W, H)
-  f:SetFrameStrata("HIGH")
+  f:SetFrameStrata("DIALOG")   -- same layer as the settings and Dungeons windows; the last one opened is in front
   f:SetToplevel(true)
   f:SetClampedToScreen(true)
   f:EnableMouse(true)
@@ -1058,6 +1124,7 @@ function J.Open()
   if not frame then Build(); Place() end
   ns.Safe("JournalScan", J.ScanGame)
   frame:Show()
+  frame:Raise()
   J.Refresh()
 end
 
@@ -1065,7 +1132,7 @@ end
 function J.OpenDungeon(name, toTab, sel)
   local d = Dungeon(name) or ns.RunLog.Dungeon(name)
   if not d then J.Open(); return end
-  if not frame or not frame:IsShown() then J.Open() end
+  if not frame or not frame:IsShown() then J.Open() else frame:Raise() end
   cur = d.name
   tab = toTab or ((cur == (ns.RunLog.Current() or {}).d) and "bosses" or "quests")
   selected = sel
