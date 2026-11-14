@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.33
+- **No more getting stuck on a finished zone.** When everything at your level is done, the route
+  moves on to the next zone and tells you to "Grind to level N" until its quests open.
+- **"Hunt" and "Look for" hints:** click to see the spot on the world map; right-click to skip the
+  quest.
+- **Quests our data has no objectives for** (Reclaiming Ravencrest) are listed with their objectives
+  instead of sending you to the hand-in early.
+- **Azshara:** Berdun Cliffbrew's Winter Frontier Fishery (fishing) and Deadliest Catch (not in the
+  game) are off the route.
+
 ## v1.0.32
 - **Planned for Forever's 40-quest log** (not Classic's 20). About 90 hours played to 60.
 - **A quest whose objectives are far apart gets a stop for each place**, slotted in where the route
