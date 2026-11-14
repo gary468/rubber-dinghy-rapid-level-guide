@@ -595,6 +595,41 @@ end
 ---------------------------------------------------------------------------
 -- A stop is a place: {map, x, y, r?, name, area, actions = {{kind, row}}, away}
 local curStep
+-- The part of a quest's area still to do: q.om = {{label, {x,y,...}}, ...} holds each objective's
+-- own spawns, so a finished objective's mobs drop off the stop (Gary 14 Nov, Beware of Pterrordax:
+-- 15/15 Frenzied done, yet every dot was a Frenzied Pterrordax). Objectives are matched by name
+-- ("3/10 Pterrordax slain" -> "Pterrordax"); anything unmatched keeps the whole area.
+local function ObjName(text)
+  local t = (text or ""):lower()
+  t = t:gsub("^%s*%d+%s*/%s*%d+%s*", ""):gsub(":%s*%d+%s*/%s*%d+%s*$", ""):gsub("%s+slain$", "")
+  return (t:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+local function RemainingArea(r, o)
+  local om = r.q.om
+  if not om then return o end
+  local objs = ns.RawObjectives(r.id)
+  if #objs == 0 then return o end
+  local doneBy = {}
+  for _, ob in ipairs(objs) do doneBy[ObjName(ob.text)] = ob.done end
+  local left = {}
+  for _, g in ipairs(om) do
+    local d = doneBy[g[1]:lower()]
+    if d == nil then return o end          -- can't tell which objective this is: keep it all
+    if not d then left[#left + 1] = g end
+  end
+  if #left == 0 or #left == #om then return o end
+  local pts, names, sx, sy, n = {}, {}, 0, 0, 0
+  for _, g in ipairs(left) do
+    names[#names + 1] = g[1]
+    local p = g[2]
+    for k = 1, #p - 1, 2 do
+      pts[#pts + 1], pts[#pts + 2] = p[k], p[k + 1]
+      sx, sy, n = sx + p[k], sy + p[k + 1], n + 1
+    end
+  end
+  if n == 0 then return o end
+  return { table.concat(names, ", "), o[2], sx / n, sy / n, o[5], pts }
+end
 local function Target(r)
   local q = r.q
   -- On a dungeon step, a hand-in at an altar/idol inside (Questie puts it at the entrance) is part of
@@ -609,7 +644,7 @@ local function Target(r)
   -- Dungeon step: quests you're doing are done inside, so the stop is the dungeon's entrance.
   if r.s == LOG and q.d and curStep and curStep.ent then return curStep.ent, "dungeon" end
   if r.s == LOG then
-    if q.o then return q.o, "do" end
+    if q.o then return RemainingArea(r, q.o), "do" end
     -- No mobs/objects to find (talk-to and delivery quests): head for the hand-in NPC.
     if q.t and not q.ob then return q.t, "go" end
     -- Has objectives but the database has no location for them: listed without a stop.

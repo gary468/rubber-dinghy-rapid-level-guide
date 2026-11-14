@@ -276,6 +276,47 @@ def _objective_area(qid, areas, focus=True):
     return dict(name=", ".join(names[:2]), area=a, x=cx, y=cy, r=rad, pts=spread)
 
 
+def objective_groups(qid, area):
+    """Each objective's own spawns on the objective area's map: [(label, [(x, y), ...])], in the quest's
+    objective order. label = what the quest log calls it (mob name for kills, item name for items).
+    The addon uses them to drop finished objectives from a stop's area (Gary 14 Nov, Beware of
+    Pterrordax: 15/15 Frenzied done, yet every dot was still a Frenzied Pterrordax). [] when the
+    quest has fewer than two objectives with spawns there."""
+    obj = get(f"X-Quest-{qid}-10")
+    if not obj or area is None: return []
+    groups = []
+    def spots(sources):
+        cells, out = set(), []
+        for kind, i in sources[:40]:
+            for b, u, v in pts(ent(kind, i)) or []:
+                if b != area: continue
+                key = (round(u / 2.5), round(v / 2.5))
+                if key in cells: continue
+                cells.add(key); out.append((u, v))
+        if len(out) > 30:
+            step = len(out) / 30.0
+            out = [out[int(i * step)] for i in range(30)]
+        return out
+    for c in pos(obj, 1) or []:
+        if isinstance(c, list) and c:
+            nm = ent("npc", c[0])["name"]
+            if nm: groups.append((nm, spots([("npc", c[0])])))
+    for o in pos(obj, 2) or []:
+        if isinstance(o, list) and o:
+            nm = ent("obj", o[0])["name"]
+            if nm: groups.append((nm, spots([("obj", o[0])])))
+    for it in pos(obj, 3) or []:
+        if not (isinstance(it, list) and it): continue
+        iname = pos(get(f"X-Item-{it[0]}-S") or {}, 1)
+        if not iname: continue
+        drops = get(f"X-Item-{it[0]}-2") or []
+        src = [("npc", n) for n in relevant_npcs(qid, drops, iname)]
+        src += [("obj", o) for o in get(f"X-Item-{it[0]}-3") or [] if isinstance(o, int)]
+        groups.append((iname, spots(src)))
+    groups = [g for g in groups if g[1]]
+    return groups if len(groups) >= 2 else []
+
+
 d = json.load(open(HERE + r"\data.json", encoding="utf-8"))
 Q = {int(k): v for k, v in d["quests"].items()}
 black = set(d["blacklist"])
@@ -578,6 +619,10 @@ for qid in sorted(set(used) | set(track)):
             parts.append("si=" + si)
             for n in si_npcs: tip_drop.setdefault(n, set()).add(qid)
     if o: parts.append(f"o={lloc(o, True)}")
+    if o and o.get("area") is not None:
+        om = objective_groups(qid, o["area"])
+        if om:
+            parts.append("om={" + ",".join("{" + lstr(lbl) + ",{" + ",".join(f"{u:.0f},{v:.0f}" for u, v in sp) + "}}" for lbl, sp in om) + "}")
     elif LEARNED_SPOTS.get(qid):
         # no location in any database, but players' recorded where its progress went up (Learn.lua)
         parts.append("o=" + spots_loc(LEARNED_SPOTS[qid], q.get("name") or "Objective"))
