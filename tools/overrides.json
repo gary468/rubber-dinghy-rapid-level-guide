@@ -1,0 +1,9 @@
+{
+  "_about": "Corrections to QuestieDB for WoW Forever, from what players see in game. gen_route.py applies them before planning. drop: the quest isn't in the game (or not worth routing). preQuestGroup / preQuestSingle: quests that must be handed in first. Each entry says who saw what, and when.",
+  "quests": {
+    "98096": {"preQuestGroup": [98067], "note": "Sisters In Duty: Sentinel Dalia Sunblade only offers Eyes of the Sentinels (98067) until it's done. Seen in game by Gary, 14 Nov 2026."},
+    "3763": {"drop": true, "note": "Assisting Arch Druid Staghelm (innkeeper breadcrumb): Innkeeper Saelienne offers no quest in game. Seen 14 Nov 2026; Forever seems to have removed the innkeeper breadcrumbs."},
+    "3789": {"drop": true, "note": "Assisting Arch Druid Staghelm, same breadcrumb from another innkeeper: removed like 3763 (unverified, same Forever change)."},
+    "3790": {"drop": true, "note": "Assisting Arch Druid Staghelm, same breadcrumb from another innkeeper: removed like 3763 (unverified, same Forever change)."}
+  }
+}

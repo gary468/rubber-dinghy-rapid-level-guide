@@ -258,6 +258,17 @@ def _objective_area(qid, areas):
 d = json.load(open(HERE + r"\data.json", encoding="utf-8"))
 Q = {int(k): v for k, v in d["quests"].items()}
 black = set(d["blacklist"])
+# Corrections from what players see in Forever (tools/overrides.json): quests that aren't in the game,
+# and chain links QuestieDB is missing.
+try:
+    for _k, _v in (json.load(open(HERE + r"\overrides.json", encoding="utf-8")).get("quests") or {}).items():
+        _q = Q.get(int(_k))
+        if _v.get("drop"): black.add(int(_k))
+        if _q is not None:
+            for _f in ("preQuestGroup", "preQuestSingle", "requiredLevel"):
+                if _f in _v: _q[_f] = _v[_f]
+except FileNotFoundError:
+    pass
 
 
 def eligible(qid, q):
@@ -345,12 +356,12 @@ if PLAN:
         if v["name"].startswith("map ") or v["name"] == "here":
             for a in sorted(map_areas.get(v["map"], [])):
                 if zone_name.get(a): v["name"] = zone_name[a]; break
-        ids = [q for q in v["quests"] if q in Q]
+        ids = [q for q in v["quests"] if q in Q and q not in black]
         if v.get("kind") == "dungeon":
             # Every quest for this dungeon: the addon shows the ones you hold or can get, live.
             ids += [q for q in v.get("all", []) if q in Q and q not in ids and eligible(q, Q[q])]
-        pick = [q for q in v.get("pick", []) if q in Q]
-        turn = [q for q in v.get("turn", []) if q in Q]      # route v2: hand-ins placed here
+        pick = [q for q in v.get("pick", []) if q in Q and q not in black]
+        turn = [q for q in v.get("turn", []) if q in Q and q not in black]      # route v2: hand-ins placed here
         m = v["map"]
         if v.get("kind") != "dungeon" and CANON.get(m):
             v["name"] = CANON[m]   # the map's own name (plan names could come from a neighbour)
