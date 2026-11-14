@@ -224,9 +224,64 @@ def relevant_npcs(qid, npcs, item_name=None):
     return npcs
 
 
+
+# Objectives of quests QuestieDB can't place, from ForeverChanges' quest pages (tools/fetch_objectives.py):
+# {qid: {"need": [[kind, id, name]], "desc": "..."}}. Used only when QuestieDB has no objective sources.
+try:
+    FC_OBJ = json.load(open(HERE + r"\forever_objectives.json", encoding="utf-8"))
+except (FileNotFoundError, ValueError):
+    FC_OBJ = {}
+_HOSTILE = None
+def hostile_by_name():
+    """Hostile NPCs (no faction to talk to) with a name of 2+ words and known spawns, by name - for
+    spotting the mob a quest's description names."""
+    global _HOSTILE
+    if _HOSTILE is None:
+        _HOSTILE = {}
+        for k in list(meta):
+            m = re.match(r"X-Npc-(\d+)-S$", k)
+            if not m: continue
+            row = get(k) or {}
+            nm = pos(row, 1)
+            if not nm or " " not in nm or len(nm) < 8 or pos(row, 13): continue
+            _HOSTILE.setdefault(nm, []).append(int(m.group(1)))
+    return _HOSTILE
+
+def fc_groups(qid, focus=True):
+    """[(label, [(kind, id)])] for a quest from ForeverChanges: each item, mob or object it asks for and
+    where it comes from. An item nothing is known to drop comes from the named mobs the description
+    mentions (Slithering Looters: 'A naga called Lady Sesspira leads the pillaging')."""
+    rec = FC_OBJ.get(str(qid))
+    if not rec: return []
+    desc = rec.get("desc") or ""
+    # the quest giver's zone: a mob the description names counts only if it lives there
+    gl = loc_of(get(f"X-Quest-{qid}-2")) if get(f"X-Quest-{qid}-2") else None
+    gmap = uimap.get((gl or {}).get("area") or 0)
+    told = []
+    for nm, ids in hostile_by_name().items():
+        if nm not in desc: continue
+        for i in ids:
+            if any(uimap.get(a) == gmap for a, _, _ in pts(ent("npc", i)) or []): told.append(("npc", i))
+    groups = []
+    for kind, i, name in rec.get("need") or []:
+        if kind == "goal":   # "Spitelash Battlemaster slain": that mob, where it lives in the giver's zone
+            mob = re.sub(r"\s+slain$", "", name)
+            src = [("npc", n) for n in hostile_by_name().get(mob, [])
+                   if any(uimap.get(a) == gmap for a, _, _ in pts(ent("npc", n)) or [])]
+            groups.append((mob, src))
+            continue
+        if kind == "npc": src = [("npc", i)]
+        elif kind == "object": src = [("obj", i)]
+        else:
+            drops = [n for n in (get(f"X-Item-{i}-2") or []) if isinstance(n, int)]
+            src = [("npc", n) for n in (relevant_npcs(qid, drops, name) if focus else drops)]
+            src += [("obj", o) for o in (get(f"X-Item-{i}-3") or []) if isinstance(o, int)]
+        groups.append((name, src or list(told)))
+    if not groups and told: groups.append(("", told))
+    return [g for g in groups if g[1]]
+
 def _objective_area(qid, areas, focus=True):
-    obj = get(f"X-Quest-{qid}-10")
-    if not obj: return None
+    obj = get(f"X-Quest-{qid}-10") or {}
     sources = []  # (kind, id)
     for c in pos(obj, 1) or []:
         if isinstance(c, list) and c: sources.append(("npc", c[0]))
@@ -241,13 +296,18 @@ def _objective_area(qid, areas, focus=True):
     for kc in pos(obj, 5) or []:
         if isinstance(kc, list) and kc and isinstance(kc[0], list):
             for n in kc[0]: sources.append(("npc", n))
-    best_pts, names = [], []
-    for kind, i in sources[:40]:
-        e = ent(kind, i)
-        p = pts(e, areas)
-        if p:
-            best_pts += p
-            if e["name"] and e["name"] not in names: names.append(e["name"])
+    def collect(srcs):
+        bp, nm = [], []
+        for kind, i in srcs[:40]:
+            e = ent(kind, i)
+            p = pts(e, areas)
+            if p:
+                bp += p
+                if e["name"] and e["name"] not in nm: nm.append(e["name"])
+        return bp, nm
+    best_pts, names = collect(sources)
+    if not best_pts:   # QuestieDB has nothing we can place: ForeverChanges' objectives
+        best_pts, names = collect([x for _, src in fc_groups(qid, focus) for x in src])
     if not best_pts: return None
     all_pts = best_pts
     best_pts = best_pts[:600]
@@ -283,7 +343,7 @@ def objective_groups(qid, area):
     Pterrordax: 15/15 Frenzied done, yet every dot was still a Frenzied Pterrordax). [] when the
     quest has fewer than two objectives with spawns there."""
     obj = get(f"X-Quest-{qid}-10")
-    if not obj or area is None: return []
+    if area is None: return []
     groups = []
     def spots(sources):
         cells, out = set(), []
@@ -313,6 +373,8 @@ def objective_groups(qid, area):
         src = [("npc", n) for n in relevant_npcs(qid, drops, iname)]
         src += [("obj", o) for o in get(f"X-Item-{it[0]}-3") or [] if isinstance(o, int)]
         groups.append((iname, spots(src)))
+    if not [g for g in groups if g[1]]:   # nothing placeable from QuestieDB: ForeverChanges' objectives
+        groups = [(lbl, spots(src)) for lbl, src in fc_groups(qid) if lbl]
     groups = [g for g in groups if g[1]]
     return groups if len(groups) >= 2 else []
 
@@ -632,12 +694,16 @@ for qid in sorted(set(used) | set(track)):
     elif LEARNED_SPOTS.get(qid):
         # no location in any database, but players' recorded where its progress went up (Learn.lua)
         parts.append("o=" + spots_loc(LEARNED_SPOTS[qid], q.get("name") or "Objective"))
+    elif (FC_OBJ.get(str(qid)) or {}).get("dots") and FC_OBJ[str(qid)].get("map"):
+        # ForeverChanges' quest map: dots where the objectives are (Forever-only objects no database has)
+        rec = FC_OBJ[str(qid)]
+        parts.append("o=" + spots_loc([[rec["map"], x, y] for x, y in rec["dots"]], q.get("name") or "Objective"))
     else:
         # no spot for its objectives: keep the quest's own objective text ("...in Wildhammer Keep")
         ot = get(f"X-Quest-{qid}-8")
         if isinstance(ot, list) and ot and isinstance(ot[0], str) and has_objectives(qid):
             parts.append(f"ot={lstr(ot[0][:160])}")
-    if has_objectives(qid): parts.append("ob=true")
+    if has_objectives(qid) or (FC_OBJ.get(str(qid)) or {}).get("need"): parts.append("ob=true")
     if (q.get("specialFlags") or 0) & 1: parts.append("rep=true")
     # Candidate quest items for the tracker's item button (Questie's rule): the item the quest gives
     # you, items it requires, and objective items. The addon shows one only if it's in your bags and

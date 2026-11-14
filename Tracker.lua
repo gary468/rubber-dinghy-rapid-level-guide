@@ -97,6 +97,7 @@ local function NewLine()
   b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
   b:SetScript("OnClick", function(self, button)
     if button == "RightButton" and self.stop then T.SkipMenu(self.stop, self); return end
+    if button == "RightButton" and self.onRightClickSelf then self.onRightClickSelf(self); return end
     if button == "RightButton" and self.onRightClick then self.onRightClick(); return end
     if self.onClick then self.onClick() elseif self.stop then ns.ShowOnMap(self.stop) end
   end)
@@ -110,7 +111,7 @@ local function Add(text, opts)
   local b = pool[used]
   if not b then b = NewLine(); pool[used] = b end
   local indent = opts.indent or 0
-  b.stop, b.tip, b.onClick, b.onRightClick = opts.stop, opts.tip, opts.onClick, opts.onRightClick
+  b.stop, b.tip, b.onClick, b.onRightClick, b.onRightClickSelf = opts.stop, opts.tip, opts.onClick, opts.onRightClick, opts.onRightClickSelf
   b.text:SetFontObject(opts.font or LINE_FONT)
   if b.text.SetWordWrap then b.text:SetWordWrap(not opts.nowrap) end
   b.text:ClearAllPoints()
@@ -435,11 +436,10 @@ local function Render(r)
           if kind ~= "drop" and ns.ShowSpotOnMap then ns.ShowSpotOnMap(wm, wx, wy, w.src)
           elseif ns.ShowOnMap and wm then ns.ShowOnMap({ map = wm, x = wx, y = wy, name = w.src, actions = {}, index = "!", spot = true }) end
         end,
-        onRightClick = function()
-          ns.db.skip = ns.db.skip or {}
-          ns.db.skip[id] = true
-          ns.Print(('skipped %s. "Un-skip all" in settings brings it back.'):format(w.q.n))
-          ns.Queue()
+        onRightClickSelf = function(line)
+          -- the same skip menu as a route stop's (Gary: "it should ask you, same as normal quests")
+          T.SkipMenu({ spot = true, name = text, map = wm, x = wx, y = wy,
+                       actions = { { kind = "get", row = { id = id, q = w.q } } } }, line)
         end })
     end
   end
@@ -866,8 +866,9 @@ function T.SkipMenu(stop, anchor)
     tinsert(UISpecialFrames, "RubberDinghySkipMenu")
   end
   for _, it in ipairs(menu.items) do it:Hide() end
-  menu.title:SetText(stop.index .. ". " .. ns.StopTitle(stop))
-  menu.stopKey = stop.map .. ":" .. tostring(stop.name)
+  -- a hint line ("Look for") isn't a route stop: its own title, and a re-plan doesn't close the menu
+  menu.title:SetText(stop.spot and stop.name or (stop.index .. ". " .. ns.StopTitle(stop)))
+  menu.stopKey = (not stop.spot) and (stop.map .. ":" .. tostring(stop.name)) or nil
   local entries = {}
   if #stop.actions > 1 then
     entries[#entries + 1] = { text = ("Skip this stop (%d quests)"):format(#stop.actions),

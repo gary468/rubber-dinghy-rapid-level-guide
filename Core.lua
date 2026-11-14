@@ -1096,6 +1096,13 @@ function ns.Recompute()
       return
     end
   end
+  -- A step you picked by hand (< >) that's now finished and behind the route hands back to automatic,
+  -- so you're never left on an empty step (a friend had to find the A button after skipping its
+  -- last hints).
+  if db.step and ns.steps[db.step] and not ns.steps[db.step].dungeon then
+    local auto = AutoStep(level)
+    if db.step < auto and not HasWork(ns.steps[db.step], level) then db.step = nil end
+  end
   local idx = db.step or AutoStep(level)
   if idx < 1 then idx = 1 elseif idx > #ns.steps then idx = #ns.steps end
   local step = ns.steps[idx]
