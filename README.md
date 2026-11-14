@@ -102,6 +102,10 @@ Game Menu > Options > AddOns.
     for entrances, bosses and quest lists.
   - **In game:** the journal reads boss descriptions, portraits and art from the game's own
     Encounter Journal, and level ranges from the group finder.
+  - **Boss loot** (`Data_Loot.lua`, built by `tools/gen_loot.py`): which items each boss drops, and
+    how often, from the [CMaNGOS Classic database](https://github.com/cmangos/classic-db) (GPLv3).
+    Only item IDs and drop chances are kept. Names, icons and stats come from the game. Forever's
+    new dungeons aren't in that database yet.
   - It's our own work. Nothing is taken from the DungeonJournal addon.
 - **Licence:** GNU GPL v3 or later (see `LICENSE.md`).
 

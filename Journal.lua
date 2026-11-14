@@ -710,6 +710,7 @@ end
 local rows = {}
 local ROW_H = 28
 local ShowFace   -- below, with the boss models
+local LootLine   -- below, with the boss page
 
 function J.Step(name)
   for _, st in ipairs(ns.steps or {}) do if st.dungeon == name then return st end end
@@ -884,10 +885,37 @@ end
 
 local lootCache = {}
 --- A boss's loot from the game's own Encounter Journal (read when the boss is opened, then kept).
+-- Loot from our own data (Data_Loot.lua: item IDs and drop chances from the CMaNGOS Classic database),
+-- with names, icons and slots from the game.
+local function DataLoot(b)
+  local list = ns.bossLoot and b.npc and ns.bossLoot[b.npc]
+  if not list then return nil end
+  local key = "n" .. b.npc
+  local c = lootCache[key]
+  if c and c.complete then return c end   -- still loading: ask the game again (cheap)
+  local out, complete = {}, true
+  for _, row in ipairs(list) do
+    local id, chance = row[1], row[2]
+    local nm, link, q, _, _, itype, isub, _, equip, icon = GetItemInfo(id)
+    if not nm then
+      complete = false   -- the game hasn't loaded this item yet: ask for it, look again shortly
+      if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, id) end
+      icon = icon or (GetItemIcon and GetItemIcon(id))
+    end
+    local slot = (equip and equip ~= "" and _G[equip]) or itype
+    out[#out + 1] = { itemID = id, name = nm, link = link, itemQuality = q, icon = icon, slot = slot,
+                      armorType = (isub ~= itype) and isub or nil, chance = chance }
+  end
+  out.complete = complete
+  out.tries = ((c and c.tries) or 0) + 1
+  lootCache[key] = out
+  return out
+end
+
 local function BossLoot(d, b)
-  if not (b.enc and EJ_SelectEncounter and EJ_GetNumLoot) then return nil end
+  if not (b.enc and EJ_SelectEncounter and EJ_GetNumLoot) then return DataLoot(b) end
   local c = lootCache[b.enc]
-  if c and (c.complete or (c.tries or 0) >= 3) then return c end
+  if c and c.complete then return c end   -- still loading: ask the game again (cheap)
   local e = ej and ej[d.name]
   if e and e.id then pcall(EJ_SelectInstance, e.id) end
   pcall(EJ_SelectEncounter, b.enc)
@@ -917,6 +945,7 @@ local function BossLoot(d, b)
   out.complete = complete
   out.tries = ((c and c.tries) or 0) + 1   -- at most 3 looks for items still loading
   lootCache[b.enc] = out
+  if #out == 0 then return DataLoot(b) end   -- the game's journal has none: our own data
   return out
 end
 
@@ -926,6 +955,15 @@ local function QualityHex(q)
     if ok and hex then return "|c" .. hex end
   end
   return P_TITLE
+end
+
+--- The boss row's second line: what it drops.
+LootLine = function(b)
+  local n = ns.bossLoot and b.npc and ns.bossLoot[b.npc] and #ns.bossLoot[b.npc] or 0
+  local bits = {}
+  if n > 0 then bits[#bits + 1] = n .. (n == 1 and " drop" or " drops") end
+  if b.drops then bits[#bits + 1] = "quest items" end
+  return #bits > 0 and table.concat(bits, " + ") or nil
 end
 
 local function RenderBossDetail(L, d, b)
@@ -944,16 +982,23 @@ local function RenderBossDetail(L, d, b)
   if loot and #loot > 0 then
     L:Head("Loot", ICON.reward)
     for _, it in ipairs(loot) do
-      local kind = { it.slot, it.armorType }
-      local extra = (#kind > 0 and (kind[1] or "") ~= "") and (P_MUTED .. "   " .. table.concat(kind, ", ") .. "|r") or ""
-      L:Add(QualityHex(it.itemQuality) .. (it.name or ("item " .. it.itemID)) .. "|r" .. extra,
-        { gap = 4, icon = it.icon, iconSize = 22, link = it.link or ("item:" .. it.itemID) })
+      local kind = {}
+      if it.slot and it.slot ~= "" then kind[#kind + 1] = it.slot end
+      if it.armorType and it.armorType ~= "" then kind[#kind + 1] = it.armorType end
+      local extra = (#kind > 0) and (P_MUTED .. "   " .. table.concat(kind, ", ") .. "|r") or ""
+      local chance = it.chance and (P_MUTED .. ("   %s%%"):format(it.chance >= 10 and math.floor(it.chance + 0.5) or it.chance) .. "|r") or ""
+      L:Add(QualityHex(it.itemQuality) .. (it.name or ("Item " .. it.itemID .. " (loading)")) .. "|r" .. extra .. chance,
+        { gap = 5, icon = it.icon, iconSize = 24, link = it.link or ("item:" .. it.itemID) })
+    end
+    if loot[1] and loot[1].chance then
+      L:Add(P_MUTED .. "Drop chances from the CMaNGOS Classic database; Forever may have changed a few.|r",
+        { gap = 6, font = { "QuestFontNormalSmall", "GameFontHighlightSmall" } })
     end
     if not loot.complete and loot.tries < 3 and C_Timer then   -- item names still loading: look again in a moment
       local want = b.enc
       C_Timer.After(1.5, function()
         local cur2 = (cur and Dungeon(cur)) and Bosses(Dungeon(cur))[selected]
-        if frame and frame:IsShown() and tab == "bosses" and cur2 and cur2.enc == want then J.RenderPage() end
+        if frame and frame:IsShown() and tab == "bosses" and cur2 and cur2.enc == want and cur2.name == b.name then J.RenderPage() end
       end)
     end
   end
@@ -1132,7 +1177,7 @@ function J.RenderPage()
     for i, b in ipairs(bosses) do
       local killed = run and run.bosses[b.name]
       items[#items + 1] = { key = i, text = (killed and GREY or WHITE) .. b.name .. "|r", boss = b,
-                            sub = killed and "Killed this run" or ((b.drops and "Drops quest items") or nil) }
+                            sub = killed and "Killed this run" or LootLine(b) }
     end
   else
     for _, run in ipairs(ns.RunLog.For(d.name)) do
