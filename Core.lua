@@ -445,20 +445,26 @@ function ns.Continent(m)
   return c or nil
 end
 
--- Current step - your LEVEL first, where you are second:
---   1. inside a dungeon: its step;
---   2. just finished getting ready for a dungeon: that dungeon, while you carry its quests;
---   3. every step your level fits (its range, one level either side; up to 2 levels past it while
---      you have its quests on the go; 5 for a chosen dungeon) is a candidate. Of those: a dungeon
---      run that's done with hand-ins left; the zone you're in while you have its quests on the go;
---      a chosen dungeon whose quests you carry; the zone you're in; then your continent (quests on
---      the go first); then the route's own order;
---   4. nothing fits (you're behind or ahead of the plan): the first step with work left you haven't
---      out-levelled; if you're a little under-levelled for everything ahead, the next to open.
--- Levelling up therefore moves you on even while you stand in a zone with quests left, and the
--- zone you're in only wins among steps your level fits.
-local STAY_LEVELS = 2
-local DUNGEON_STAY = 5   -- a chosen dungeon's quests (and hand-ins after the run) hold longer
+-- Current step: your LEVEL alone (Gary: "it should auto update based only on your level - if you
+-- decide to grind or do a dungeon etc. it should just update based on your level alone"):
+--   1. inside a dungeon: its step; just got ready for a dungeon you chose: that dungeon (explicit
+--      choices, not location);
+--   2. else the route's step for your level: of the steps that start at or below your level, the
+--      ones starting latest; several start at the same level (four at 33), so the first of those in
+--      route order that still has something to do (quests to pick up, on the go, or to hand in);
+--   3. all of those done: the next step in route order with something to do (it may open a level
+--      or two later).
+-- Where you stand, and quests left in your log from earlier steps, never hold or move it: levelling
+-- past steps (grinding, a dungeon run) jumps ahead, and leftovers stay under Other Quests. The < and
+-- > buttons still pick a step by hand.
+local function Usable(step)
+  return not (step.dungeon and ns.DungeonOff(step.dungeon))
+end
+local function HasWork(step, level)
+  if step.grind then return level < step.to end
+  local _, c = ScanStep(step, level)
+  return c[READY] + c[LOG] + c[OPEN] > 0
+end
 local function AutoStep(level)
   local dn = ns.CurrentDungeon()
   if dn then
@@ -475,54 +481,26 @@ local function AutoStep(level)
     end
     ns.db.goDungeon = nil   -- done (or dropped): back to the normal route
   end
-  local pm = ns.HerePos()
-  local pc = pm and ns.Continent(pm)
-  local best, bestScore, grind
-  for i, step in ipairs(ns.steps) do
-    -- cheap level filter first: only the handful of steps around your level get scanned
-    if level >= step.from - 1 and level <= step.to + (step.dungeon and DUNGEON_STAY or STAY_LEVELS)
-      and not (step.dungeon and ns.DungeonOff(step.dungeon)) then
-      if step.grind then
-        if not grind and level >= step.from and level < step.to then grind = i end
-      else
-        local _, c = ScanStep(step, level)
-        local going = c[READY] + c[LOG] > 0
-        -- a chosen dungeon is a candidate while you carry its quests (picking them up is the zones' job)
-        local fits = going or (not step.dungeon and c[OPEN] > 0 and level <= step.to + 1)
-        if fits then
-          local here = pm and step.map == pm
-          local score
-          if step.dungeon and c[READY] > 0 and c[LOG] == 0 then
-            score = 7   -- run done, only hand-ins left: finish it before anything else
-          elseif here and going then score = 6
-          elseif step.dungeon then score = 5          -- carrying its quests: the run comes first
-          elseif here then score = 4
-          else
-            local near = pc and ns.Continent(step.map) == pc
-            score = (near and 2 or 0) + (going and 1 or 0)
-          end
-          if not best or score > bestScore then best, bestScore = i, score end
-        end
+  -- the latest start at or below your level
+  local L
+  for _, step in ipairs(ns.steps) do
+    if Usable(step) and step.from <= level and (not L or step.from > L) then L = step.from end
+  end
+  local last = 0
+  if L then
+    for i, step in ipairs(ns.steps) do
+      if Usable(step) and step.from == L then
+        last = i
+        if HasWork(step, level) then return i end
       end
     end
   end
-  if best then return best end
-  if grind then return grind end
-  local soon
-  for i, step in ipairs(ns.steps) do
-    if step.grind and level >= step.from and level < step.to then return i end
-    if step.dungeon and ns.DungeonOff(step.dungeon) then
-      -- not a chosen dungeon: never the automatic step
-    elseif level <= step.to + STAY_LEVELS then
-      local _, c = ScanStep(step, level)
-      if c[READY] + c[LOG] > 0 then return i end
-      if level <= step.to + 1 and c[OPEN] > 0 then return i end
-      -- quests only a level or two away don't hold a step on their own (no stops to show)...
-      if not soon and level <= step.to + 1 and c[SOON] > 0 then soon = i end
-    end
+  -- that level's steps are done (or you're below the route's start): the next one with work
+  for i = last + 1, #ns.steps do
+    local step = ns.steps[i]
+    if Usable(step) and HasWork(step, level) then return i end
   end
-  -- ...unless there's nothing open anywhere ahead: then the step that opens next
-  return soon or #ns.steps
+  return last > 0 and last or #ns.steps
 end
 
 -- How efficient the route is, from the plan the search settled on (tools/plan.json): XP per minute
