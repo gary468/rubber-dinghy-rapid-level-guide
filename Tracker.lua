@@ -510,6 +510,8 @@ local function Init()
   frame:SetFrameStrata("LOW")
   frame:SetClampedToScreen(true)
   frame:SetMovable(true)
+  -- size first, then the saved position (it's stored in the tracker's own scaled units)
+  frame:SetScale(ns.db.trackerScale or 1)
   Anchor()
 
   header = CreateFrame("Frame", nil, frame)
@@ -632,7 +634,6 @@ local function Init()
     ns.Queue()
   end)
   mover:Hide()
-  T.ApplyScale()
   if ns.db.unlocked then T.SetMoveMode(true) end
 
   blizzHidden = not ns.db.keepBlizzard and not ns.db.noTracker
