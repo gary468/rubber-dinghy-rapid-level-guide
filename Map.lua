@@ -317,6 +317,7 @@ local function HideQuest(id)
   if Map.MarkDirty then Map.MarkDirty() end
 end
 
+local OUTLINE = { { -1.5, 0 }, { 1.5, 0 }, { 0, -1.5 }, { 0, 1.5 }, { -1, -1 }, { 1, -1 }, { -1, 1 }, { 1, 1 } }
 local function Icon(i, canvas)
   local p = iconPool[i]
   if p then return p end
@@ -327,6 +328,14 @@ local function Icon(i, canvas)
   p.edge:SetPoint("CENTER")
   p.edge:SetTexture(CIRCLE)
   p.edge:SetVertexColor(0, 0, 0, 0.85)
+  -- Outline for "!" and "?": eight black copies of the icon just around it, so it reads on any map.
+  p.outline = {}
+  for k, o in ipairs(OUTLINE) do
+    local t = p:CreateTexture(nil, "BORDER")
+    t:SetPoint("TOPLEFT", o[1], o[2]); t:SetPoint("BOTTOMRIGHT", o[1], o[2])
+    t:SetVertexColor(0, 0, 0, 1)
+    p.outline[k] = t
+  end
   p:RegisterForClicks("LeftButtonUp", "RightButtonUp")
   p:SetScript("OnEnter", function(self)
     local q = self.qid and ns.quests[self.qid]
@@ -383,11 +392,16 @@ local function DrawOthers(canvas, cur)
     p.edge:SetSize(size + 3, size + 3)
     if kind == "spawn" then
       p.tex:SetTexture(CIRCLE); p.tex:SetVertexColor(r, g, b, a); p.edge:Show()
+      for _, t in ipairs(p.outline) do t:Hide() end
     else
-      p.tex:SetTexture(kind == "avail" and ICON_AVAIL or ICON_TURNIN)
+      local tex = kind == "avail" and ICON_AVAIL or ICON_TURNIN
+      p.tex:SetTexture(tex)
       p.tex:SetVertexColor(1, 1, 1, a)
       if p.tex.SetDesaturated then p.tex:SetDesaturated(r == 0) end
       p.edge:Hide()
+      for _, t in ipairs(p.outline) do
+        t:SetTexture(tex); t:SetVertexColor(0, 0, 0, a); t:Show()
+      end
     end
     p:SetScale(1 / scale)
     p:ClearAllPoints()
@@ -420,7 +434,7 @@ local function DrawOthers(canvas, cur)
     local q = ns.quests[e.id]
     if q and not routeSet[e.id] and not hidden[e.id] and not skip[e.id] then
       if ns.IsReady(e.id) then
-        if q.t and q.t[2] == cur and q.t[3] then Place(e.id, "turnin", q.t[3], q.t[4], 18, 1, 1, 1, 1, false) end
+        if q.t and q.t[2] == cur and q.t[3] then Place(e.id, "turnin", q.t[3], q.t[4], 20, 1, 1, 1, 1, false) end
         if q.tp then Path(q.tp, false) end
       elseif q.o and q.o[2] == cur then
         local pts = q.o[6]
@@ -437,7 +451,7 @@ local function DrawOthers(canvas, cur)
       local q = ns.quests[id]
       if ns.Status(id, level) == ns.S.OPEN then
         local low = (q.l or 0) < level - 5
-        Place(id, "avail", q.g[3], q.g[4], 18, low and 0 or 1, 1, 1, low and 0.6 or 1, false)
+        Place(id, "avail", q.g[3], q.g[4], 20, low and 0 or 1, 1, 1, low and 0.6 or 1, false)
         if q.gp then Path(q.gp, false) end
       end
     end
