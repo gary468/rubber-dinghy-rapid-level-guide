@@ -202,10 +202,29 @@ def has_objectives(qid):
 def objective_area(q, qid, areas):
     """Densest cluster of the quest's mobs/objects/drop sources: inside the step's areas if any are
     there, otherwise wherever they are (the addon then shows the zone name)."""
-    return _objective_area(qid, areas) or _objective_area(qid, None)
+    return (_objective_area(qid, areas) or _objective_area(qid, None)
+            or _objective_area(qid, areas, False) or _objective_area(qid, None, False))
 
 
-def _objective_area(qid, areas):
+def relevant_npcs(qid, npcs, item_name=None):
+    """Of the mobs an objective comes from, the ones the quest is about: when the quest names its
+    target in the item ("Gor'tesh's Lopped Off Head") or its objective text, and that target is a real
+    named mob (1-3 known spawns), only that mob. Forever lists a level-60 Grubbub as dropping Gor'tesh's
+    head too, and his two spawns outvoted Gor'tesh's one. Otherwise every mob that drops it."""
+    npcs = [n for n in npcs if isinstance(n, int)]
+    if len(npcs) <= 1: return npcs
+    text = " ".join(str(x) for x in (get(f"X-Quest-{qid}-8") or []) if isinstance(x, str))
+    if item_name: text += " " + item_name
+    def spawn_count(n):
+        return sum(len(v or []) for v in ent("npc", n)["spawns"].values())
+    # only a real named mob (1-3 spawns, with known spawns): ordinary mobs share names with their
+    # kin ("Goretusk" vs "Young Goretusk"), and those all drop the item
+    named = [n for n in npcs if (ent("npc", n)["name"] or "\0") in text and 0 < spawn_count(n) <= 3]
+    if named: return named
+    return npcs
+
+
+def _objective_area(qid, areas, focus=True):
     obj = get(f"X-Quest-{qid}-10")
     if not obj: return None
     sources = []  # (kind, id)
@@ -215,7 +234,9 @@ def _objective_area(qid, areas):
         if isinstance(o, list) and o: sources.append(("obj", o[0]))
     for it in pos(obj, 3) or []:
         if not (isinstance(it, list) and it): continue
-        for n in get(f"X-Item-{it[0]}-2") or []: sources.append(("npc", n))
+        iname = pos(get(f"X-Item-{it[0]}-S") or {}, 1)
+        drops = get(f"X-Item-{it[0]}-2") or []
+        for n in (relevant_npcs(qid, drops, iname) if focus else drops): sources.append(("npc", n))
         for o in get(f"X-Item-{it[0]}-3") or []: sources.append(("obj", o))
     for kc in pos(obj, 5) or []:
         if isinstance(kc, list) and kc and isinstance(kc[0], list):
@@ -550,7 +571,7 @@ for qid in sorted(set(used) | set(track)):
         iname = pos(get(f"X-Item-{it[0]}-S") or {}, 1)
         if not iname: continue
         names, objs = [], []
-        for npc in (get(f"X-Item-{it[0]}-2") or []):
+        for npc in relevant_npcs(qid, get(f"X-Item-{it[0]}-2") or [], iname):
             nm = isinstance(npc, int) and ent("npc", npc)["name"]
             if nm and nm not in names: names.append(nm)
         for ob in (get(f"X-Item-{it[0]}-3") or []):
