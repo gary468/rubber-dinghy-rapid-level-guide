@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.0.29
+- **The Dungeon Journal is no longer part of this addon.** v1.0.28 included it by mistake. The
+  leveling route still knows every dungeon, its quests and your runs (the tracker shows a run's time,
+  XP and bosses), and links to a journal only when one is installed.
+- **Tracker, cleaner:**
+  - a faint dark backdrop with a thin gold edge, and a plain header band;
+  - one line per stop (short name on the left, coordinates or zone on the right);
+  - only unfinished objectives are shown;
+  - the zone note and counts are in the header's tooltip;
+  - nothing wraps.
+- **Map and minimap:** quest-mob spawn dots are grey with a dark edge, so they no longer look like a
+  party member.
 ## v1.0.28
 - **A new route, planned action by action on real time.** Every pick-up, objective and hand-in is
   placed in order using Forever's real geography (zone positions and flight masters read from the
