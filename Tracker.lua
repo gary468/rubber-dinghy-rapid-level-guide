@@ -293,9 +293,12 @@ local function Render(r)
     -- inside it: this run's time, XP and bosses (our Run Log)
     local runLine = ns.RunLog and ns.RunLog.Line and ns.RunLog.Line()
     if runLine then Add(runLine, { font = SMALL_FONT, color = WHITE, gap = 2, nowrap = true }) end
-    Add("|cff66ccffOpen in the Dungeon Journal|r", { font = SMALL_FONT, gap = 1,
-      tip = "Where every quest for this dungeon starts, the chain before it, its bosses and your runs.",
-      onClick = function() ns.OpenJournal(step) end })
+    -- only with the Dungeon Journal add-on installed (it's a separate, unpublished add-on)
+    if ns.Journal then
+      Add("|cff66ccffOpen in the Dungeon Journal|r", { font = SMALL_FONT, gap = 1,
+        tip = "Where every quest for this dungeon starts, the chain before it, its bosses and your runs.",
+        onClick = function() ns.OpenJournal(step) end })
+    end
     local on = ns.DungeonOn(step.dungeon)
     Add(on and "|cff999999Skip this dungeon|r" or ("|cffff8040Not in your route|r - click to add " .. step.dungeon),
       { font = SMALL_FONT, gap = 4,

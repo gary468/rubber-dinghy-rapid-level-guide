@@ -810,8 +810,7 @@ function ns.OpenJournal(step)
     open(dj or "")
     return true
   end
-  ns.Print("install the DungeonJournal addon to see where every dungeon quest starts (/dj).")
-  return false
+  return false   -- no journal add-on: the tracker doesn't offer the link
 end
 
 function ns.StopTooltip(owner, s, anchor)
