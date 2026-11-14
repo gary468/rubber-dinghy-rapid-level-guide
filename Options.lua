@@ -191,7 +191,7 @@ local function Build()
   end, "Brings back the map icons of every quest you shift-clicked to hide.")
   unhideB:SetPoint("TOPLEFT", PAD + 24, y)
   y = y - 28
-  Check(f, y, "Minimap pins for the next stops", "Numbered pins on the minimap; stop 1 rides the edge when far away.", "noMiniPins", true, "map"); y = y - 30
+  Check(f, y, "Route on the minimap", "The next stops, numbered (stop 1 rides the edge when far away), plus the same quest icons as the world map for quests near you. Blizzard's own minimap quest arrow and areas are hidden while it's on. Questie's minimap icons are Questie's: turn them off in Questie > Icons > Minimap icons.", "noMiniPins", true, "map"); y = y - 30
   local areaB = Button(f, "", 220, function(self)
     local cur = ns.db.areaMode or "next"
     local i = 1

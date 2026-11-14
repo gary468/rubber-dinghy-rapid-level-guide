@@ -687,21 +687,174 @@ end
 ---------------------------------------------------------------------------
 -- Minimap pins (HereBeDragons): the next stops, with stop 1 riding the minimap edge when far away.
 ---------------------------------------------------------------------------
-local miniPins = {}
-local MINI_MAX = 8
+local miniPins, miniIcons = {}, {}
+local MINI_MAX = 8          -- numbered stops
+local MINI_ICONS = 60       -- "!", "?" and mob dots, nearest first
+local MINI_RANGE = 12       -- map % around you worth putting on the minimap
+
+-- Blizzard's own minimap quest markers (the gold edge arrow for a tracked quest and its shaded
+-- areas) are hidden while the route is on, like on the world map. They come back after a /reload
+-- once "Show the route on the map and minimap" is off.
+local BLANK = MEDIA .. "blank"
+local miniSuppressed = false
+local function SuppressMinimap()
+  if not Minimap or ns.db.noMap or ns.db.keepBlizzMap then return end
+  pcall(function()
+    if Minimap.SetPOIArrowTexture then Minimap:SetPOIArrowTexture(BLANK) end
+    if Minimap.SetQuestBlobInsideAlpha then Minimap:SetQuestBlobInsideAlpha(0) end
+    if Minimap.SetQuestBlobOutsideAlpha then Minimap:SetQuestBlobOutsideAlpha(0) end
+    if Minimap.SetQuestBlobRingAlpha then Minimap:SetQuestBlobRingAlpha(0) end
+  end)
+  miniSuppressed = true
+end
+
+local function MiniIcon(i)
+  local p = miniIcons[i]
+  if p then return p end
+  p = CreateFrame("Button", nil, Minimap)
+  p.tex = p:CreateTexture(nil, "ARTWORK"); p.tex:SetAllPoints()
+  p.outline = {}
+  for k, o in ipairs(OUTLINE) do
+    local t = p:CreateTexture(nil, "BORDER")
+    t:SetPoint("TOPLEFT", o[1], o[2]); t:SetPoint("BOTTOMRIGHT", o[1], o[2])
+    p.outline[k] = t
+  end
+  p:SetScript("OnEnter", function(self)
+    local q = self.qid and ns.quests[self.qid]
+    if not q then return end
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:AddLine(("%s |cff999999[%s]|r"):format(q.n, q.l or "?"), 1, 0.82, 0)
+    if self.kind == "avail" then GameTooltip:AddLine("Pick up from " .. (q.g and q.g[1] or "?"), 1, 1, 1)
+    elseif self.kind == "turnin" then GameTooltip:AddLine("Finished: hand in to " .. (q.t and q.t[1] or "?"), 0.2, 1, 0.2)
+    else
+      GameTooltip:AddLine((q.o and q.o[1]) or "Objective", 1, 1, 1)
+      for _, o in ipairs(ns.Objectives(self.qid)) do
+        if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. o.text, 1, 1, 1) end
+      end
+    end
+    GameTooltip:AddLine("Not on the route", 0.6, 0.6, 0.6)
+    GameTooltip:Show()
+  end)
+  p:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  miniIcons[i] = p
+  return p
+end
+
 local function UpdateMinimap()
   if not HBDP then return end
   HBDP:RemoveAllMinimapIcons(Map)
   if ns.db.noMap or ns.db.noMiniPins then return end
+  SuppressMinimap()
+  -- the route's next stops, numbered (stop 1 rides the edge when it's off the minimap)
   local n = 0
+  local stopAt = {}
   for _, s in ipairs(route.stops) do
     if n >= MINI_MAX then break end
     n = n + 1
     local p = miniPins[n]
-    if not p then p = NewPin(Minimap, 16); miniPins[n] = p end
+    if not p then p = NewPin(Minimap, 20); miniPins[n] = p end
+    p:SetFrameLevel(Minimap:GetFrameLevel() + 8)
     StylePin(p, s, false)
     HBDP:AddMinimapIconMap(Map, p, s.map, s.x / 100, s.y / 100, false, n == 1)
+    stopAt[#stopAt + 1] = s
   end
+  -- other quests near you, like the world map's icons: "!" to pick up, "?" to hand in, mob dots
+  if ns.db.noOtherPins then return end
+  local pm = ns.HerePos and ns.HerePos()
+  if not pm then return end
+  local px, py
+  if C_Map and C_Map.GetPlayerMapPosition then
+    local pos = C_Map.GetPlayerMapPosition(pm, "player")
+    if pos then px, py = pos:GetXY(); px, py = px * 100, py * 100 end
+  end
+  if not px then return end
+  local level = UnitLevel("player") or 1
+  local hidden, skip = ns.db.hiddenQuests or {}, ns.db.skip or {}
+  local cand = {}
+  local function Add(qid, kind, x, y)
+    if not x or not y then return end
+    local d = (x - px) ^ 2 + (y - py) ^ 2
+    if d > MINI_RANGE * MINI_RANGE then return end
+    if kind ~= "spawn" then
+      for _, s in ipairs(stopAt) do   -- never under a numbered stop
+        if s.map == pm and math.abs(s.x - x) < 1 and math.abs(s.y - y) < 1 then return end
+      end
+    end
+    cand[#cand + 1] = { qid = qid, kind = kind, x = x, y = y, d = d }
+  end
+  local inLog = {}
+  for _, e in ipairs(ns.QuestLog()) do
+    inLog[e.id] = true
+    local q = ns.quests[e.id]
+    if q and not routeSet[e.id] and not hidden[e.id] and not skip[e.id] then
+      if ns.IsReady(e.id) then
+        if q.t and q.t[2] == pm then Add(e.id, "turnin", q.t[3], q.t[4]) end
+      elseif q.o and q.o[2] == pm then
+        local pts = q.o[6]
+        if pts and #pts >= 2 then for k = 1, #pts - 1, 2 do Add(e.id, "spawn", pts[k], pts[k + 1]) end
+        else Add(e.id, "spawn", q.o[3], q.o[4]) end
+      end
+    end
+  end
+  for _, id in ipairs(GiverIndex()[pm] or {}) do
+    if not inLog[id] and not routeSet[id] and not hidden[id] and not skip[id] and ns.Status(id, level) == ns.S.OPEN then
+      local q = ns.quests[id]
+      Add(id, "avail", q.g[3], q.g[4])
+    end
+  end
+  table.sort(cand, function(a, b)
+    if (a.kind == "spawn") ~= (b.kind == "spawn") then return b.kind == "spawn" end   -- ! and ? first
+    return a.d < b.d
+  end)
+  for i = 1, math.min(#cand, MINI_ICONS) do
+    local c = cand[i]
+    local p = MiniIcon(i)
+    p.qid, p.kind = c.qid, c.kind
+    p:SetFrameLevel(Minimap:GetFrameLevel() + (c.kind == "spawn" and 4 or 6))
+    if c.kind == "spawn" then
+      p:SetSize(7, 7)
+      p.tex:SetTexture(CIRCLE); p.tex:SetVertexColor(1, 1, 1, 0.9)
+      for k, t in ipairs(p.outline) do
+        t:SetTexture(CIRCLE); t:SetVertexColor(0, 0, 0, 0.85)
+        if k > 4 then t:Hide() else t:Show() end
+      end
+    else
+      local tex = c.kind == "avail" and ICON_AVAIL or ICON_TURNIN
+      local low = c.kind == "avail" and (ns.quests[c.qid].l or 0) < level - 5
+      p:SetSize(14, 14)
+      p.tex:SetTexture(tex); p.tex:SetVertexColor(1, 1, 1, low and 0.6 or 1)
+      if p.tex.SetDesaturated then p.tex:SetDesaturated(low) end
+      for _, t in ipairs(p.outline) do t:SetTexture(tex); t:SetVertexColor(0, 0, 0, low and 0.6 or 1); t:Show() end
+    end
+    HBDP:AddMinimapIconMap(Map, p, pm, c.x / 100, c.y / 100, false, false)
+  end
+end
+Map.UpdateMinimap = UpdateMinimap
+
+-- Questie draws its own minimap icons; with both on, the minimap shows two sets. Say so once.
+ns.inits.MapQuestieNote = function()
+  C_Timer.After(8, function()
+    local qp = rawget(_G, "Questie") and Questie.db and Questie.db.profile
+    if qp and qp.enableMiniMapIcons and not ns.db.toldQuestieMini and not ns.db.noMiniPins then
+      ns.db.toldQuestieMini = true
+      ns.Print("the minimap now shows your route and nearby quests. Questie's minimap icons are on too: "
+        .. "to see only the route's, turn them off in Questie's settings > Icons > Minimap icons.")
+    end
+  end)
+end
+
+-- Nearby icons change as you move: refresh them every few seconds (cheap: no route work).
+do
+  local mm = CreateFrame("Frame")
+  local t = 0
+  mm:SetScript("OnUpdate", function(_, e)
+    t = t + (e or 0)
+    if t < 3 then return end
+    t = 0
+    if ns.db and not ns.disabled and not ns.db.noMap and not ns.db.noMiniPins and not ns.db.noOtherPins then
+      ns.Safe("Minimap", UpdateMinimap)
+    end
+  end)
 end
 
 ---------------------------------------------------------------------------
