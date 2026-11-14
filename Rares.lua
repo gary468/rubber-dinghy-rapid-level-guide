@@ -42,8 +42,9 @@ local function InCombat() return InCombatLockdown and InCombatLockdown() end
 local function Secret(v) return issecretvalue and v ~= nil and issecretvalue(v) end
 
 local function NpcId(unit)
-  local guid = UnitGUID(unit)
-  if not guid or Secret(guid) then return nil end
+  if not unit or Secret(unit) then return nil end   -- a secret token: UnitGUID would error
+  local ok, guid = pcall(UnitGUID, unit)
+  if not ok or not guid or Secret(guid) then return nil end
   local kind, _, _, _, _, id = strsplit("-", guid)
   if kind ~= "Creature" and kind ~= "Vehicle" then return nil end
   return tonumber(id), guid
@@ -52,7 +53,7 @@ end
 local KIND = { rare = "Rare", rareelite = "Rare elite", worldboss = "Boss" }
 --- kind, name, guid for a unit worth an alert (or nil)
 function R.Classify(unit)
-  if not UnitExists(unit) then return end
+  if not unit or Secret(unit) or not UnitExists(unit) then return end
   local dead = UnitIsDead(unit)
   if dead and not Secret(dead) then return end
   local id, guid = NpcId(unit)

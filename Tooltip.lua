@@ -9,8 +9,10 @@ local ADDON, ns = ...
 local function Secret(v) return issecretvalue and issecretvalue(v) end
 
 local function NpcId(unit)
-  local guid = UnitGUID and UnitGUID(unit)
-  if not guid or Secret(guid) or (canaccessvalue and not canaccessvalue(guid)) then return nil end
+  -- the tooltip's unit token itself can be secret (Forever): UnitGUID then errors, so never pass it on
+  if not unit or Secret(unit) or not UnitGUID then return nil end
+  local ok, guid = pcall(UnitGUID, unit)
+  if not ok or not guid or Secret(guid) or (canaccessvalue and not canaccessvalue(guid)) then return nil end
   local kind, _, _, _, _, id = strsplit("-", guid)
   if kind ~= "Creature" and kind ~= "Vehicle" then return nil end
   return tonumber(id)
@@ -52,6 +54,8 @@ local function InLog(id) return (ns.LogIndex(id) or 0) > 0 end
 local function AddLines(tt)
   if not (ns.db and ns.quests) or ns.db.noTooltips or ns.disabled then return end
   local _, unit = tt:GetUnit()
+  -- a secret unit token (Forever hides some from addons): use the mouseover unit instead, if any
+  if unit and Secret(unit) then unit = (UnitExists and UnitExists("mouseover")) and "mouseover" or nil end
   if not unit then return end
   local npc = NpcId(unit)
   local added, seen = false, {}
