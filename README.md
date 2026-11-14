@@ -105,7 +105,8 @@ Game Menu > Options > AddOns.
   - **Boss loot** (`Data_Loot.lua`, built by `tools/gen_loot.py`): which items each boss drops, and
     how often, from the [CMaNGOS Classic database](https://github.com/cmangos/classic-db) (GPLv3).
     Only item IDs and drop chances are kept. Names, icons and stats come from the game. Forever's
-    new dungeons aren't in that database yet.
+    new dungeons: drops and chances read from [Wowhead's WoW Forever](https://www.wowhead.com/forever)
+    boss pages (`tools/forever_loot.json`).
   - It's our own work. Nothing is taken from the DungeonJournal addon.
 - **Licence:** GNU GPL v3 or later (see `LICENSE.md`).
 

@@ -991,7 +991,9 @@ local function RenderBossDetail(L, d, b)
         { gap = 5, icon = it.icon, iconSize = 24, link = it.link or ("item:" .. it.itemID) })
     end
     if loot[1] and loot[1].chance then
-      L:Add(P_MUTED .. "Drop chances from the CMaNGOS Classic database; Forever may have changed a few.|r",
+      L:Add(P_MUTED .. ((ns.bossLootForever and b.npc and ns.bossLootForever[b.npc])
+        and "Drop chances from Wowhead's WoW Forever database (players' kills)."
+        or "Drop chances from the CMaNGOS Classic database; Forever may have changed a few.") .. "|r",
         { gap = 6, font = { "QuestFontNormalSmall", "GameFontHighlightSmall" } })
     end
     if not loot.complete and loot.tries < 3 and C_Timer then   -- item names still loading: look again in a moment

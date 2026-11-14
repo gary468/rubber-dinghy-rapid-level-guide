@@ -7,9 +7,10 @@ creature_loot_template and reference_loot_template tables. Only facts are kept: 
 drops and how often. Item names, icons, quality and stats are read from the game in play.
 Kept: uncommon or better items and recipes; quest items are left out (the journal lists those from
 QuestieDB) and so are loot lists shared by many creatures (random world drops).
-Forever's new dungeons aren't in that database, so their bosses get no loot from it.
+Forever's new dungeons aren't in that database: their drops come from tools/forever_loot.json
+(read from Wowhead's WoW Forever NPC pages; facts only).
 """
-import gzip, re, sys
+import gzip, json, os, re, sys
 from collections import defaultdict
 
 SQL, DUNGEONS, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -130,7 +131,17 @@ def main():
         if not items: continue
         n_boss += 1; n_items += len(items)
         lines.append(f"  [{npc}]={{" + ",".join(f"{{{i},{round(c, 1)}}}" for i, c in items) + "},")
+    # Forever's new dungeons: drops read from Wowhead's WoW Forever NPC pages (tools/forever_loot.json)
+    fv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "forever_loot.json")
+    fv = json.load(open(fv_path, encoding="utf-8"))["npc"] if os.path.isfile(fv_path) else {}
+    wh = []
+    for npc, items in sorted(fv.items(), key=lambda kv: int(kv[0])):
+        if int(npc) not in boss_npcs: continue
+        wh.append(int(npc)); n_boss += 1; n_items += len(items)
+        lines.append(f"  [{npc}]={{" + ",".join(f"{{{i},{c}}}" for i, c, _ in items) + "},")
     lines.append("}")
+    lines.append("-- Bosses whose drops come from Wowhead WoW Forever (the rest: the CMaNGOS Classic database)")
+    lines.append("ns.bossLootForever = {" + ",".join(f"[{n}]=true" for n in wh) + "}")
     open(OUT, "w", encoding="utf-8", newline="\n").write("\n".join(lines) + "\n")
     print(f"{n_boss} of {len(boss_npcs)} bosses have loot, {n_items} items -> {OUT}")
 
