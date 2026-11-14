@@ -312,8 +312,12 @@ local function Render(r)
 
   for _, a in ipairs(r.loose) do
     if y > maxH then break end
-    local hint = (a.kind == "do") and (ns.C.DIM .. " - no location in the database, see Questie's map icons|r") or ""
-    Add(ns.ActionText(a) .. hint, { indent = 22, color = WHITE })
+    -- no spot in any database yet: the quest's own words say where (e.g. "...in Wildhammer Keep")
+    Add(ns.ActionText(a), { indent = 22, color = WHITE })
+    local q = a.row.q
+    if a.kind == "do" and q and q.ot then
+      Add(q.ot, { indent = 30, font = SMALL_FONT, color = GREY })
+    end
   end
   -- Dungeon step: every quest for this dungeon and where it stands, like the Dungeon Journal shows it
   -- (its pick-up text, notes and required chains are used when the journal addon is loaded).

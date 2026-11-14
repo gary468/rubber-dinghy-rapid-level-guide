@@ -137,6 +137,19 @@ for m in re.finditer(r"\[(\d+)\]\s*=\s*(\d+)", open(UIMAP, encoding="utf-8").rea
 dungeons = {int(m.group(1)) for m in re.finditer(r'\[(\d+)\]\s*=\s*\{\s*"', open(DUNG, encoding="utf-8").read())}
 
 _cache = {}
+# Spawns QuestieDB doesn't have yet (mobs and objects new in Forever), read from Wowhead's Forever
+# database into tools/wowhead_spawns.json: {"npc"|"object": {id: {"name", "spawns": {area: [[x,y]]}}}}.
+# Only used when QuestieDB has no spawns for that NPC/object.
+WH_SPAWNS = {"npc": {}, "object": {}}
+try:
+    _wh = json.load(open(HERE + r"\wowhead_spawns.json", encoding="utf-8"))
+    for _k in ("npc", "object"):
+        for _i, _v in (_wh.get(_k) or {}).items():
+            WH_SPAWNS[_k][int(_i)] = {"name": _v.get("name"),
+                                      "spawns": {int(a): c for a, c in (_v.get("spawns") or {}).items()}}
+except FileNotFoundError:
+    pass
+
 def ent(kind, i):
     """name, faction, spawns {area: [[x,y],...]} for an NPC or object."""
     if (kind, i) in _cache: return _cache[(kind, i)]
@@ -146,6 +159,11 @@ def ent(kind, i):
     else:
         row = get(f"X-Object-{i}-S") or {}; sp = get(f"X-Object-{i}-4") or {}
         e = dict(name=pos(row, 1), zone=pos(row, 5), fac=None, spawns=sp if isinstance(sp, dict) else {})
+    # Spawns QuestieDB doesn't have yet (new in Forever), from Wowhead's Forever database.
+    wh = WH_SPAWNS["npc" if kind == "npc" else "object"].get(i)
+    if wh and not e["spawns"]:
+        e["spawns"] = wh["spawns"]
+        e["name"] = e["name"] or wh["name"]
     _cache[(kind, i)] = e
     return e
 
@@ -431,6 +449,11 @@ for qid in sorted(set(used) | set(track)):
     parts = [f"n={lstr(q.get('name'))}", f"l={q.get('questLevel') or 0}", f"r={q.get('requiredLevel') or 0}",
              f"g={lloc(givers.get(qid))}", f"t={lloc(t)}"]
     if o: parts.append(f"o={lloc(o, True)}")
+    else:
+        # no spot for its objectives: keep the quest's own objective text ("...in Wildhammer Keep")
+        ot = get(f"X-Quest-{qid}-8")
+        if isinstance(ot, list) and ot and isinstance(ot[0], str) and has_objectives(qid):
+            parts.append(f"ot={lstr(ot[0][:160])}")
     if has_objectives(qid): parts.append("ob=true")
     if (q.get("specialFlags") or 0) & 1: parts.append("rep=true")
     # Candidate quest items for the tracker's item button (Questie's rule): the item the quest gives
@@ -478,10 +501,10 @@ for qid in sorted(set(used) | set(track)):
         if not iname: continue
         names, objs = [], []
         for npc in (get(f"X-Item-{it[0]}-2") or []):
-            nm = isinstance(npc, int) and pos(get(f"X-Npc-{npc}-S") or {}, 1)
+            nm = isinstance(npc, int) and ent("npc", npc)["name"]
             if nm and nm not in names: names.append(nm)
         for ob in (get(f"X-Item-{it[0]}-3") or []):
-            nm = isinstance(ob, int) and pos(get(f"X-Object-{ob}-S") or {}, 1)
+            nm = isinstance(ob, int) and ent("object", ob)["name"]
             if nm and nm not in objs: objs.append(nm)
         if names:
             src = "drops from " + ", ".join(names[:3]) + (", ..." if len(names) > 3 else "")
