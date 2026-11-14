@@ -73,6 +73,9 @@ local function NewLine()
   b.text = b:CreateFontString(nil, "OVERLAY", LINE_FONT)
   b.text:SetJustifyH("LEFT")
   b.text:SetWordWrap(true)
+  b.right = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  b.right:SetJustifyH("RIGHT")
+  b.right:SetTextColor(0.6, 0.6, 0.6)
   b:SetScript("OnEnter", function(self)
     if self.stop then
       self.text:SetTextColor(1, 1, 1)
@@ -128,8 +131,19 @@ local function Add(text, opts)
     b.check:Show()
     left = indent + 14
   end
+  -- right-hand column (e.g. "74,40" or a zone name), the text left of it cut short rather than wrapped
+  local rightW = 0
+  if opts.right then
+    b.right:ClearAllPoints()
+    b.right:SetPoint("TOPRIGHT", b, "TOPRIGHT", -8, -3)
+    b.right:SetText(opts.right)
+    b.right:Show()
+    rightW = (b.right:GetStringWidth() or 30) + 8
+  else
+    b.right:Hide()
+  end
   b.text:SetPoint("TOPLEFT", b, "TOPLEFT", left, -2)
-  b.text:SetWidth(WIDTH - left - 6)
+  b.text:SetWidth(WIDTH - left - 8 - rightW)
   b.text:SetText(text)
   local c = opts.color or { 1, 1, 1 }
   b.baseColor = c
@@ -181,6 +195,19 @@ function T.RefreshXP()
 end
 local function TopH() return header:GetHeight() + 4 + ((xpwrap and xpwrap:IsShown()) and (XP_H + 2) or 0) end
 
+local function ShortStop(s)
+  local name = s.name or "?"
+  if s.area then
+    local first, rest = name:match("^([^,]+),%s*(.+)$")
+    if first then
+      local n = 1
+      for _ in rest:gmatch(",") do n = n + 1 end
+      name = first .. " |cff999999+" .. n .. "|r"
+    end
+  end
+  return name
+end
+
 local blizzHidden
 local function Render(r)
   if not frame or not r or not r.step then return end   -- nothing to show yet (e.g. during start-up)
@@ -212,8 +239,18 @@ local function Render(r)
   Add(("%s (%s)  |cff999999%d/%d%s|r"):format(title, range, r.idx, #ns.steps, (r.manual and not r.prep) and " manual" or ""),
     { font = HEADER_FONT, color = GOLD, bg = MODULE_BG, height = 22, gap = 3, nowrap = true,
       tip = function()
+        local lines = {}
+        if step.note and step.note ~= "" then lines[#lines + 1] = step.note end
+        local c, S = r.counts, ns.S
+        if c and not r.prep and not step.dungeon then
+          lines[#lines + 1] = ("|cff999999%d to hand in, %d in log, %d to pick up, %d later, %d locked%s|r"):format(
+            c[S.READY], c[S.LOG], c[S.OPEN], c[S.LATER], c[S.LOCKED],
+            (c[S.SKIP] or 0) > 0 and (", " .. c[S.SKIP] .. " skipped") or "")
+        end
         local eff = (not step.prep and ns.EfficiencyText) and ns.EfficiencyText(step, UnitLevel("player")) or ""
-        return (eff ~= "" and (eff .. "\n") or "") .. "|cff999999< and > in the header change step, A goes back to automatic.|r"
+        if eff ~= "" then lines[#lines + 1] = eff end
+        lines[#lines + 1] = "|cff999999< and > in the header change step, A goes back to automatic.|r"
+        return table.concat(lines, "\n")
       end })
   local goTo = (r.inZone or step.dungeon or step.grind) and "" or ("Go to " .. step.name .. ". ")
   local note = step.note
@@ -236,7 +273,12 @@ local function Render(r)
     end
     step._open = open
   end
-  Add(goTo .. note, { font = SMALL_FONT, color = GREY, gap = 4 })
+  -- zone steps: the note lives in the header's tooltip; dungeon and get-ready steps keep their one line
+  if step.dungeon or step.prep then
+    Add(note, { font = SMALL_FONT, color = GREY, gap = 4, nowrap = true, tip = goTo .. note })
+  else
+    y = y + 2
+  end
   if step.prep then
     Add("|cffff8040Back to the route|r - stop getting ready for " .. step.dungeon, { font = SMALL_FONT, gap = 2,
       tip = "Ends the get-ready route and goes back to the leveling route.",
@@ -267,32 +309,35 @@ local function Render(r)
   for i, s in ipairs(r.stops) do
     if shown >= MAX_STOPS or y > maxH then break end
     shown = shown + 1
-    local where = s.away and (" (" .. (ns.MapName(s.map) or "elsewhere") .. ")") or ""
     local detailed = i <= MAX_DETAILED
-    local title = ns.StopTitle(s) .. ns.C.DIM .. (" %.0f,%.0f"):format(s.x, s.y) .. where .. "|r"
+    local right = s.away and (ns.MapName(s.map) or "elsewhere") or ("%.0f,%.0f"):format(s.x, s.y)
+    local title = ShortStop(s)
     if not detailed then
       if #s.actions > 1 then
-        title = title .. ns.C.DIM .. " - " .. #s.actions .. " quests|r"
+        title = title .. ns.C.DIM .. "  " .. #s.actions .. " quests|r"
       elseif s.actions[1] then
-        title = title .. ns.C.DIM .. " - " .. s.actions[1].row.q.n .. "|r"
+        title = title .. ns.C.DIM .. "  " .. s.actions[1].row.q.n .. "|r"
       end
     end
     if not detailed then
       for _, a in ipairs(s.actions) do if a.kind ~= "get" then Slot(a.row.id) end end
     end
-    Add(title, { font = TITLE_FONT, color = GOLD, badge = s.index, stop = s, gap = 1 })
+    Add(title, { font = TITLE_FONT, color = GOLD, badge = s.index, stop = s, gap = 1, nowrap = true, right = right })
     if detailed then
       for _, a in ipairs(s.actions) do
         if a.kind ~= "get" then Slot(a.row.id) end
-        Add(ns.ActionText(a), { indent = 22, stop = s, color = WHITE })
+        Add(ns.ActionText(a), { indent = 22, stop = s, color = WHITE, nowrap = true })
         if (a.kind == "do" or a.kind == "turn" or a.kind == "go" or a.kind == "dungeon") and not objShown[a.row.id] then
           objShown[a.row.id] = true
+          -- only what's left to do; finished objectives drop off
           for _, o in ipairs(ns.Objectives(a.row.id)) do
-            Add(ns.ObjText(o, true), { indent = 30, font = SMALL_FONT, color = o.done and GREY or WHITE, check = o.done, stop = s })
+            if not o.done then
+              Add(ns.ObjText(o, true), { indent = 30, font = SMALL_FONT, color = { 0.85, 0.85, 0.85 }, stop = s, nowrap = true })
+            end
           end
         end
       end
-      y = y + 6   -- room between stops
+      y = y + 7   -- room between stops
     end
   end
   local more = #r.stops - shown
@@ -403,10 +448,7 @@ local function Render(r)
     y = y + 3
   end
 
-  local c, S = r.counts, ns.S
-  if not r.prep and not step.dungeon then Add(("%d to hand in, %d in log, %d to pick up, %d later, %d locked%s"):format(
-    c[S.READY], c[S.LOG], c[S.OPEN], c[S.LATER], c[S.LOCKED],
-    (c[S.SKIP] or 0) > 0 and (", " .. c[S.SKIP] .. " skipped") or ""), { font = SMALL_FONT, color = GREY, gap = 6 }) end
+  y = y + 2
 
   -- Quests in the log outside this step: Blizzard's tracker would have shown them.
   local n = #r.other
@@ -609,6 +651,21 @@ local function Init()
   body = CreateFrame("Frame", nil, frame)
   body:SetPoint("TOPLEFT", xpwrap, "BOTTOMLEFT", -4, -4)
   body:SetSize(WIDTH, 1)
+
+  -- A faint dark backdrop with a thin edge behind everything, so the text reads over any scenery.
+  frame.back = frame:CreateTexture(nil, "BACKGROUND", nil, -8)
+  frame.back:SetPoint("TOPLEFT", frame, "TOPLEFT", -6, 4)
+  frame.back:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 6, -6)
+  frame.back:SetColorTexture(0, 0, 0, 0.42)
+  frame.edges = {}
+  for k, pts in ipairs({ { "TOPLEFT", "TOPRIGHT" }, { "BOTTOMLEFT", "BOTTOMRIGHT" }, { "TOPLEFT", "BOTTOMLEFT" }, { "TOPRIGHT", "BOTTOMRIGHT" } }) do
+    local e = frame:CreateTexture(nil, "BACKGROUND", nil, -7)
+    e:SetColorTexture(1, 0.82, 0, 0.18)
+    e:SetPoint(pts[1], frame.back, pts[1])
+    e:SetPoint(pts[2], frame.back, pts[2])
+    if k <= 2 then e:SetHeight(1) else e:SetWidth(1) end
+    frame.edges[k] = e
+  end
 
   -- Move mode overlay: a highlighted box over the whole tracker that you drag, with a Lock button.
   mover = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate" or nil)
