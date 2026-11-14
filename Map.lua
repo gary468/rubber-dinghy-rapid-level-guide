@@ -20,6 +20,30 @@ local function ToCur(m, x, y, cur)
 end
 Map.ToCur = ToCur
 
+-- The same, but also for places beyond this map's edges (same continent): for pointing at them.
+local function ToCurAny(m, x, y, cur)
+  if not (m and x and y) then return nil end
+  if m == cur then return x, y end
+  if not (HBDW and HBDW.TranslateZoneCoordinates) then return nil end
+  local tx, ty = HBDW:TranslateZoneCoordinates(x / 100, y / 100, m, cur, true)
+  if tx and ty then return tx * 100, ty * 100 end
+  return nil
+end
+
+-- From a point on the map (a) toward a point that may be off it (b): where that line leaves the map
+-- (inset a little so the pin stays visible), or b itself when it's on the map.
+local function ClipToMap(ax, ay, bx, by)
+  local EDGE = 3
+  local lo, hi = EDGE, 100 - EDGE
+  if bx >= lo and bx <= hi and by >= lo and by <= hi then return bx, by end
+  local dx, dy = bx - ax, by - ay
+  local t = 1
+  if dx > 0 then t = math.min(t, (hi - ax) / dx) elseif dx < 0 then t = math.min(t, (lo - ax) / dx) end
+  if dy > 0 then t = math.min(t, (hi - ay) / dy) elseif dy < 0 then t = math.min(t, (lo - ay) / dy) end
+  if t <= 0 then return nil end
+  return ax + dx * t, ay + dy * t
+end
+
 -- Looking at a continent or the whole world (not a zone): quest icons there are smaller and fewer.
 local overviewCache = {}
 local function IsOverview(cur)
@@ -196,8 +220,11 @@ end
 
 local otherPins = {}
 local HideIcons   -- set below, with the quest icon layer
+local aheadLabels, aheadLines = {}, {}
 local function HideMap()
   for _, p in ipairs(otherPins) do p:Hide() end
+  for _, l in ipairs(aheadLabels) do l:Hide() end
+  for _, l in ipairs(aheadLines) do l:Hide() end
   if HideIcons then HideIcons() end
   for _, p in ipairs(mapPins) do p:Hide() end
   for _, l in ipairs(mapLines) do l:Hide() end
@@ -488,7 +515,8 @@ local function DrawOthers(canvas, cur)
     local q = ns.quests[e.id]
     if q and not routeSet[e.id] and not hidden[e.id] and not skip[e.id] then
       if ns.IsReady(e.id) then
-        local tx, ty = q.t and ToCur(q.t[2], q.t[3], q.t[4], cur)
+        local tx, ty
+        if q.t then tx, ty = ToCur(q.t[2], q.t[3], q.t[4], cur) end
         if tx then Place(e.id, "turnin", tx, ty, overview and 14 or 20, 1, 1, 1, 1, false) end
         if q.tp and not overview then Path(q.tp, false) end
       elseif q.o and q.o[2] == cur then
@@ -537,6 +565,85 @@ local function DrawOthers(canvas, cur)
     end
   end
 end
+-- Where a step happens: the middle of its quest givers on its map (cached per step).
+local hubCache = setmetatable({}, { __mode = "k" })
+local function StepHub(step)
+  local h = hubCache[step]
+  if h ~= nil then return h or nil end
+  local sx, sy, n = 0, 0, 0
+  for _, id in ipairs(step.quests or {}) do
+    local q = ns.quests[id]
+    local g = q and q.g
+    if g and g[2] == step.map and g[3] then sx, sy, n = sx + g[3], sy + g[4], n + 1 end
+  end
+  if step.ent and step.ent[2] == step.map then h = { step.ent[3], step.ent[4] }   -- a dungeon: its entrance
+  elseif n > 0 then h = { sx / n, sy / n }
+  else h = { 50, 50 } end
+  hubCache[step] = h
+  return h
+end
+
+local AHEAD = 6   -- how many steps of the route ahead the continent / world map shows
+local function AheadLabel(i, canvas)
+  local f = aheadLabels[i]
+  if not f then
+    f = CreateFrame("Frame", nil, canvas)
+    f:SetSize(1, 1)
+    f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f.text:SetPoint("BOTTOM", f, "TOP", 0, 6)
+    f.dot = f:CreateTexture(nil, "OVERLAY")
+    f.dot:SetTexture(CIRCLE); f.dot:SetSize(9, 9); f.dot:SetPoint("CENTER")
+    f.dot:SetVertexColor(1, 0.82, 0, 0.9)
+    aheadLabels[i] = f
+  end
+  return f
+end
+
+-- The route beyond the current step: a fainter gold line through the next steps' zones, each labelled
+-- with its name and levels. From (fx, fy), the end of what's already drawn, on the map being viewed.
+local function DrawAhead(canvas, cur, fx, fy, P, scale)
+  if not (route and route.idx and ns.steps) then return end
+  local n, li = 0, 0
+  local lx, ly = fx, fy
+  for i = route.idx + 1, #ns.steps do
+    if n >= AHEAD then break end
+    local st = ns.steps[i]
+    if not (st.dungeon and ns.DungeonOff and ns.DungeonOff(st.dungeon)) and not st.grind then
+      local hub = StepHub(st)
+      local hx, hy = ToCur(st.map, hub[1], hub[2], cur)
+      if not hx then break end   -- the route leaves this map (another continent): stop here
+      n = n + 1
+      if lx then
+        li = li + 1
+        local l = aheadLines[li]
+        if not l then
+          l = canvas.CreateLine and canvas:CreateLine(nil, "OVERLAY")
+          aheadLines[li] = l
+        end
+        if l then
+          local x1, y1 = P(lx, ly)
+          local x2, y2 = P(hx, hy)
+          l:SetThickness(2.5 / scale)
+          l:SetColorTexture(1, 0.82, 0, 0.45)
+          l:SetStartPoint("TOPLEFT", canvas, x1, y1)
+          l:SetEndPoint("TOPLEFT", canvas, x2, y2)
+          l:Show()
+        end
+      end
+      local f = AheadLabel(n, canvas)
+      f:SetScale(1 / scale)
+      f:ClearAllPoints()
+      local cx, cy = P(hx, hy)
+      f:SetPoint("CENTER", canvas, "TOPLEFT", cx * scale, cy * scale)
+      f:SetFrameLevel(PIN_LEVEL - 2)
+      local name = (st.dungeon and st.dungeon) or st.name
+      f.text:SetText(("%s |cffcccccc(%s)|r"):format(name, st.from == st.to and st.from or (st.from .. "-" .. st.to)))
+      f:Show()
+      lx, ly = hx, hy
+    end
+  end
+end
+
 local function Draw()
   HideMap()
   if not ns.db or ns.db.noMap then return end
@@ -563,15 +670,36 @@ local function Draw()
     local vx, vy = ToCur(s.map, s.x, s.y, cur)
     if vx then view[s] = { vx, vy }; onStep = true end
   end
-  local hlx, hly = hlStop and ToCur(hlStop.map, hlStop.x, hlStop.y, cur)
+  local hlx, hly
+  if hlStop then hlx, hly = ToCur(hlStop.map, hlStop.x, hlStop.y, cur) end
   -- (a spot shown from the Dungeon Journal is drawn even on a map with route stops)
   local hlHere = hlx and (not onStep or hlStop.journal)
-  if not onStep and not hlHere then return end
   local w, h = canvas:GetWidth(), canvas:GetHeight()
   if not w or w == 0 then return end
   local scale = CanvasScale()
   local thick = 4 / scale
   local function P(x, y) return x / 100 * w, -y / 100 * h end
+
+  -- The step's stops are all in another zone (e.g. you're in Redridge, the step is Burning Steppes):
+  -- the line from you toward stop 1, out to this map's edge, with stop 1's pin on the edge.
+  if not onStep and not hlHere then
+    local s1 = route.stops and route.stops[1]
+    local pm1, px1, py1 = ns.PlayerPos()
+    local ax, ay = ToCur(pm1, px1, py1, cur)   -- (nil-safe; never 'x and ToCur()': that keeps one value)
+    local bx, by
+    if s1 then bx, by = ToCurAny(s1.map, s1.x, s1.y, cur) end
+    if ax and bx then
+      local ex, ey = ClipToMap(ax, ay, bx, by)
+      if ex then
+        local x1, y1 = P(ax, ay)
+        local x2, y2 = P(ex, ey)
+        PlaceLine(GetLine(1, canvas), canvas, x1, y1, x2, y2, thick, 0.95)
+        PlacePin(1, s1, canvas, P, scale, ex, ey)
+      end
+    end
+    if IsOverview(cur) then ns.Safe("MapAhead", DrawAhead, canvas, cur, ax, ay, P, scale) end
+    return
+  end
 
   local pinN = 0
   if hlHere then pinN = 1; PlacePin(pinN, hlStop, canvas, P, scale, hlx, hly) end
@@ -634,6 +762,8 @@ local function Draw()
       PlacePin(pinN, s, canvas, P, scale, sx, sy)
     end
   end
+  -- on a continent or the world map: the route beyond this step, from its last stop
+  if IsOverview(cur) then ns.Safe("MapAhead", DrawAhead, canvas, cur, prevX, prevY, P, scale) end
 end
 
 local function SafeDraw() ns.Safe("Map", Draw) end
