@@ -1,6 +1,6 @@
 """Time-to-60 of the current route (plan.json, played the way the addon plays it today) and the v2 route
 (plan_v2.json), on the same clock: plan_v2.py's simulation (real travel, kill/collect time, levels,
-chains, the 20-quest log).
+chains, the 40-quest log).
 
 The current route as played: each zone's quests nearest-first; anything in another zone (pick-up or
 hand-in) is a detour made at the end of that zone, then back.

@@ -5,7 +5,7 @@ Usage:  python tools/plan_v2.py Data.lua "<WoW>/_forever_" tools/qmeta.json tool
 
 The route is one list of actions. simulate() plays it: travel to each place, the time each action
 takes (kills x kill time, objects, accept/hand-in), quest XP and kill XP, levelling, quest chains,
-level requirements and the 20-quest log. Actions that can't be done at their point (too low, log full,
+level requirements and the 40-quest log. Actions that can't be done at their point (too low, log full,
 prerequisite missing) are skipped, and so is the rest of that quest. Whatever XP is missing at the end
 is ground at the solo rate.
 
@@ -22,7 +22,7 @@ args = [a for i, a in enumerate(sys.argv[1:], 1) if not a.startswith("--") and s
 DATA, WOW, QMETA, PLAN, OUT = args[:5]
 MINUTES = float(sys.argv[sys.argv.index("--minutes") + 1]) if "--minutes" in sys.argv else 10
 START_LEVEL = int(os.environ.get("START_LEVEL", 10))
-LOG_MAX = 20
+LOG_MAX = 40   # Forever's quest log holds 40 (the game shows 26/40); Classic's 20 left good quests out
 ACC_S, RET_S = 12, 12                    # talking to the NPC (the walk there is travel)
 WINDOW = 60                              # how far an action may move in one step of the search
 GRIND_GAP = 2                            # grind at most this many levels to reach a quest

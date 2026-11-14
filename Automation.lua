@@ -81,7 +81,7 @@ local function Skipped(id)
 end
 
 local function LogFull()
-  local max = (C_QuestLog and C_QuestLog.GetMaxNumQuestsCanAccept and C_QuestLog.GetMaxNumQuestsCanAccept()) or 20
+  local max = (C_QuestLog and C_QuestLog.GetMaxNumQuestsCanAccept and C_QuestLog.GetMaxNumQuestsCanAccept()) or 40   -- Forever: 40
   local n
   if C_QuestLog and C_QuestLog.GetNumQuestLogEntries then
     local _, quests = C_QuestLog.GetNumQuestLogEntries(); n = quests

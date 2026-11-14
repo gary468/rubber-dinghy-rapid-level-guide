@@ -27,6 +27,21 @@
     "4245": {
       "drop": true,
       "note": "Chasing A-Me 01 (escort, part 3): needs 4244 first, which is off the route."
+    },
+    "95934": {
+      "spots": [
+        [
+          2548,
+          30.2,
+          69.2
+        ]
+      ],
+      "note": "Proof of Profit: the Cubic Draconia crystals poke up from the dirt in the dragon cave Gelinda Coppergleam stands in (quest text: 'in these caves'). No database places them. Gary, 14 Nov 2026: 'its in the cave'."
+    },
+    "95982": {
+      "drop": true,
+      "noAccept": "needs 10 Briny Seafood Stew (Cooking 200 - recipe from Fimbo Greasemitz in Riverglades - or the Auction House)",
+      "note": "Not My Circus: 10 Briny Seafood Stew, cooked only (2 Murloc Eye, Tender Crab Meat, Hot Spices each). Not worth routing. A friend of Gary's was sent to it with nowhere to go, 14 Nov 2026."
     }
   }
 }

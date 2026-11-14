@@ -546,6 +546,12 @@ try:
     LEARNED_SPOTS = {int(k): v for k, v in (json.load(open(HERE + r"\learned.json", encoding="utf-8")).get("spots") or {}).items()}
 except (FileNotFoundError, ValueError):
     LEARNED_SPOTS = {}
+# Spots players told us about (tools/overrides.json "spots"), for objectives no database places.
+try:
+    for _k, _v in (json.load(open(HERE + r"\overrides.json", encoding="utf-8")).get("quests") or {}).items():
+        if _v.get("spots") and int(_k) not in LEARNED_SPOTS: LEARNED_SPOTS[int(_k)] = _v["spots"]
+except FileNotFoundError:
+    pass
 
 def spots_loc(spots, name):
     from collections import Counter
