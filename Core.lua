@@ -340,6 +340,9 @@ local function Status(id, level)
   end
   if IsDone(id) then return DONE end
   if index > 0 then return IsReady(id, index) and READY or LOG end
+  -- A breadcrumb (a lead-in that sends you to another quest's giver) stops being offered once you
+  -- have its target quest or have done it: then it's as good as done, never a stop.
+  if q.bc and (IsDone(q.bc) or LogIndex(q.bc) > 0) then return DONE end
   if not PrereqsMet(q) then return LOCKED end
   if level < (q.r or 0) then
     return (q.r - level <= 2) and SOON or LATER
@@ -364,6 +367,16 @@ local function ScanStep(step, level)
     if s == OPEN or s == SOON then
       counts[s] = counts[s] + 1
       rows[#rows + 1] = { id = id, s = s, q = ns.quests[id], pick = true }
+    end
+  end
+  -- Route v2: finished quests from earlier zones that the plan hands in here.
+  local listed = {}
+  for _, r in ipairs(rows) do listed[r.id] = true end
+  for _, id in ipairs(step.turn or {}) do
+    local s = Status(id, level)
+    if s == READY and not listed[id] then
+      counts[s] = counts[s] + 1
+      rows[#rows + 1] = { id = id, s = s, q = ns.quests[id], handin = true }
     end
   end
   return rows, counts
@@ -742,6 +755,25 @@ local function BuildStops(rows, stepMap, current)
       if d <= 25 then s.tier = 1 end
     end
   end
+  -- Route v2: the planned order of every action (step.ord, "a916,o916,r916"): a stop's rank is its
+  -- earliest action. Ranked stops keep that order (no live re-sorting), after tiers 0 and 1.
+  local rank
+  if curStep and curStep.ord then
+    rank = {}
+    local i = 0
+    for code, id in curStep.ord:gmatch("(%a)(%d+)") do
+      i = i + 1
+      local key = code .. id
+      if not rank[key] then rank[key] = i end
+    end
+    local CODE = { get = "a", ["do"] = "o", go = "o", turn = "r", dungeon = "o", dungeonturn = "r" }
+    for _, s in ipairs(here) do
+      for _, a in ipairs(s.actions) do
+        local r = rank[(CODE[a.kind] or "o") .. a.row.id] or (a.kind == "go" and rank["r" .. a.row.id])
+        if r and (not s.rank or r < s.rank) then s.rank = r end
+      end
+    end
+  end
   local ordered = {}
   while #here > 0 do
     local bi, bt, bd, bx, by = 1, math.huge, math.huge, nil, nil
@@ -749,6 +781,7 @@ local function BuildStops(rows, stepMap, current)
       local d, px2, py2 = Dist(s, cx, cy)
       d = d * (s.w or 1)
       if s.area and s.w == 1 then d = d + 4 end -- same distance: pick-ups before mob areas
+      if rank and s.tier == 2 then d = s.rank and (s.rank * 1e6) or (1e12 + d) end   -- planned order
       if s.tier < bt or (s.tier == bt and d < bd) then bi, bt, bd, bx, by = i, s.tier, d, px2, py2 end
     end
     local s = table.remove(here, bi)

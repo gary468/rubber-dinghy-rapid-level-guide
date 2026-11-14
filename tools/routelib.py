@@ -119,6 +119,7 @@ def available(q, done, lv, allow_class=True, dungeon=False):
     ps = q.get("ps") or []
     if ps and not any(p in done for p in ps): return False
     if any(p in done for p in (q.get("ex") or [])): return False
+    if q.get("bc") and q["bc"] in done: return False      # a breadcrumb whose target is already done
     return True
 
 

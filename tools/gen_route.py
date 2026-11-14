@@ -350,6 +350,7 @@ if PLAN:
             # Every quest for this dungeon: the addon shows the ones you hold or can get, live.
             ids += [q for q in v.get("all", []) if q in Q and q not in ids and eligible(q, Q[q])]
         pick = [q for q in v.get("pick", []) if q in Q]
+        turn = [q for q in v.get("turn", []) if q in Q]      # route v2: hand-ins placed here
         m = v["map"]
         if v.get("kind") != "dungeon" and CANON.get(m):
             v["name"] = CANON[m]   # the map's own name (plan names could come from a neighbour)
@@ -367,13 +368,17 @@ if PLAN:
                       note=f"Nothing left here beats killing mobs: grind to level {v['lv_out']} "
                            f"(about {round(v.get('secs', 0) / 60)} min), ideally in a dungeon group.", extra=[], grind=True)
         else:
-            if not ids and not pick: continue
+            if not ids and not pick and not turn: continue
             seen[m] += 1
             note = zone_note.get(m, f"Go to {v['name']}.")
-            if seen[m] > 1: note = "Back for the quests that have opened up at your level. " + note
-            if pick: note += " Pick up the dungeon quests here for a later run."
+            if not ids and (pick or turn):
+                note = "On the way: " + " and ".join(x for x in (
+                    "pick up quests for later" if pick else "", "hand in finished quests" if turn else "") if x) + "."
+            elif seen[m] > 1: note = "Back for the quests that have opened up at your level. " + note
+            if pick and ids: note += " Pick up quests here for later in the route."
             st = dict(name=v["name"] + ("" if seen[m] == 1 else " (return visit)"), lv=lv,
-                      zones=sorted(map_areas.get(m, [])) or [0], map_id=m, note=note, extra=[], pick=pick)
+                      zones=sorted(map_areas.get(m, [])) or [0], map_id=m, note=note, extra=[], pick=pick,
+                      turn=turn, ord=v.get("order"))
         st["xp"], st["secs"] = int(v.get("xp") or 0), int(v.get("secs") or 0)
         for q in ids: new_used[q] = st
         new_steps.append((st, ids))
@@ -411,6 +416,9 @@ for st, ids in steps_out:
     m = st.get("map_id") or uimap.get(st["zones"][0], 0)
     extra = ""
     if st.get("pick"): extra += f", pick={{{','.join(map(str, st['pick']))}}}"
+    if st.get("turn"): extra += f", turn={{{','.join(map(str, st['turn']))}}}"
+    if st.get("ord"):   # the planned order of every action: a=accept, o=objectives, r=hand in
+        extra += ', ord="' + ",".join({"acc": "a", "obj": "o", "ret": "r"}[k] + str(q) for k, q in st["ord"]) + '"'
     if st.get("dungeon"):
         e = st["ent"]
         extra += f", dungeon={lstr(st['dungeon'])}, ent={{{lstr(e[0])},{e[1]},{e[2]},{e[3]}}}"
@@ -499,6 +507,8 @@ for qid in sorted(set(used) | set(track)):
     cl = (q.get("requiredClasses") or 0) & 0xFFFF
     if ra: parts.append(f"ra={ra}")
     if cl: parts.append(f"cl={cl}")
+    if isinstance(q.get("breadcrumbForQuestId"), int) and q["breadcrumbForQuestId"] > 0:
+        parts.append(f"bc={q['breadcrumbForQuestId']}")   # a lead-in: gone once its target is taken
     for key, fld in (("pg", "preQuestGroup"), ("ps", "preQuestSingle"), ("ex", "exclusiveTo")):
         a = larr(q.get(fld))
         if a != "nil": parts.append(f"{key}={a}")
