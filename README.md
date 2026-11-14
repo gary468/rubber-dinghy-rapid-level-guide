@@ -17,8 +17,8 @@ what order, and keeps track of your progress as you play.
   It never places map markers.
 - **Quest icons like Questie** on the world map: quest givers (!), hand-ins (?), every spawn of the
   mobs your quests need, and patrol paths of NPCs that walk. Shift-click an icon to hide that quest.
-- **Rare and named mob alerts.** A rare, rare elite or named quest target nearby gets a raid warning,
-  a sound and a Target button you click (or press its key binding) to target it. WoW doesn't let
+- **Rare and named mob alerts.** A rare, rare elite or named quest target nearby gets a pop-up
+  (and a sound): a Target button you click (or press its key binding) to target it. WoW doesn't let
   addons target by themselves. Turn on enemy nameplates (V) to spot them from further away.
 - **Automatic progress.** It reads your progress from the game and picks the step for your level
   (the zone you're in wins when your level fits more than one). It moves on when you've done a zone

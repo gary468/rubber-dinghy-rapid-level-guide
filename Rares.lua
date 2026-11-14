@@ -1,6 +1,6 @@
 -- Rubber Dinghy - rare and named mob alerts.
 -- When a rare (or rare elite) or a named quest target comes into view, you get:
---   * a raid-warning style alert and a sound,
+--   * a sound (optional),
 --   * a "Target" button (also bindable: Key Bindings > Rubber Dinghy) that targets it in one press.
 -- Blizzard doesn't let addons target a mob by themselves: targeting needs a click or key press, which
 -- is why the button exists (RareScanner works the same way).
@@ -141,6 +141,9 @@ local function Build()
     GameTooltip:Show()
   end)
   btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  -- Clicked (or its key pressed): it has targeted the mob, so it goes away (Gary). In combat the
+  -- secure button can't be hidden, so it goes the moment combat ends.
+  btn:SetScript("PostClick", function() GameTooltip:Hide(); R.Hide() end)
   Place()
   btn:Hide()
 end
@@ -173,10 +176,7 @@ local function Alert(name, kind)
   if not ns.db.noRareSound and PlaySound then
     pcall(PlaySound, (SOUNDKIT and SOUNDKIT.RAID_WARNING) or 8959, "Master")
   end
-  if RaidNotice_AddMessage and RaidWarningFrame then
-    pcall(RaidNotice_AddMessage, RaidWarningFrame, "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_8:0|t " .. text,
-      (ChatTypeInfo and ChatTypeInfo.RAID_WARNING) or { r = 1, g = 0.3, b = 0.1 })
-  end
+  -- no raid-warning text in the middle of the screen (Gary): the pop-up and the sound are enough
   if FlashClientIcon then pcall(FlashClientIcon) end
   ns.Print(text .. " nearby - click the Target button to target it.")
   ShowButton(current)
