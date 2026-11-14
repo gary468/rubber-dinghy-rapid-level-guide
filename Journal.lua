@@ -9,8 +9,8 @@ local ADDON, ns = ...
 local J = {}
 ns.Journal = J
 
-local W, H = 880, 620
-local CARD_H = 104
+local W, H = 940, 680
+local CARD_H = 112
 local LIST_W = 300
 local band = bit and bit.band or function(a, b)   -- the game has bit; this is only for test clients
   local r, m = 0, 1
@@ -83,11 +83,6 @@ end
 
 local ST = { READY = 1, LOG = 2, OPEN = 3, SOON = 4, LOCKED = 5, LOW = 6, DONE = 7 }
 J.ST = ST
-local ST_TEXT = {
-  [1] = GREEN .. "Ready to turn in|r", [2] = GOLD .. "In your quest log|r", [3] = WHITE .. "You can pick it up now|r",
-  [4] = GREY .. "Available from level %d|r", [5] = GREY .. "Needs earlier quests first|r",
-  [6] = GREY .. "Available from level %d|r", [7] = GREEN .. "Completed|r",
-}
 local ST_COLOR = { [1] = GREEN, [2] = GOLD, [3] = WHITE, [4] = GREY, [5] = GREY, [6] = GREY, [7] = GREY }
 
 function J.QuestStatus(id)
@@ -165,12 +160,6 @@ function J.StaticChain(id)
   return c
 end
 
-local function Where(loc)
-  if not loc then return nil end
-  if not loc[2] then return loc[1] .. " (inside the dungeon)" end
-  return ("%s, %s %.1f, %.1f"):format(loc[1], ns.MapName(loc[2]) or "?", loc[3], loc[4])
-end
-
 --- This dungeon's quests for you: ids, how many done, how many there are.
 function J.Counts(d, otherFaction)
   local mine, done = {}, 0
@@ -224,12 +213,12 @@ function J.ScanGame()
             local okE, ename, edesc, encID = pcall(EJ_GetEncounterInfoByIndex, e, id)
             if not okE or not ename then okE, ename, edesc, encID = pcall(EJ_GetEncounterInfoByIndex, e) end
             if not okE or not ename then break end
-            local icon
+            local icon, display
             if EJ_GetCreatureInfo then
-              local okC, _, _, _, _, ic = pcall(EJ_GetCreatureInfo, 1, encID)
-              if okC then icon = ic end
+              local okC, _, _, _, disp, ic = pcall(EJ_GetCreatureInfo, 1, encID)
+              if okC then icon, display = ic, disp end
             end
-            bosses[#bosses + 1] = { name = ename, desc = edesc, id = encID, icon = icon }
+            bosses[#bosses + 1] = { name = ename, desc = edesc, id = encID, icon = icon, display = display }
           end
           info.bosses = #bosses
           -- loot: does the game's journal have any for the first boss? (phase 2 decides on this)
@@ -281,14 +270,117 @@ local function Levels(d)
 end
 
 ---------------------------------------------------------------------------
--- Small UI helpers
+-- Look: the game's own textures, each checked in the client before use, with plain fallbacks.
 ---------------------------------------------------------------------------
 local function Font(fs, names) local n = ns.Font(names); if _G[n] then fs:SetFontObject(_G[n]) end end
 
-local function Button(parent, text, w, onClick, tip)
-  local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-  b:SetSize(w, 22)
-  b:SetText(text)
+local probe            -- a hidden texture, for clients without GetFileIDFromPath
+local texOK = {}
+local function Has(path)
+  if not path then return false end
+  if type(path) == "number" then return true end
+  local v = texOK[path]
+  if v ~= nil then return v end
+  v = false
+  if GetFileIDFromPath then
+    local ok, id = pcall(GetFileIDFromPath, path)
+    if ok then v = id ~= nil and id ~= 0; texOK[path] = v; return v end
+  end
+  if probe then
+    local ok, set = pcall(probe.SetTexture, probe, path)
+    v = ok and set and true or false
+  end
+  texOK[path] = v
+  return v
+end
+
+local TEX = {
+  rock = "Interface\\FrameGeneral\\UI-Background-Rock",
+  marble = "Interface\\FrameGeneral\\UI-Background-Marble",
+  goldBorder = "Interface\\DialogFrame\\UI-DialogBox-Gold-Border",
+  border = "Interface\\DialogFrame\\UI-DialogBox-Border",
+  header = "Interface\\DialogFrame\\UI-DialogBox-Header",
+  parchment = "Interface\\QuestFrame\\QuestBG",
+  questHL = "Interface\\QuestFrame\\UI-QuestTitleHighlight",
+  tipBorder = "Interface\\Tooltips\\UI-Tooltip-Border",
+  white = "Interface\\Buttons\\WHITE8X8",
+  mask = "Interface\\CharacterFrame\\TempPortraitAlphaMask",
+}
+local ICON = {
+  start = "Interface\\GossipFrame\\AvailableQuestIcon",
+  turnin = "Interface\\GossipFrame\\ActiveQuestIcon",
+  objective = "Interface\\Icons\\INV_Misc_Note_01",
+  chain = "Interface\\Icons\\INV_Misc_Book_09",
+  reward = "Interface\\Icons\\INV_Misc_Coin_01",
+  share = "Interface\\Icons\\INV_Misc_GroupNeedMore",
+  map = "Interface\\Icons\\INV_Misc_Map_01",
+  boss = "Interface\\TargetingFrame\\UI-TargetingFrame-Skull",
+  clock = "Interface\\Icons\\INV_Misc_PocketWatch_01",
+  drop = "Interface\\Icons\\INV_Misc_Bag_10",
+  done = "Interface\\RaidFrame\\ReadyCheck-Ready",
+}
+local function Ico(path, size)
+  if not Has(path) then return "" end
+  return ("|T%s:%d:%d:0:0|t "):format(path, size or 16, size or 16)
+end
+
+-- Parchment page colors (dark ink on light paper)
+local P_TITLE, P_HEAD, P_MUTED, P_GOOD, P_WARN, P_BAD, P_LINK =
+  "|cff2b1709", "|cff6a2c04", "|cff6b5537", "|cff1d6b12", "|cff9a4a00", "|cff8f1a10", "|cff1a4f8c"
+local INK = { 0.18, 0.11, 0.05 }
+
+local function Grad(tex, orient, a, b)
+  tex:SetColorTexture(1, 1, 1, 1)
+  if CreateColor and tex.SetGradient then
+    local ok = pcall(tex.SetGradient, tex, orient, CreateColor(a[1], a[2], a[3], a[4]), CreateColor(b[1], b[2], b[3], b[4]))
+    if ok then return end
+  end
+  if tex.SetGradientAlpha then pcall(tex.SetGradientAlpha, tex, orient, a[1], a[2], a[3], a[4], b[1], b[2], b[3], b[4]) end
+end
+
+local function Backdrop(f, bg, br, edge, edgeSize)
+  if not f.SetBackdrop then return end
+  f:SetBackdrop({ bgFile = TEX.white, edgeFile = edge or TEX.tipBorder, edgeSize = edgeSize or 12,
+                  insets = { left = 3, right = 3, top = 3, bottom = 3 } })
+  f:SetBackdropColor(bg[1], bg[2], bg[3], bg[4] or 1)
+  f:SetBackdropBorderColor(br[1], br[2], br[3], br[4] or 1)
+end
+
+local GOLD_EDGE, DIM_EDGE = { 0.85, 0.68, 0.3 }, { 0.42, 0.34, 0.2 }
+
+local function Panel(parent)
+  local p = CreateFrame("Frame", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  Backdrop(p, { 0.05, 0.04, 0.03, 0.9 }, DIM_EDGE)
+  return p
+end
+
+-- A parchment page: the quest frame's paper when the client has it, else a paper color.
+local function Parchment(parent)
+  local p = CreateFrame("Frame", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  Backdrop(p, { 0.80, 0.71, 0.53, 1 }, GOLD_EDGE)
+  local t = p:CreateTexture(nil, "BACKGROUND", nil, 1)
+  t:SetPoint("TOPLEFT", 4, -4); t:SetPoint("BOTTOMRIGHT", -4, 4)
+  if Has(TEX.parchment) then
+    t:SetTexture(TEX.parchment); t:SetTexCoord(0, 0.5859375, 0, 0.65625)
+  else
+    Grad(t, "VERTICAL", { 0.74, 0.64, 0.46, 1 }, { 0.88, 0.80, 0.62, 1 })
+  end
+  p.paper = t
+  return p
+end
+
+-- Flat buttons in the journal's own style (the red panel buttons all looked alike).
+local function FlatButton(parent, text, w, onClick, tip, h)
+  local b = CreateFrame("Button", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  b:SetSize(w, h or 24)
+  Backdrop(b, { 0.13, 0.10, 0.06, 0.95 }, DIM_EDGE)
+  b.label = b:CreateFontString(nil, "OVERLAY"); Font(b.label, { "GameFontNormal" })
+  b.label:SetPoint("CENTER", 0, 0)
+  b.label:SetText(text)
+  function b:SetText(s) self.label:SetText(s) end
+  local hl = b:CreateTexture(nil, "HIGHLIGHT")
+  hl:SetPoint("TOPLEFT", 3, -3); hl:SetPoint("BOTTOMRIGHT", -3, 3)
+  hl:SetColorTexture(1, 0.82, 0.3, 0.12)
   b:SetScript("OnClick", onClick)
   if tip then
     b:SetScript("OnEnter", function(self) GameTooltip:SetOwner(self, "ANCHOR_BOTTOM"); GameTooltip:AddLine(tip, 1, 1, 1, true); GameTooltip:Show() end)
@@ -297,15 +389,19 @@ local function Button(parent, text, w, onClick, tip)
   return b
 end
 
-local function Panel(parent)
-  local p = CreateFrame("Frame", nil, parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-  if p.SetBackdrop then
-    p:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                    edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
-    p:SetBackdropColor(0.06, 0.05, 0.04, 0.92)
-    p:SetBackdropBorderColor(0.55, 0.45, 0.25, 1)
+-- Tabs that look like tabs: the chosen one is lit and joins the page below it.
+local function Tab(parent, text, w, onClick)
+  local b = FlatButton(parent, text, w, onClick, nil, 28)
+  function b:SetActive(on)
+    if on then
+      Backdrop(self, { 0.30, 0.22, 0.10, 1 }, GOLD_EDGE)
+      self.label:SetTextColor(1, 0.86, 0.35)
+    else
+      Backdrop(self, { 0.09, 0.07, 0.05, 0.95 }, DIM_EDGE)
+      self.label:SetTextColor(0.62, 0.55, 0.42)
+    end
   end
-  return p
+  return b
 end
 
 local function Scroll(parent)
@@ -317,27 +413,34 @@ local function Scroll(parent)
   return sf
 end
 
--- A column of text lines (wrapping) with optional click and tooltip, for the detail panels.
-local function Lines(parent, width)
-  local L = { parent = parent, width = width, fs = {}, btn = {}, y = 0, n = 0, nb = 0 }
+-- A column of text lines (wrapping) with optional click, tooltip, icons and rules, for the pages.
+-- dark = ink on parchment.
+local function Lines(parent, width, dark)
+  local L = { parent = parent, width = width, fs = {}, btn = {}, rules = {}, y = 0, n = 0, nb = 0, nr = 0 }
   function L:Reset()
     for _, f in ipairs(self.fs) do f:Hide() end
     for _, b in ipairs(self.btn) do b:Hide() end
-    self.y, self.n, self.nb = -4, 0, 0
+    for _, r in ipairs(self.rules) do r:Hide() end
+    self.y, self.n, self.nb, self.nr = -6, 0, 0, 0
   end
   function L:Add(text, o)
     o = o or {}
     self.n = self.n + 1
     local fs = self.fs[self.n]
     if not fs then fs = self.parent:CreateFontString(nil, "OVERLAY"); self.fs[self.n] = fs end
-    Font(fs, o.font or { "GameFontHighlight" })
+    Font(fs, o.font or (dark and { "QuestFont", "GameFontHighlight" } or { "GameFontHighlight" }))
+    if dark then
+      fs:SetTextColor(INK[1], INK[2], INK[3]); fs:SetShadowOffset(0, 0)
+    else
+      fs:SetTextColor(1, 1, 1); fs:SetShadowOffset(1, -1)
+    end
     fs:SetJustifyH("LEFT")
     if fs.SetWordWrap then fs:SetWordWrap(true) end
-    fs:SetWidth(self.width - (o.indent or 0) - 8)
+    fs:SetWidth(self.width - (o.indent or 0) - 12)
     fs:ClearAllPoints()
     self.y = self.y - (o.gap or 2)
-    fs:SetPoint("TOPLEFT", self.parent, "TOPLEFT", 6 + (o.indent or 0), self.y)
-    fs:SetText(text)
+    fs:SetPoint("TOPLEFT", self.parent, "TOPLEFT", 10 + (o.indent or 0), self.y)
+    fs:SetText((o.icon and Ico(o.icon, o.iconSize) or "") .. text)
     fs:Show()
     local h = math.max(12, fs:GetStringHeight() or 12)
     if o.onClick or o.tip then
@@ -345,22 +448,38 @@ local function Lines(parent, width)
       local b = self.btn[self.nb]
       if not b then
         b = CreateFrame("Button", nil, self.parent)
+        local hl = b:CreateTexture(nil, "HIGHLIGHT"); hl:SetAllPoints(); hl:SetColorTexture(1, 0.9, 0.5, dark and 0.25 or 0.12)
         b:SetScript("OnEnter", function(s) if s.tip then GameTooltip:SetOwner(s, "ANCHOR_RIGHT"); GameTooltip:AddLine(s.tip, 1, 1, 1, true); GameTooltip:Show() end end)
         b:SetScript("OnLeave", function() GameTooltip:Hide() end)
         b:SetScript("OnClick", function(s) if s.onClick then s.onClick() end end)
         self.btn[self.nb] = b
       end
       b:ClearAllPoints()
-      b:SetPoint("TOPLEFT", fs, "TOPLEFT", 0, 0)
-      b:SetSize(self.width - (o.indent or 0) - 8, h)
+      b:SetPoint("TOPLEFT", fs, "TOPLEFT", -2, 1)
+      b:SetSize(self.width - (o.indent or 0) - 12, h + 2)
       b.onClick, b.tip = o.onClick, o.tip
       b:Show()
     end
     self.y = self.y - h
     return fs
   end
+  --- A section header: icon, title, and a thin rule under it.
+  function L:Head(text, icon)
+    self:Gap(10)
+    self:Add((dark and P_HEAD or GOLD) .. text .. "|r", { font = dark and { "QuestTitleFont", "GameFontNormalLarge" } or { "GameFontNormal" },
+      icon = icon, iconSize = 18 })
+    self.nr = self.nr + 1
+    local r = self.rules[self.nr]
+    if not r then r = self.parent:CreateTexture(nil, "ARTWORK"); self.rules[self.nr] = r end
+    r:ClearAllPoints()
+    r:SetPoint("TOPLEFT", self.parent, "TOPLEFT", 10, self.y - 3)
+    r:SetSize(self.width - 24, 1)
+    if dark then r:SetColorTexture(0.42, 0.26, 0.10, 0.55) else r:SetColorTexture(0.85, 0.68, 0.3, 0.4) end
+    r:Show()
+    self.y = self.y - 7
+  end
   function L:Gap(n) self.y = self.y - (n or 8) end
-  function L:Height() return -self.y + 8 end
+  function L:Height() return -self.y + 12 end
   return L
 end
 
@@ -380,15 +499,12 @@ end
 J.ShowSpot = ShowSpot
 
 ---------------------------------------------------------------------------
--- Home: the dungeon cards
+-- Dungeon art: the game's own pictures. First the Encounter Journal's art for the dungeon (if the
+-- client has it), then Blizzard's loading screen for the dungeon (one per Classic dungeon; spellings
+-- vary, so a few are tried), then one named after the dungeon (in case Forever ships one for its new
+-- dungeons), then the loading screen of the continent it's on. Looked up once per dungeon.
 ---------------------------------------------------------------------------
-local cards = {}
 local LEVEL_TINT = { { 0.20, 0.35, 0.18 }, { 0.18, 0.28, 0.40 }, { 0.36, 0.26, 0.14 }, { 0.38, 0.16, 0.14 } }
-
--- Card art: the game's own pictures, checked in the client before use. First the Encounter Journal's
--- art for the dungeon (if the client has it), then Blizzard's loading screen for the dungeon (one per
--- Classic dungeon; spellings vary, so a few are tried), then one named after the dungeon (in case
--- Forever ships one for its new dungeons), then the loading screen of the continent it's on.
 local LS = "Interface\\Glues\\LoadingScreens\\"
 local LOADSCREEN = {
   ["Ragefire Chasm"] = { "LoadScreenRagefireChasm" },
@@ -415,17 +531,7 @@ local CONTINENT_SCREEN = { [1415] = { "LoadScreenEasternKingdom", "LoadScreenEas
                            [1414] = { "LoadScreenKalimdor" } }
 local cardArt = {}   -- [dungeon name] = { path, isLoadingScreen } or false
 
-local function ArtExists(path, tex)
-  if GetFileIDFromPath then
-    local ok, id = pcall(GetFileIDFromPath, path)
-    if ok then return id ~= nil and id ~= 0 end
-  end
-  -- older clients: SetTexture says whether the file loaded
-  local ok, set = pcall(tex.SetTexture, tex, path)
-  return ok and set and true or false
-end
-
-local function CardArt(d, tex)
+local function CardArt(d)
   local a = cardArt[d.name]
   if a ~= nil then return a end
   a = false
@@ -439,7 +545,7 @@ local function CardArt(d, tex)
     local cont = d.ent and ns.Continent and ns.Continent(d.ent[1])
     for _, n in ipairs(CONTINENT_SCREEN[cont] or {}) do tries[#tries + 1] = n end
     for _, n in ipairs(tries) do
-      if ArtExists(LS .. n, tex) then a = { LS .. n, true }; break end
+      if Has(LS .. n) then a = { LS .. n, true }; break end
     end
   end
   cardArt[d.name] = a
@@ -447,6 +553,37 @@ local function CardArt(d, tex)
   if rep then rep.art = rep.art or {}; rep.art[d.name] = a and a[1] or "none" end
   return a
 end
+
+--- Paint a dungeon's art into a texture, showing a band of it (top..bottom of the picture).
+local function PaintArt(tex, d, top, bottom)
+  local art = CardArt(d)
+  if art then
+    tex:SetTexture(art[1])
+    if art[2] then tex:SetTexCoord(0, 1, top or 0.33, bottom or 0.67) else tex:SetTexCoord(0, 1, 0, 1) end
+    tex:SetVertexColor(1, 1, 1)
+  else
+    tex:SetTexCoord(0, 1, 0, 1)
+    local lo = d.lo or 10
+    local t = LEVEL_TINT[math.min(4, math.max(1, math.floor((lo - 10) / 13) + 1))]
+    Grad(tex, "HORIZONTAL", { t[1] * 1.4, t[2] * 1.4, t[3] * 1.4, 1 }, { t[1] * 0.5, t[2] * 0.5, t[3] * 0.5, 1 })
+  end
+  return art
+end
+
+--- A boss portrait: the game's journal portrait (by creature display) when there is one, else a skull.
+local function PaintPortrait(tex, b)
+  if b.display and SetPortraitTextureFromCreatureDisplayID then
+    if pcall(SetPortraitTextureFromCreatureDisplayID, tex, b.display) then tex:SetTexCoord(0, 1, 0, 1); return true end
+  end
+  if b.icon then tex:SetTexture(b.icon); tex:SetTexCoord(0, 1, 0, 1); return true end
+  tex:SetTexture(ICON.boss); tex:SetTexCoord(0, 1, 0, 1)
+  return false
+end
+
+---------------------------------------------------------------------------
+-- Home: the dungeon cards
+---------------------------------------------------------------------------
+local cards = {}
 
 local function Visible(d)
   local o = DB()
@@ -468,26 +605,34 @@ local function Card(i)
   if c then return c end
   c = CreateFrame("Button", nil, homeView.scroll.child, BackdropTemplateMixin and "BackdropTemplate" or nil)
   if c.SetBackdrop then
-    c:SetBackdrop({ edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 12 })
-    c:SetBackdropBorderColor(0.55, 0.45, 0.25, 1)
+    c:SetBackdrop({ edgeFile = TEX.tipBorder, edgeSize = 14 })
+    c:SetBackdropBorderColor(GOLD_EDGE[1], GOLD_EDGE[2], GOLD_EDGE[3], 1)
   end
   c.art = c:CreateTexture(nil, "BACKGROUND")
   c.art:SetPoint("TOPLEFT", 3, -3); c.art:SetPoint("BOTTOMRIGHT", -3, 3)
-  c.shade = c:CreateTexture(nil, "BORDER")
-  c.shade:SetPoint("TOPLEFT", 3, -3); c.shade:SetPoint("TOPRIGHT", -3, -3); c.shade:SetHeight(34)
-  c.shade:SetColorTexture(0, 0, 0, 0.55)
-  c.name = c:CreateFontString(nil, "OVERLAY"); Font(c.name, { "GameFontNormalLarge" })
-  c.name:SetPoint("TOPLEFT", 12, -10)
+  c.top = c:CreateTexture(nil, "BORDER")        -- dark band behind the name
+  c.top:SetPoint("TOPLEFT", 3, -3); c.top:SetPoint("TOPRIGHT", -3, -3); c.top:SetHeight(40)
+  Grad(c.top, "VERTICAL", { 0, 0, 0, 0 }, { 0, 0, 0, 0.8 })
+  c.bottom = c:CreateTexture(nil, "BORDER")     -- and behind the levels
+  c.bottom:SetPoint("BOTTOMLEFT", 3, 3); c.bottom:SetPoint("BOTTOMRIGHT", -3, 3); c.bottom:SetHeight(30)
+  Grad(c.bottom, "VERTICAL", { 0, 0, 0, 0.85 }, { 0, 0, 0, 0 })
+  c.glow = c:CreateTexture(nil, "HIGHLIGHT")
+  c.glow:SetPoint("TOPLEFT", 3, -3); c.glow:SetPoint("BOTTOMRIGHT", -3, 3)
+  if Has(TEX.questHL) then c.glow:SetTexture(TEX.questHL); c.glow:SetBlendMode("ADD"); c.glow:SetAlpha(0.6)
+  else c.glow:SetColorTexture(1, 0.85, 0.4, 0.12) end
+  c.name = c:CreateFontString(nil, "OVERLAY"); Font(c.name, { "QuestTitleFontBlackShadow", "GameFontNormalLarge" })
+  c.name:SetTextColor(1, 0.86, 0.4)
+  c.name:SetPoint("TOPLEFT", 14, -11)
   c.count = c:CreateFontString(nil, "OVERLAY"); Font(c.count, { "GameFontHighlight" })
-  c.count:SetPoint("TOPRIGHT", -12, -12)
-  c.tick = c:CreateTexture(nil, "OVERLAY")
-  c.tick:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
-  c.tick:SetSize(20, 20)
-  c.tick:SetPoint("RIGHT", c.count, "LEFT", -4, 0)
-  c.levels = c:CreateFontString(nil, "OVERLAY"); Font(c.levels, { "GameFontHighlightSmall" })
-  c.levels:SetPoint("BOTTOMLEFT", 12, 10)
+  c.count:SetPoint("TOPRIGHT", -14, -13)
+  c.qicon = c:CreateTexture(nil, "OVERLAY"); c.qicon:SetSize(16, 16)
+  c.qicon:SetPoint("RIGHT", c.count, "LEFT", -3, 0)
+  c.tick = c:CreateTexture(nil, "OVERLAY"); c.tick:SetTexture(ICON.done); c.tick:SetSize(22, 22)
+  c.tick:SetPoint("RIGHT", c.qicon, "LEFT", -2, 0)
+  c.levels = c:CreateFontString(nil, "OVERLAY"); Font(c.levels, { "GameFontNormal" })
+  c.levels:SetPoint("BOTTOMLEFT", 14, 10)
   c.tag = c:CreateFontString(nil, "OVERLAY"); Font(c.tag, { "GameFontHighlightSmall" })
-  c.tag:SetPoint("BOTTOMRIGHT", -12, 10)
+  c.tag:SetPoint("BOTTOMRIGHT", -14, 11)
   c:SetScript("OnClick", function(self)
     if hideMode then
       local o = DB()
@@ -515,42 +660,32 @@ end
 local function RenderHome()
   local list = {}
   for _, d in ipairs(ns.dungeonDB or {}) do if Visible(d) then list[#list + 1] = d end end
-  local cw = math.floor((W - 64) / 2)
+  local cw = math.floor((W - 70) / 2)
   local o = DB()
   for i, d in ipairs(list) do
     local c = Card(i)
     c.d = d
     c:SetSize(cw, CARD_H)
     c:ClearAllPoints()
-    c:SetPoint("TOPLEFT", homeView.scroll.child, "TOPLEFT", ((i - 1) % 2) * (cw + 10), -math.floor((i - 1) / 2) * (CARD_H + 10))
-    local art = CardArt(d, c.art)
-    if art then
-      c.art:SetTexture(art[1])
-      -- a loading screen is 4:3: show a band across its middle; journal art fits as it is
-      if art[2] then c.art:SetTexCoord(0, 1, 0.33, 0.67) else c.art:SetTexCoord(0, 1, 0, 1) end
-      c.art:SetVertexColor(1, 1, 1)
-    else
-      c.art:SetTexCoord(0, 1, 0, 1)
-      local lo = Levels(d)
-      local t = LEVEL_TINT[math.min(4, math.max(1, math.floor((lo - 10) / 13) + 1))]
-      c.art:SetColorTexture(t[1], t[2], t[3], 1)
-    end
+    c:SetPoint("TOPLEFT", homeView.scroll.child, "TOPLEFT", ((i - 1) % 2) * (cw + 12), -math.floor((i - 1) / 2) * (CARD_H + 12))
+    PaintArt(c.art, d, 0.30, 0.66)
     c.name:SetText(d.name)
     local mine, done = J.Counts(d)
-    c.count:SetText(#mine > 0 and (#mine == done and (done .. "/" .. #mine .. " quests") or ((done > 0 and (done .. "/") or "") .. #mine .. (#mine == 1 and " quest" or " quests"))) or "0 quests")
+    local cnt = #mine == 0 and "no quests" or ((done > 0 and (done .. "/") or "") .. #mine .. (#mine == 1 and " quest" or " quests"))
+    c.count:SetText(cnt)
+    if Has(ICON.start) and #mine > 0 then c.qicon:SetTexture(ICON.start); c.qicon:Show() else c.qicon:Hide() end
     c.tick:SetShown(#mine > 0 and done == #mine and not o.hideTick)
     local lo, hi = Levels(d)
-    c.levels:SetText(("LV %d-%d"):format(lo, hi))
+    c.levels:SetText(("Level %d-%d"):format(lo, hi))
     local tag = {}
     if d.forever then tag[#tag + 1] = BLUE .. "WoW Forever|r" end
-    local step = ns.steps and J.Step(d.name)
-    if step and ns.DungeonOn(d.name) then tag[#tag + 1] = GREEN .. "In your route|r" end
-    c.tag:SetText(table.concat(tag, "  "))
+    if J.Step(d.name) and ns.DungeonOn(d.name) then tag[#tag + 1] = GREEN .. "In your route|r" end
+    c.tag:SetText(table.concat(tag, "   "))
     c:SetAlpha((hideMode and o.hidden[d.name]) and 0.35 or 1)
     c:Show()
   end
   for i = #list + 1, #cards do cards[i]:Hide() end
-  homeView.scroll.child:SetSize(W - 50, math.ceil(#list / 2) * (CARD_H + 10) + 10)
+  homeView.scroll.child:SetSize(W - 50, math.ceil(#list / 2) * (CARD_H + 12) + 10)
   homeView.empty:SetShown(#list == 0)
   homeView.hideB:SetText(hideMode and "Done hiding" or "Hide Dungeons")
   homeView.foreverB:SetText(o.foreverOnly and "All dungeons" or "Forever only")
@@ -560,6 +695,7 @@ end
 -- Dungeon page
 ---------------------------------------------------------------------------
 local rows = {}
+local ROW_H = 28
 
 function J.Step(name)
   for _, st in ipairs(ns.steps or {}) do if st.dungeon == name then return st end end
@@ -573,24 +709,24 @@ local function Row(i)
   local r = rows[i]
   if r then return r end
   r = CreateFrame("Button", nil, pageView.list.child)
-  r:SetSize(LIST_W - 28, 22)
-  r.hl = r:CreateTexture(nil, "BACKGROUND"); r.hl:SetAllPoints(); r.hl:SetColorTexture(1, 0.82, 0, 0.15)
-  r.icon = r:CreateTexture(nil, "ARTWORK"); r.icon:SetSize(16, 16); r.icon:SetPoint("LEFT", 2, 0)
+  r:SetSize(LIST_W - 30, ROW_H)
+  r.sel = r:CreateTexture(nil, "BACKGROUND"); r.sel:SetAllPoints(); Grad(r.sel, "HORIZONTAL", { 1, 0.78, 0.3, 0.35 }, { 1, 0.78, 0.3, 0.02 })
+  r.bar = r:CreateTexture(nil, "ARTWORK"); r.bar:SetPoint("TOPLEFT"); r.bar:SetPoint("BOTTOMLEFT"); r.bar:SetWidth(3)
+  r.bar:SetColorTexture(1, 0.82, 0.3, 1)
+  local hl = r:CreateTexture(nil, "HIGHLIGHT"); hl:SetAllPoints(); hl:SetColorTexture(1, 0.9, 0.6, 0.08)
+  r.icon = r:CreateTexture(nil, "ARTWORK"); r.icon:SetSize(22, 22); r.icon:SetPoint("LEFT", 8, 0)
   r.text = r:CreateFontString(nil, "OVERLAY"); Font(r.text, { "GameFontHighlight" })
-  r.text:SetPoint("LEFT", r.icon, "RIGHT", 4, 0); r.text:SetPoint("RIGHT", -34, 0); r.text:SetJustifyH("LEFT")
+  r.text:SetPoint("LEFT", r.icon, "RIGHT", 6, 0); r.text:SetPoint("RIGHT", -34, 0); r.text:SetJustifyH("LEFT")
   if r.text.SetWordWrap then r.text:SetWordWrap(false) end
   r.right = r:CreateFontString(nil, "OVERLAY"); Font(r.right, { "GameFontHighlightSmall" })
-  r.right:SetPoint("RIGHT", -2, 0)
+  r.right:SetPoint("RIGHT", -6, 0)
   r:SetScript("OnClick", function(self) selected = self.key; J.RenderPage() end)
   rows[i] = r
   return r
 end
 
-local QUEST_ICON = { [1] = "Interface\\GossipFrame\\ActiveQuestIcon", [2] = "Interface\\GossipFrame\\IncompleteQuestIcon",
-  [3] = "Interface\\GossipFrame\\AvailableQuestIcon", [4] = "Interface\\GossipFrame\\AvailableQuestIcon",
-  [5] = "Interface\\GossipFrame\\AvailableQuestIcon", [6] = "Interface\\GossipFrame\\AvailableQuestIcon",
-  [7] = "Interface\\RaidFrame\\ReadyCheck-Ready" }
-local SKULL = "Interface\\TargetingFrame\\UI-TargetingFrame-Skull"
+local QUEST_ICON = { [1] = ICON.turnin, [2] = "Interface\\GossipFrame\\IncompleteQuestIcon",
+  [3] = ICON.start, [4] = ICON.start, [5] = ICON.start, [6] = ICON.start, [7] = ICON.done }
 
 local function QuestRows(d)
   local ids = J.Counts(d, DB().otherFaction)
@@ -611,8 +747,8 @@ local function Bosses(d)
   if e and e.bosses and #e.bosses > 0 then
     for _, b in ipairs(e.bosses) do
       local ours = byName[Norm(b.name)]
-      out[#out + 1] = { name = b.name, desc = b.desc, icon = b.icon, npc = ours and ours[2], level = ours and ours[3],
-                        drops = ours and ours[4] }
+      out[#out + 1] = { name = b.name, desc = b.desc, icon = b.icon, display = b.display, npc = ours and ours[2],
+                        level = ours and ours[3], drops = ours and ours[4] }
     end
   else
     for _, b in ipairs(d.bosses or {}) do out[#out + 1] = { name = b[1], npc = b[2], level = b[3], drops = b[4] } end
@@ -620,83 +756,89 @@ local function Bosses(d)
   return out
 end
 
+local function Where(loc, dark)
+  if not loc then return nil end
+  if not loc[2] then return loc[1] .. ((dark and P_MUTED or GREY) .. "  (inside the dungeon)|r") end
+  return ("%s%s  -  %s %.1f, %.1f|r"):format(loc[1], dark and P_MUTED or GREY, ns.MapName(loc[2]) or "?", loc[3], loc[4])
+end
+
+local ST_PAGE = {
+  [1] = P_GOOD .. "Ready to turn in|r", [2] = P_WARN .. "In your quest log|r", [3] = P_GOOD .. "You can pick it up now|r",
+  [4] = P_MUTED .. "Available from level %d|r", [5] = P_WARN .. "Needs earlier quests first|r",
+  [6] = P_MUTED .. "Available from level %d|r", [7] = P_GOOD .. "Completed|r",
+}
+
 local function RenderQuestDetail(L, id)
   local q = Quest(id)
   if not q then return end
   local s = J.QuestStatus(id)
-  L:Add(q.n, { font = { "GameFontNormalLarge" } })
+  L:Add(P_TITLE .. q.n .. "|r", { font = { "QuestTitleFont", "GameFontNormalLarge" }, gap = 4 })
   local tags = { ("Level %d"):format(q.l or 0) }
   if (q.r or 0) > 0 then tags[#tags + 1] = ("requires %d"):format(q.r) end
   if q.fa then tags[#tags + 1] = (q.fa == "A" and "Alliance" or "Horde") .. " only" end
   if q.cl then tags[#tags + 1] = "class quest" end
-  L:Add(GREY .. table.concat(tags, " - ") .. "|r", { font = { "GameFontHighlightSmall" } })
-  local st = ST_TEXT[s]
+  L:Add(P_MUTED .. table.concat(tags, "  -  ") .. "|r", { font = { "QuestFontNormalSmall", "GameFontHighlightSmall" } })
+  local st = ST_PAGE[s]
   if s == ST.SOON or s == ST.LOW then st = st:format(q.r or 0) end
   if s == ST.LOG then
     local have, need = ns.Progress and ns.Progress(id)
-    if need and need > 0 then st = st .. GREY .. (" (%d/%d)"):format(have, need) .. "|r" end
+    if need and need > 0 then st = st .. P_MUTED .. ("  (%d/%d)"):format(have, need) .. "|r" end
   end
-  L:Add(st, { gap = 6 })
+  L:Add(st, { gap = 6, icon = QUEST_ICON[s], iconSize = 16 })
   local chain = J.Chain(id)
   if s == ST.LOCKED and #chain > 0 then
     local doneN = 0
     for _, c in ipairs(chain) do if c.done then doneN = doneN + 1 end end
-    L:Add(ORANGE .. ("Needs a quest chain first: you're on step %d of %d."):format(doneN + 1, #chain + 1) .. "|r", { gap = 2 })
+    L:Add(P_WARN .. ("Needs a quest chain first: you're on step %d of %d."):format(doneN + 1, #chain + 1) .. "|r", { gap = 2 })
   end
 
-  L:Gap(6)
-  L:Add(GOLD .. "Starts at|r", { font = { "GameFontNormal" } })
-  local g = q.g
-  L:Add(Where(g) or "Not recorded", { indent = 8, onClick = (g and g[2]) and function() ShowSpot(g[1], g[2], g[3], g[4]) end or nil,
-    tip = (g and g[2]) and "Show it on the world map." or nil })
   if q.ot then
-    L:Gap(4)
-    L:Add(GOLD .. "Objective|r", { font = { "GameFontNormal" } })
-    L:Add(q.ot, { indent = 8 })
+    L:Head("Objective", ICON.objective)
+    L:Add(q.ot, { gap = 4 })
   end
   local nq = ns.quests and ns.quests[id]
   if nq and nq.dr then
-    for _, dr in ipairs(nq.dr) do L:Add(GREY .. dr[1] .. ": " .. dr[2] .. "|r", { indent = 8, font = { "GameFontHighlightSmall" } }) end
+    for _, dr in ipairs(nq.dr) do L:Add(P_MUTED .. dr[1] .. ": " .. dr[2] .. "|r", { indent = 8, font = { "QuestFontNormalSmall", "GameFontHighlightSmall" } }) end
   end
-  L:Gap(4)
-  L:Add(GOLD .. "Turn in|r", { font = { "GameFontNormal" } })
+  L:Head("Starts at", ICON.start)
+  local g = q.g
+  L:Add((Where(g, true) or "Not recorded") .. ((g and g[2]) and ("   " .. P_LINK .. "Show on map|r") or ""), { gap = 4,
+    onClick = (g and g[2]) and function() ShowSpot(g[1], g[2], g[3], g[4]) end or nil, tip = (g and g[2]) and "Show it on the world map." or nil })
+  L:Head("Turn in", ICON.turnin)
   local t = q.t
-  L:Add(Where(t) or "Not recorded", { indent = 8, onClick = (t and t[2]) and function() ShowSpot(t[1], t[2], t[3], t[4]) end or nil,
-    tip = (t and t[2]) and "Show it on the world map." or nil })
+  L:Add((Where(t, true) or "Not recorded") .. ((t and t[2]) and ("   " .. P_LINK .. "Show on map|r") or ""), { gap = 4,
+    onClick = (t and t[2]) and function() ShowSpot(t[1], t[2], t[3], t[4]) end or nil, tip = (t and t[2]) and "Show it on the world map." or nil })
   if #chain > 0 then
-    L:Gap(4)
-    L:Add(GOLD .. "Quest chain|r", { font = { "GameFontNormal" } })
+    L:Head("Quest chain", ICON.chain)
     for i, c in ipairs(chain) do
-      local mark = c.done and (GREEN .. "done|r") or (c.inlog and (GOLD .. "in your log|r") or (GREY .. "not yet|r"))
-      L:Add(("%d. %s - %s"):format(i, c.name, mark), { indent = 8,
+      local mark = c.done and (P_GOOD .. "done|r") or (c.inlog and (P_WARN .. "in your log|r") or (P_MUTED .. "not yet|r"))
+      L:Add(("%d.  %s  -  %s"):format(i, c.name, mark), { indent = 6, gap = 3,
         tip = c.giver and ("Starts at " .. (Where(c.giver) or "?") .. (c.giver[2] and "\nClick to show it on the map." or "")) or nil,
         onClick = (c.giver and c.giver[2]) and function() ShowSpot(c.giver[1], c.giver[2], c.giver[3], c.giver[4]) end or nil })
     end
-    L:Add(("%d. %s - this quest"):format(#chain + 1, q.n), { indent = 8 })
+    L:Add(("%d.  %s  -  %sthis quest|r"):format(#chain + 1, q.n, P_HEAD), { indent = 6, gap = 3 })
   end
   if q.nx then
     local nxq = Quest(q.nx) or (ns.quests and ns.quests[q.nx])
     local nm = (nxq and (nxq.n)) or (ns.dungeonChain and ns.dungeonChain[q.nx] and ns.dungeonChain[q.nx][1])
-    if nm then L:Gap(4); L:Add(GREY .. "Leads to: " .. nm .. "|r") end
+    if nm then L:Add(P_MUTED .. "Leads to: " .. nm .. "|r", { gap = 6 }) end
   end
-  L:Gap(6)
-  L:Add(GOLD .. "Reward|r", { font = { "GameFontNormal" } })
+  L:Head("Rewards", ICON.reward)
   local xp = J.QuestXP(id)
-  L:Add((xp and (ns.RunLog.Thousands(xp) .. " XP at your level") or "XP not recorded"), { indent = 8 })
-  L:Gap(4)
-  L:Add(q.sh and (GREEN .. "Shareable quest|r - accept it, then share it with your group.") or (GREY .. "Not shareable|r"))
+  L:Add(xp and (P_TITLE .. ns.RunLog.Thousands(xp) .. " XP|r" .. P_MUTED .. "  at your level|r") or (P_MUTED .. "XP not recorded|r"), { gap = 4 })
+  L:Add(q.sh and (P_GOOD .. "Shareable|r  -  accept it, then share it with your group.") or (P_MUTED .. "Can't be shared|r"),
+    { gap = 6, icon = Has(ICON.share) and ICON.share or nil, iconSize = 16 })
 end
 
 local function RenderBossDetail(L, d, b)
-  L:Add(b.name, { font = { "GameFontNormalLarge" } })
-  if b.level and b.level > 0 then L:Add(GREY .. "Level " .. b.level .. "|r", { font = { "GameFontHighlightSmall" } }) end
-  if b.desc and b.desc ~= "" then L:Gap(6); L:Add(b.desc) end
+  L:Add(P_TITLE .. (b.name or "?") .. "|r", { font = { "QuestTitleFont", "GameFontNormalLarge" }, gap = 4 })
+  if b.level and b.level > 0 then L:Add(P_MUTED .. "Level " .. b.level .. " elite|r", { font = { "QuestFontNormalSmall", "GameFontHighlightSmall" } }) end
+  if b.desc and b.desc ~= "" then L:Gap(4); L:Add(b.desc) end
   if b.drops then
-    L:Gap(6)
-    L:Add(GOLD .. "Quest items it drops|r", { font = { "GameFontNormal" } })
+    L:Head("Quest items it drops", ICON.drop)
     for _, dr in ipairs(b.drops) do
       local q = Quest(dr[2])
-      L:Add(dr[1] .. GREY .. " - for " .. (q and q.n or "a quest") .. "|r", { indent = 8,
+      L:Add(P_TITLE .. dr[1] .. "|r" .. P_MUTED .. "  -  for " .. (q and q.n or "a quest") .. "|r", { indent = 4, gap = 3,
         onClick = function() tab, selected = "quests", dr[2]; J.RenderPage() end, tip = "Click to open the quest." })
     end
   end
@@ -705,41 +847,40 @@ local function RenderBossDetail(L, d, b)
     local t = run.bosses and run.bosses[b.name]
     if t then n = n + 1; if not best or t < best then best = t end end
   end
-  L:Gap(6)
-  L:Add(GOLD .. "Your runs|r", { font = { "GameFontNormal" } })
+  L:Head("Your runs", ICON.clock)
   L:Add(n > 0 and (("Killed in %d run%s, fastest %s into the run."):format(n, n == 1 and "" or "s", ns.RunLog.Clock(best)))
-    or "Not killed in a logged run yet.", { indent = 8 })
+    or (P_MUTED .. "Not killed in a logged run yet.|r"), { gap = 4 })
 end
 
 local function RunTitle(run)
-  local when = date("%b %d %H:%M", run.t0)
+  local when = date("%b %d  %H:%M", run.t0)
   local n, of = ns.RunLog.BossCount(run)
-  return ("%s  %s  %s XP  %d/%d bosses"):format(when, ns.RunLog.Clock(ns.RunLog.Secs(run)),
+  return ("%s   %s   %s XP   %d/%d bosses"):format(when, ns.RunLog.Clock(ns.RunLog.Secs(run)),
     ns.RunLog.Thousands(ns.RunLog.MobXP(run)), n, of)
 end
 
 local function RenderRunDetail(L, run)
   local RL = ns.RunLog
-  L:Add((run.d or "?") .. GREY .. "  " .. date("%b %d %Y, %H:%M", run.t0) .. "|r", { font = { "GameFontNormalLarge" } })
-  L:Gap(4)
-  L:Add(("Time: %s (first kill to last kill)%s"):format(RL.Clock(RL.Secs(run)), run.done and GREEN .. " - cleared|r" or ""))
-  L:Add(("Mobs: %d killed, %s XP"):format(run.kills or 0, RL.Thousands(RL.MobXP(run))))
-  if (run.qxp or 0) > 0 then L:Add(("Quests handed in during the run: %s XP"):format(RL.Thousands(run.qxp))) end
-  L:Add(("Money looted: %s"):format(GetCoinTextureString and GetCoinTextureString(RL.Gold(run)) or (RL.Gold(run) .. "c")))
-  L:Add(("Deaths: %d"):format(run.deaths or 0))
-  L:Add(("Level %d%s"):format(run.lv0 or 0, (run.lv1 and run.lv1 ~= run.lv0) and (" to " .. run.lv1) or ""))
-  if (run.out or 0) > 60 then L:Add(("Time outside: %s"):format(RL.Clock(run.out))) end
+  L:Add(P_TITLE .. (run.d or "?") .. "|r", { font = { "QuestTitleFont", "GameFontNormalLarge" }, gap = 4 })
+  L:Add(P_MUTED .. date("%A %b %d %Y, %H:%M", run.t0) .. "|r", { font = { "QuestFontNormalSmall", "GameFontHighlightSmall" } })
+  L:Head("The run", ICON.clock)
+  L:Add(("Time  %s%s"):format(P_TITLE .. RL.Clock(RL.Secs(run)) .. "|r", run.done and ("   " .. P_GOOD .. "cleared|r") or ""), { gap = 4 })
+  L:Add(("Mobs  %s%d killed, %s XP|r"):format(P_TITLE, run.kills or 0, RL.Thousands(RL.MobXP(run))), { gap = 3 })
+  if (run.qxp or 0) > 0 then L:Add(("Quests handed in  %s%s XP|r"):format(P_TITLE, RL.Thousands(run.qxp)), { gap = 3 }) end
+  L:Add(("Money looted  %s"):format(GetCoinTextureString and GetCoinTextureString(RL.Gold(run)) or (RL.Gold(run) .. "c")), { gap = 3 })
+  L:Add(("Deaths  %s%d|r"):format(P_TITLE, run.deaths or 0), { gap = 3 })
+  L:Add(("Level  %s%d%s|r"):format(P_TITLE, run.lv0 or 0, (run.lv1 and run.lv1 ~= run.lv0) and (" to " .. run.lv1) or ""), { gap = 3 })
+  if (run.out or 0) > 60 then L:Add(("Time outside  %s%s|r"):format(P_TITLE, RL.Clock(run.out)), { gap = 3 }) end
   local d = Dungeon(run.d)
   if d then
-    L:Gap(6)
-    L:Add(GOLD .. "Bosses|r", { font = { "GameFontNormal" } })
+    L:Head("Bosses", ICON.boss)
     for _, b in ipairs(d.bosses or {}) do
       local t = run.bosses[b[1]]
-      L:Add((t and GREEN or GREY) .. b[1] .. "|r" .. (t and (GREY .. "  at " .. RL.Clock(t) .. "|r") or ""), { indent = 8 })
+      L:Add((t and (P_GOOD .. b[1] .. "|r" .. P_MUTED .. "   at " .. RL.Clock(t) .. "|r")) or (P_MUTED .. b[1] .. "|r"), { indent = 4, gap = 3 })
     end
   end
-  L:Gap(10)
-  L:Add(RED .. "Delete this run|r", { onClick = function() J.ConfirmDelete(run) end, tip = "Removes it from your Run Log (asks first)." })
+  L:Gap(14)
+  L:Add(P_BAD .. "Delete this run|r", { onClick = function() J.ConfirmDelete(run) end, tip = "Removes it from your Run Log (asks first)." })
 end
 
 function J.ConfirmDelete(run)
@@ -753,45 +894,91 @@ function J.ConfirmDelete(run)
   StaticPopup_Show("RUBBERDINGHY_DELETE_RUN", run.d or "a dungeon", nil, run)
 end
 
+-- The boss's 3D model on a stage of the dungeon's art (journal display when the client has it, else
+-- by NPC ID); hidden when there's neither.
+local function ShowModel(d, b)
+  local M = pageView.model
+  if not M then return 0 end
+  local ok = false
+  if b and b.display and M.SetDisplayInfo then ok = pcall(M.SetDisplayInfo, M, b.display)
+  elseif b and b.npc and b.npc > 0 and M.SetCreature then ok = pcall(M.SetCreature, M, b.npc) end
+  pageView.stage:SetShown(ok)
+  if not ok then return 0 end
+  PaintArt(pageView.stage.art, d, 0.25, 0.75)
+  if M.SetRotation then pcall(M.SetRotation, M, 0.35) end
+  return 190
+end
+
+-- The summary under the list: your progress here, at a glance.
+local function RenderSummary(d)
+  local S = pageView.summary
+  local mine, done = J.Counts(d)
+  local inLog, ready = 0, 0
+  for _, id in ipairs(mine) do
+    local s = J.QuestStatus(id)
+    if s == ST.LOG then inLog = inLog + 1 elseif s == ST.READY then ready = ready + 1 end
+  end
+  local runs = ns.RunLog.For(d.name)
+  local best
+  for _, r in ipairs(runs) do local s = ns.RunLog.Secs(r); if s > 0 and (not best or s < best) then best = s end end
+  local lines = {
+    GOLD .. "Your progress|r",
+    ("%s%d|r of %d quests done%s"):format(WHITE, done, #mine, (inLog + ready > 0) and ("  -  " .. GREEN .. (inLog + ready) .. " in your log|r") or ""),
+    ("%s%d|r bosses   -   %s%d|r run%s logged%s"):format(WHITE, #(d.bosses or {}), WHITE, #runs, #runs == 1 and "" or "s",
+      best and ("   -   best " .. WHITE .. ns.RunLog.Clock(best) .. "|r") or ""),
+  }
+  S.text:SetText(table.concat(lines, "\n"))
+end
+
 function J.RenderPage()
   local d = cur and Dungeon(cur)
   if not d then return end
   local P = pageView
   local lo, hi = Levels(d)
+  PaintArt(P.banner.art, d, 0.28, 0.58)
   P.title:SetText(d.name)
   local ent = d.ent
-  P.sub:SetText(("Levels %d-%d%s"):format(lo, hi, ent and ("   Entrance: " .. (ns.MapName(ent[1]) or "?") .. (" %.1f, %.1f"):format(ent[2], ent[3])) or ""))
-  P.locB:SetShown(ent ~= nil)
+  local bits = { ("Level %d-%d"):format(lo, hi) }
+  if ent then bits[#bits + 1] = ("%s  %.1f, %.1f"):format(ns.MapName(ent[1]) or "?", ent[2], ent[3]) end
+  if d.forever then bits[#bits + 1] = BLUE .. "WoW Forever|r" end
   local step = J.Step(d.name)
+  if step then bits[#bits + 1] = ns.DungeonOn(d.name) and (GREEN .. "In your route|r") or (GREY .. "Not in your route|r") end
+  P.sub:SetText(table.concat(bits, GREY .. "    |    |r"))
+  local e = ej and ej[d.name]
+  P.desc:SetText((e and e.desc and e.desc ~= "") and e.desc or "")
+  P.locB:SetShown(ent ~= nil)
   P.routeCB:SetShown(step ~= nil)
   P.readyB:SetShown(step ~= nil and ns.StartPrep ~= nil)
   if step then
     P.routeCB:SetChecked(ns.DungeonOn(d.name))
     P.readyB:SetText((ns.db.prep == d.name) and "Stop getting ready" or "Get ready")
   end
+  local nQuests = #(select(1, J.Counts(d, DB().otherFaction)))
+  local counts = { quests = nQuests, bosses = #Bosses(d), runs = #ns.RunLog.For(d.name) }
   for _, t in ipairs(P.tabs) do
-    if t.key == tab then t:LockHighlight() else t:UnlockHighlight() end
+    t:SetActive(t.key == tab)
+    t:SetText(("%s  %s(%d)|r"):format(t.title, GREY, counts[t.key] or 0))
   end
   P.factionB:SetShown(tab == "quests")
   P.factionB:SetText(DB().otherFaction and "Both factions" or "My faction")
 
   -- left list
   local items = {}
+  local bosses = Bosses(d)
   if tab == "quests" then
     for _, it in ipairs(QuestRows(d)) do
       items[#items + 1] = { key = it.id, text = ST_COLOR[it.s] .. it.q.n .. "|r", right = GREY .. (it.q.l or "") .. "|r", icon = QUEST_ICON[it.s] }
     end
   elseif tab == "bosses" then
-    for i, b in ipairs(Bosses(d)) do
-      local killed
-      local run = ns.RunLog.Current()
-      if run and run.bosses[b.name] then killed = true end
+    local run = ns.RunLog.Current()
+    for i, b in ipairs(bosses) do
+      local killed = run and run.bosses[b.name]
       items[#items + 1] = { key = i, text = (killed and GREY or WHITE) .. b.name .. "|r", right = GREY .. ((b.level and b.level > 0) and b.level or "") .. "|r",
-                            icon = b.icon or SKULL }
+                            boss = b }
     end
   else
     for _, run in ipairs(ns.RunLog.For(d.name)) do
-      items[#items + 1] = { key = run, text = WHITE .. RunTitle(run) .. "|r", icon = run.done and "Interface\\RaidFrame\\ReadyCheck-Ready" or nil }
+      items[#items + 1] = { key = run, text = WHITE .. RunTitle(run) .. "|r", icon = run.done and ICON.done or ICON.clock }
     end
   end
   if selected == nil or (type(selected) ~= type(items[1] and items[1].key)) then selected = items[1] and items[1].key end
@@ -799,31 +986,40 @@ function J.RenderPage()
   for i, it in ipairs(items) do
     local r = Row(i)
     r.key = it.key
-    r:ClearAllPoints(); r:SetPoint("TOPLEFT", 0, -(i - 1) * 22)
+    r:ClearAllPoints(); r:SetPoint("TOPLEFT", 0, -(i - 1) * ROW_H)
     r.text:SetText(it.text); r.right:SetText(it.right or "")
-    if it.icon then r.icon:SetTexture(it.icon); r.icon:Show() else r.icon:Hide() end
-    r.hl:SetShown(it.key == selected)
+    if it.boss then PaintPortrait(r.icon, it.boss); r.icon:Show()
+    elseif it.icon then r.icon:SetTexture(it.icon); r.icon:SetTexCoord(0, 1, 0, 1); r.icon:Show()
+    else r.icon:Hide() end
+    r.sel:SetShown(it.key == selected); r.bar:SetShown(it.key == selected)
     if it.key == selected then found = true end
     r:Show()
   end
   for i = #items + 1, #rows do rows[i]:Hide() end
   if not found then selected = items[1] and items[1].key end
-  P.list.child:SetSize(LIST_W - 28, #items * 22 + 4)
+  P.list.child:SetSize(LIST_W - 30, #items * ROW_H + 4)
   P.empty:SetShown(#items == 0)
   P.empty:SetText(tab == "runs" and "No runs logged yet. Runs are recorded on their own when you go in." or
     (tab == "quests" and "No quests recorded for this dungeon." or "No bosses recorded."))
+  RenderSummary(d)
 
-  -- right detail
+  -- right page
   local L = P.detail
   L:Reset()
+  local top = 0
+  if tab == "bosses" and selected then top = ShowModel(d, bosses[selected]) else P.stage:Hide() end
+  L.y = -6 - top
+  if top > 0 then L.y = L.y - 4 end
   if tab == "quests" and selected then RenderQuestDetail(L, selected)
-  elseif tab == "bosses" and selected then RenderBossDetail(L, d, Bosses(d)[selected] or {})
+  elseif tab == "bosses" and selected then RenderBossDetail(L, d, bosses[selected] or {})
   elseif tab == "runs" and selected then RenderRunDetail(L, selected)
-  elseif tab == "runs" then
-    local e = ej and ej[d.name]
-    if e and e.desc and e.desc ~= "" then L:Add(e.desc) end
+  else
+    L:Add(P_TITLE .. d.name .. "|r", { font = { "QuestTitleFont", "GameFontNormalLarge" } })
+    if e and e.desc and e.desc ~= "" then L:Gap(4); L:Add(e.desc) end
+    L:Gap(6)
+    L:Add(P_MUTED .. (tab == "runs" and "Every run you do here is recorded on its own: time, XP, bosses, deaths." or "Nothing here yet.") .. "|r")
   end
-  P.detailScroll.child:SetSize(W - LIST_W - 60, L:Height())
+  P.detailScroll.child:SetSize(W - LIST_W - 70, L:Height())
 end
 
 ---------------------------------------------------------------------------
@@ -838,21 +1034,28 @@ local function RenderLogs()
     n = n + 1
     local r = logRows[n]
     if not r then
-      r = CreateFrame("Button", nil, logsView.scroll.child)
-      r:SetSize(W - 70, 22)
-      r.hl = r:CreateTexture(nil, "HIGHLIGHT"); r.hl:SetAllPoints(); r.hl:SetColorTexture(1, 0.82, 0, 0.15)
-      r.text = r:CreateFontString(nil, "OVERLAY"); Font(r.text, { "GameFontHighlight" })
-      r.text:SetPoint("LEFT", 4, 0); r.text:SetJustifyH("LEFT")
+      r = CreateFrame("Button", nil, logsView.scroll.child, BackdropTemplateMixin and "BackdropTemplate" or nil)
+      r:SetSize(W - 76, 40)
+      Backdrop(r, { 0.07, 0.05, 0.04, 0.9 }, DIM_EDGE)
+      r.thumb = r:CreateTexture(nil, "ARTWORK"); r.thumb:SetSize(96, 32); r.thumb:SetPoint("LEFT", 4, 0)
+      local hl = r:CreateTexture(nil, "HIGHLIGHT"); hl:SetPoint("TOPLEFT", 3, -3); hl:SetPoint("BOTTOMRIGHT", -3, 3); hl:SetColorTexture(1, 0.85, 0.4, 0.1)
+      r.name = r:CreateFontString(nil, "OVERLAY"); Font(r.name, { "GameFontNormal" })
+      r.name:SetPoint("TOPLEFT", r.thumb, "TOPRIGHT", 10, -2)
+      r.text = r:CreateFontString(nil, "OVERLAY"); Font(r.text, { "GameFontHighlightSmall" })
+      r.text:SetPoint("BOTTOMLEFT", r.thumb, "BOTTOMRIGHT", 10, 2)
       r:SetScript("OnClick", function(self) J.OpenDungeon(self.run.d, "runs", self.run) end)
       logRows[n] = r
     end
     r.run = run
-    r:ClearAllPoints(); r:SetPoint("TOPLEFT", 0, -(n - 1) * 22)
-    r.text:SetText(GOLD .. (run.d or "?") .. "|r   " .. RunTitle(run) .. (run.deaths and run.deaths > 0 and (GREY .. ("  %d death%s"):format(run.deaths, run.deaths == 1 and "" or "s") .. "|r") or ""))
+    r:ClearAllPoints(); r:SetPoint("TOPLEFT", 0, -(n - 1) * 44)
+    local d = Dungeon(run.d) or ns.RunLog.Dungeon(run.d)
+    if d then PaintArt(r.thumb, d, 0.35, 0.65); r.thumb:Show() else r.thumb:Hide() end
+    r.name:SetText((run.d or "?") .. (run.done and ("  " .. Ico(ICON.done, 14)) or ""))
+    r.text:SetText(RunTitle(run) .. (run.deaths and run.deaths > 0 and (GREY .. ("   %d death%s"):format(run.deaths, run.deaths == 1 and "" or "s") .. "|r") or ""))
     r:Show()
   end
   for i = n + 1, #logRows do logRows[i]:Hide() end
-  logsView.scroll.child:SetSize(W - 70, n * 22 + 4)
+  logsView.scroll.child:SetSize(W - 76, n * 44 + 4)
   logsView.empty:SetShown(n == 0)
 end
 
@@ -867,14 +1070,14 @@ local function RenderSearch(text)
   local res = {}
   if #q >= 2 then
     for _, d in ipairs(ns.dungeonDB or {}) do
-      if Fold(d.name):find(q, 1, true) then res[#res + 1] = { GOLD .. d.name .. "|r", d.name } end
+      if Fold(d.name):find(q, 1, true) then res[#res + 1] = { GOLD .. d.name .. "|r" .. GREY .. "  dungeon|r", d.name, nil, nil, ICON.map } end
       for _, b in ipairs(d.bosses or {}) do
-        if Fold(b[1]):find(q, 1, true) then res[#res + 1] = { WHITE .. b[1] .. "|r" .. GREY .. "  boss, " .. d.name .. "|r", d.name, "bosses", b[1] } end
+        if Fold(b[1]):find(q, 1, true) then res[#res + 1] = { WHITE .. b[1] .. "|r" .. GREY .. "  boss, " .. d.name .. "|r", d.name, "bosses", b[1], ICON.boss } end
       end
       for _, id in ipairs(d.quests or {}) do
         local qq = Quest(id)
         if qq and ForMe(qq, true) and Fold(qq.n):find(q, 1, true) then
-          res[#res + 1] = { WHITE .. qq.n .. "|r" .. GREY .. "  quest, " .. d.name .. "|r", d.name, "quests", id }
+          res[#res + 1] = { WHITE .. qq.n .. "|r" .. GREY .. "  quest, " .. d.name .. "|r", d.name, "quests", id, ICON.start }
         end
       end
       if #res > 60 then break end
@@ -886,10 +1089,11 @@ local function RenderSearch(text)
     local b = resultRows[i]
     if not b then
       b = CreateFrame("Button", nil, box)
-      b:SetSize(W - 80, 20)
-      b.hl = b:CreateTexture(nil, "HIGHLIGHT"); b.hl:SetAllPoints(); b.hl:SetColorTexture(1, 0.82, 0, 0.15)
+      b:SetSize(W - 90, 22)
+      local hl = b:CreateTexture(nil, "HIGHLIGHT"); hl:SetAllPoints(); hl:SetColorTexture(1, 0.82, 0.3, 0.15)
+      b.icon = b:CreateTexture(nil, "ARTWORK"); b.icon:SetSize(16, 16); b.icon:SetPoint("LEFT", 6, 0)
       b.text = b:CreateFontString(nil, "OVERLAY"); Font(b.text, { "GameFontHighlight" })
-      b.text:SetPoint("LEFT", 6, 0); b.text:SetJustifyH("LEFT")
+      b.text:SetPoint("LEFT", b.icon, "RIGHT", 6, 0); b.text:SetJustifyH("LEFT")
       b:SetScript("OnClick", function(self)
         local r2 = self.r
         if searchBox then searchBox:SetText(""); searchBox:ClearFocus() end
@@ -904,12 +1108,13 @@ local function RenderSearch(text)
       resultRows[i] = b
     end
     b.r = r
-    b:ClearAllPoints(); b:SetPoint("TOPLEFT", 8, -8 - (i - 1) * 20)
+    b:ClearAllPoints(); b:SetPoint("TOPLEFT", 8, -8 - (i - 1) * 22)
     b.text:SetText(r[1])
+    if r[5] and Has(r[5]) then b.icon:SetTexture(r[5]); b.icon:Show() else b.icon:Hide() end
     b:Show()
-    if i >= 24 then break end
+    if i >= 22 then break end
   end
-  for i = math.min(#res, 24) + 1, #resultRows do resultRows[i]:Hide() end
+  for i = math.min(#res, 22) + 1, #resultRows do resultRows[i]:Hide() end
   box.none:SetShown(#q >= 2 and #res == 0)
 end
 
@@ -927,7 +1132,7 @@ end
 local function OptCheck(parent, y, label, key, tip)
   local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
   cb:SetSize(24, 24)
-  cb:SetPoint("TOPLEFT", 10, y)
+  cb:SetPoint("TOPLEFT", 12, y)
   local fs = (type(cb.Text) == "table" and cb.Text) or (type(cb.text) == "table" and cb.text) or nil
   if not fs then fs = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlight"); fs:SetPoint("LEFT", cb, "RIGHT", 2, 0) end
   fs:SetText(label)
@@ -944,6 +1149,7 @@ local function Build()
   local ok, f = pcall(CreateFrame, "Frame", "RubberDinghyJournal", UIParent, "BackdropTemplate")
   if not ok or not f then f = CreateFrame("Frame", "RubberDinghyJournal", UIParent) end
   frame = f
+  probe = f:CreateTexture(nil, "BACKGROUND"); probe:Hide()
   f:SetSize(W, H)
   f:SetFrameStrata("DIALOG")   -- same layer as the settings and Dungeons windows; the last one opened is in front
   f:SetToplevel(true)
@@ -957,23 +1163,34 @@ local function Build()
     local x, y = self:GetLeft(), self:GetTop()
     if x and y then DB().pos = { x, y } end
   end)
+  -- the window: dark stone behind, the dialog border (gold when the client has it)
   if f.SetBackdrop then
-    f:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-                    edgeSize = 24, insets = { left = 6, right = 6, top = 6, bottom = 6 } })
-    f:SetBackdropColor(0.08, 0.06, 0.04, 0.97)
+    local rock = Has(TEX.rock)
+    f:SetBackdrop({ bgFile = rock and TEX.rock or TEX.white, tile = rock, tileSize = rock and 256 or nil,
+                    edgeFile = Has(TEX.goldBorder) and TEX.goldBorder or TEX.border,
+                    edgeSize = 28, insets = { left = 7, right = 7, top = 7, bottom = 7 } })
+    if rock then f:SetBackdropColor(0.55, 0.48, 0.40, 1) else f:SetBackdropColor(0.07, 0.055, 0.04, 0.98) end
   end
+  local shade = f:CreateTexture(nil, "BACKGROUND", nil, 2)   -- darken the middle so the pages stand out
+  shade:SetPoint("TOPLEFT", 8, -8); shade:SetPoint("BOTTOMRIGHT", -8, 8)
+  shade:SetColorTexture(0, 0, 0, 0.35)
   tinsert(UISpecialFrames, "RubberDinghyJournal")
+  -- title on the dialog header plate
+  local plate = f:CreateTexture(nil, "ARTWORK")
+  if Has(TEX.header) then
+    plate:SetTexture(TEX.header); plate:SetSize(340, 64); plate:SetPoint("TOP", 0, 14)
+  else plate:Hide() end
   local title = f:CreateFontString(nil, "OVERLAY"); Font(title, { "GameFontNormalLarge" })
-  title:SetPoint("TOP", 0, -16)
+  title:SetPoint("TOP", 0, Has(TEX.header) and 0 or -14)
   title:SetText("Dungeon Journal")
   local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-  close:SetPoint("TOPRIGHT", -6, -6)
+  close:SetPoint("TOPRIGHT", -5, -5)
 
   local okS, sb = pcall(CreateFrame, "EditBox", "RubberDinghyJournalSearch", f, "SearchBoxTemplate")
   if not okS or not sb then sb = CreateFrame("EditBox", "RubberDinghyJournalSearch", f, "InputBoxTemplate") end
   searchBox = sb
-  sb:SetSize(240, 22)
-  sb:SetPoint("TOPLEFT", 22, -14)
+  sb:SetSize(250, 22)
+  sb:SetPoint("TOPLEFT", 24, -22)
   sb:SetAutoFocus(false)
   if type(sb.Instructions) == "table" then sb.Instructions:SetText("Search dungeons, bosses, quests...") end
   sb:HookScript("OnTextChanged", function(self)
@@ -984,30 +1201,30 @@ local function Build()
 
   -- Home
   homeView = CreateFrame("Frame", nil, f)
-  homeView:SetPoint("TOPLEFT", 14, -44); homeView:SetPoint("BOTTOMRIGHT", -14, 14)
-  local logsB = Button(homeView, "Character Logs", 130, function() ShowView("logs"); RenderLogs() end,
-    "Every dungeon run this character has done: time, XP, bosses, deaths. Recorded on its own.")
-  logsB:SetPoint("TOPRIGHT", -246, -4)
-  homeView.hideB = Button(homeView, "Hide Dungeons", 120, function() hideMode = not hideMode; RenderHome() end,
-    "Click this, then click dungeons to hide them from the list (or show them again). Click Done hiding when you're finished.")
-  homeView.hideB:SetPoint("TOPRIGHT", -114, -4)
-  local optB = Button(homeView, "Options", 100, function()
+  homeView:SetPoint("TOPLEFT", 16, -52); homeView:SetPoint("BOTTOMRIGHT", -16, 16)
+  local optB = FlatButton(homeView, "Options", 90, function()
     if optsPanel:IsShown() then optsPanel:Hide() else optsPanel:Show() end
   end, "What the dungeon list shows.")
-  optB:SetPoint("TOPRIGHT", -8, -4)
-  homeView.foreverB = Button(homeView, "Forever only", 110, function() DB().foreverOnly = not DB().foreverOnly or nil; RenderHome() end,
+  optB:SetPoint("TOPRIGHT", -6, -2)
+  homeView.hideB = FlatButton(homeView, "Hide Dungeons", 124, function() hideMode = not hideMode; RenderHome() end,
+    "Click this, then click dungeons to hide them from the list (or show them again). Click Done hiding when you're finished.")
+  homeView.hideB:SetPoint("RIGHT", optB, "LEFT", -6, 0)
+  local logsB = FlatButton(homeView, Ico(ICON.clock, 14) .. "Character Logs", 150, function() ShowView("logs"); RenderLogs() end,
+    "Every dungeon run this character has done: time, XP, bosses, deaths. Recorded on its own.")
+  logsB:SetPoint("RIGHT", homeView.hideB, "LEFT", -6, 0)
+  homeView.foreverB = FlatButton(homeView, "Forever only", 112, function() DB().foreverOnly = not DB().foreverOnly or nil; RenderHome() end,
     "Show only the dungeons that are new in WoW Forever (click again for all of them).")
-  homeView.foreverB:SetPoint("TOPLEFT", 8, -4)
+  homeView.foreverB:SetPoint("TOPLEFT", 6, -2)
   local sub = homeView:CreateFontString(nil, "OVERLAY"); Font(sub, { "GameFontHighlightSmall" })
   sub:SetPoint("LEFT", homeView.foreverB, "RIGHT", 12, 0)
   sub:SetText(GREY .. "Click a dungeon for its quests, bosses and runs.|r")
   homeView.scroll = Scroll(homeView)
-  homeView.scroll:SetPoint("TOPLEFT", 8, -36); homeView.scroll:SetPoint("BOTTOMRIGHT", -28, 4)
+  homeView.scroll:SetPoint("TOPLEFT", 6, -36); homeView.scroll:SetPoint("BOTTOMRIGHT", -26, 4)
   homeView.empty = homeView:CreateFontString(nil, "OVERLAY"); Font(homeView.empty, { "GameFontHighlight" })
   homeView.empty:SetPoint("CENTER")
   homeView.empty:SetText("Every dungeon is hidden. Click Hide Dungeons to bring them back, or check Options.")
   homeView.results = Panel(homeView)
-  homeView.results:SetPoint("TOPLEFT", 8, -36); homeView.results:SetPoint("BOTTOMRIGHT", -8, 4)
+  homeView.results:SetPoint("TOPLEFT", 6, -36); homeView.results:SetPoint("BOTTOMRIGHT", -6, 4)
   homeView.results:SetFrameLevel(homeView:GetFrameLevel() + 20)
   homeView.results:Hide()
   homeView.results.none = homeView.results:CreateFontString(nil, "OVERLAY"); Font(homeView.results.none, { "GameFontHighlight" })
@@ -1015,8 +1232,8 @@ local function Build()
   homeView.results.none:SetText("No results")
 
   optsPanel = Panel(f)
-  optsPanel:SetSize(330, 150)
-  optsPanel:SetPoint("TOPRIGHT", f, "TOPRIGHT", -20, -78)
+  optsPanel:SetSize(340, 150)
+  optsPanel:SetPoint("TOPRIGHT", f, "TOPRIGHT", -22, -82)
   optsPanel:SetFrameLevel(f:GetFrameLevel() + 40)
   optsPanel:Hide()
   OptCheck(optsPanel, -10, "Hide dungeons you've outleveled", "hideOutleveled", "Hides a dungeon once your level is above its range.")
@@ -1025,24 +1242,49 @@ local function Build()
   OptCheck(optsPanel, -88, "Show every class's quests", "allClass", "Normally only your own class's quests are listed.")
   OptCheck(optsPanel, -114, "Show the other faction's quests too", "otherFaction")
 
-  -- Dungeon page
+  -- Dungeon page: an art banner, tabs, the list on the left and a parchment page on the right
   pageView = CreateFrame("Frame", nil, f)
-  pageView:SetPoint("TOPLEFT", 14, -44); pageView:SetPoint("BOTTOMRIGHT", -14, 14)
+  pageView:SetPoint("TOPLEFT", 16, -52); pageView:SetPoint("BOTTOMRIGHT", -16, 16)
   local P = pageView
-  local back = Button(P, "< All dungeons", 120, function() ShowView("home"); RenderHome() end)
-  back:SetPoint("TOPLEFT", 8, -4)
-  P.title = P:CreateFontString(nil, "OVERLAY"); Font(P.title, { "QuestTitleFontBlackShadow", "GameFontNormalHuge", "GameFontNormalLarge" })
-  P.title:SetPoint("TOPLEFT", 8, -34)
-  P.sub = P:CreateFontString(nil, "OVERLAY"); Font(P.sub, { "GameFontHighlightSmall" })
-  P.sub:SetPoint("TOPLEFT", P.title, "BOTTOMLEFT", 0, -4)
-  P.locB = Button(P, "Show Location", 116, function()
+  local BANNER_H = 118
+  P.banner = CreateFrame("Frame", nil, P, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  P.banner:SetPoint("TOPLEFT", 0, 0); P.banner:SetPoint("TOPRIGHT", 0, 0); P.banner:SetHeight(BANNER_H)
+  if P.banner.SetBackdrop then
+    P.banner:SetBackdrop({ edgeFile = TEX.tipBorder, edgeSize = 14 })
+    P.banner:SetBackdropBorderColor(GOLD_EDGE[1], GOLD_EDGE[2], GOLD_EDGE[3], 1)
+  end
+  P.banner.art = P.banner:CreateTexture(nil, "BACKGROUND")
+  P.banner.art:SetPoint("TOPLEFT", 3, -3); P.banner.art:SetPoint("BOTTOMRIGHT", -3, 3)
+  local fadeL = P.banner:CreateTexture(nil, "BORDER")      -- dark on the left for the title, clear on the right
+  fadeL:SetPoint("TOPLEFT", 3, -3); fadeL:SetPoint("BOTTOMLEFT", 3, 3); fadeL:SetWidth(560)
+  Grad(fadeL, "HORIZONTAL", { 0, 0, 0, 0.85 }, { 0, 0, 0, 0 })
+  local fadeB = P.banner:CreateTexture(nil, "BORDER")
+  fadeB:SetPoint("BOTTOMLEFT", 3, 3); fadeB:SetPoint("BOTTOMRIGHT", -3, 3); fadeB:SetHeight(46)
+  Grad(fadeB, "VERTICAL", { 0, 0, 0, 0.7 }, { 0, 0, 0, 0 })
+  local back = FlatButton(P.banner, "< All dungeons", 118, function() ShowView("home"); RenderHome() end, nil, 22)
+  back:SetPoint("TOPLEFT", 10, -10)
+  P.title = P.banner:CreateFontString(nil, "OVERLAY"); Font(P.title, { "QuestTitleFontBlackShadow", "GameFontNormalHuge", "GameFontNormalLarge" })
+  P.title:SetTextColor(1, 0.86, 0.4)
+  P.title:SetPoint("TOPLEFT", 16, -42)
+  P.sub = P.banner:CreateFontString(nil, "OVERLAY"); Font(P.sub, { "GameFontHighlight" })
+  P.sub:SetPoint("TOPLEFT", P.title, "BOTTOMLEFT", 0, -6)
+  P.desc = P.banner:CreateFontString(nil, "OVERLAY"); Font(P.desc, { "GameFontHighlightSmall" })
+  P.desc:SetPoint("TOPLEFT", P.sub, "BOTTOMLEFT", 0, -6); P.desc:SetWidth(520); P.desc:SetJustifyH("LEFT")
+  if P.desc.SetMaxLines then P.desc:SetMaxLines(2) end
+  -- actions on the right of the banner
+  P.locB = FlatButton(P.banner, Ico(ICON.map, 14) .. "Show Location", 150, function()
     local d = Dungeon(cur)
     if d and d.ent then ShowSpot(d.name .. " entrance", d.ent[1], d.ent[2], d.ent[3]) end
   end, "Opens the world map on the dungeon's entrance.")
-  P.locB:SetPoint("LEFT", back, "RIGHT", 10, 0)
-  P.routeCB = CreateFrame("CheckButton", nil, P, "UICheckButtonTemplate")
+  P.locB:SetPoint("TOPRIGHT", -12, -12)
+  P.readyB = FlatButton(P.banner, "Get ready", 150, function()
+    if ns.db.prep == cur then ns.StopPrep() else ns.StartPrep(cur) end
+    J.RenderPage()
+  end, "A side route that walks every quest chain and picks up every quest this dungeon has for you.")
+  P.readyB:SetPoint("TOP", P.locB, "BOTTOM", 0, -6)
+  P.routeCB = CreateFrame("CheckButton", nil, P.banner, "UICheckButtonTemplate")
   P.routeCB:SetSize(24, 24)
-  P.routeCB:SetPoint("LEFT", P.locB, "RIGHT", 14, 0)
+  P.routeCB:SetPoint("TOPLEFT", P.readyB, "BOTTOMLEFT", 2, -4)
   local rl = (type(P.routeCB.Text) == "table" and P.routeCB.Text) or (type(P.routeCB.text) == "table" and P.routeCB.text) or nil
   if not rl then rl = P.routeCB:CreateFontString(nil, "OVERLAY", "GameFontHighlight"); rl:SetPoint("LEFT", P.routeCB, "RIGHT", 2, 0) end
   rl:SetText("In my route")
@@ -1052,45 +1294,61 @@ local function Build()
     else ns.SetDungeon(cur, self:GetChecked() and true or false) end
     J.RenderPage()
   end)
-  P.readyB = Button(P, "Get ready", 130, function()
-    if ns.db.prep == cur then ns.StopPrep() else ns.StartPrep(cur) end
-    J.RenderPage()
-  end, "A side route that walks every quest chain and picks up every quest this dungeon has for you.")
-  P.readyB:SetPoint("LEFT", P.routeCB, "RIGHT", 96, 0)
+  -- tabs, sitting on top of the pages
   P.tabs = {}
-  local tx = -8
-  for _, t in ipairs({ { "runs", "Runs" }, { "bosses", "Bosses" }, { "quests", "Quests" } }) do
-    local b = Button(P, t[2], 96, function() tab, selected = t[1], nil; J.RenderPage() end)
-    b.key = t[1]
-    b:SetPoint("TOPRIGHT", tx, -40)
-    tx = tx - 100
+  local tx = 4
+  for _, t in ipairs({ { "quests", "Quests" }, { "bosses", "Bosses" }, { "runs", "Runs" } }) do
+    local b = Tab(P, t[2], 126, function() tab, selected = t[1], nil; J.RenderPage() end)
+    b.key, b.title = t[1], t[2]
+    b:SetPoint("TOPLEFT", tx, -(BANNER_H + 8))
+    tx = tx + 130
     P.tabs[#P.tabs + 1] = b
   end
-  P.factionB = Button(P, "My faction", 110, function() DB().otherFaction = not DB().otherFaction or nil; selected = nil; J.RenderPage() end,
-    "Show only your faction's quests, or both factions'.")
-  P.factionB:SetPoint("TOPRIGHT", tx - 10, -40)
+  P.factionB = FlatButton(P, "My faction", 120, function() DB().otherFaction = not DB().otherFaction or nil; selected = nil; J.RenderPage() end,
+    "Show only your faction's quests, or both factions'.", 24)
+  P.factionB:SetPoint("TOPRIGHT", -4, -(BANNER_H + 10))
+  local bodyTop = -(BANNER_H + 36)
   local listBox = Panel(P)
-  listBox:SetPoint("TOPLEFT", 4, -78); listBox:SetPoint("BOTTOMLEFT", 4, 4); listBox:SetWidth(LIST_W)
+  listBox:SetPoint("TOPLEFT", 0, bodyTop); listBox:SetPoint("BOTTOMLEFT", 0, 0); listBox:SetWidth(LIST_W)
+  P.summary = CreateFrame("Frame", nil, listBox, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  P.summary:SetPoint("BOTTOMLEFT", 6, 6); P.summary:SetPoint("BOTTOMRIGHT", -6, 6); P.summary:SetHeight(64)
+  Backdrop(P.summary, { 0.16, 0.12, 0.06, 0.9 }, DIM_EDGE)
+  P.summary.text = P.summary:CreateFontString(nil, "OVERLAY"); Font(P.summary.text, { "GameFontHighlightSmall" })
+  P.summary.text:SetPoint("TOPLEFT", 10, -9); P.summary.text:SetPoint("RIGHT", -10, 0); P.summary.text:SetJustifyH("LEFT")
+  if P.summary.text.SetSpacing then P.summary.text:SetSpacing(3) end
   P.list = Scroll(listBox)
-  P.list:SetPoint("TOPLEFT", 6, -6); P.list:SetPoint("BOTTOMRIGHT", -26, 6)
+  P.list:SetPoint("TOPLEFT", 4, -6); P.list:SetPoint("BOTTOMRIGHT", -26, 76)
   P.empty = listBox:CreateFontString(nil, "OVERLAY"); Font(P.empty, { "GameFontHighlightSmall" })
-  P.empty:SetPoint("TOPLEFT", 10, -10); P.empty:SetWidth(LIST_W - 20); P.empty:SetJustifyH("LEFT")
-  local detailBox = Panel(P)
-  detailBox:SetPoint("TOPLEFT", listBox, "TOPRIGHT", 8, 0); detailBox:SetPoint("BOTTOMRIGHT", -4, 4)
-  P.detailScroll = Scroll(detailBox)
-  P.detailScroll:SetPoint("TOPLEFT", 8, -8); P.detailScroll:SetPoint("BOTTOMRIGHT", -28, 8)
-  P.detail = Lines(P.detailScroll.child, W - LIST_W - 70)
+  P.empty:SetPoint("TOPLEFT", 12, -12); P.empty:SetWidth(LIST_W - 24); P.empty:SetJustifyH("LEFT")
+  local page = Parchment(P)
+  page:SetPoint("TOPLEFT", listBox, "TOPRIGHT", 8, 0); page:SetPoint("BOTTOMRIGHT", 0, 0)
+  P.detailScroll = Scroll(page)
+  P.detailScroll:SetPoint("TOPLEFT", 10, -10); P.detailScroll:SetPoint("BOTTOMRIGHT", -30, 10)
+  P.detail = Lines(P.detailScroll.child, W - LIST_W - 80, true)
+  -- the boss model's stage, at the top of the page
+  P.stage = CreateFrame("Frame", nil, P.detailScroll.child, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  P.stage:SetPoint("TOPLEFT", 8, -6); P.stage:SetSize(W - LIST_W - 96, 184)
+  if P.stage.SetBackdrop then P.stage:SetBackdrop({ edgeFile = TEX.tipBorder, edgeSize = 12 }); P.stage:SetBackdropBorderColor(0.42, 0.26, 0.1, 1) end
+  P.stage.art = P.stage:CreateTexture(nil, "BACKGROUND")
+  P.stage.art:SetPoint("TOPLEFT", 3, -3); P.stage.art:SetPoint("BOTTOMRIGHT", -3, 3)
+  local dim = P.stage:CreateTexture(nil, "BORDER"); dim:SetPoint("TOPLEFT", 3, -3); dim:SetPoint("BOTTOMRIGHT", -3, 3); dim:SetColorTexture(0, 0, 0, 0.45)
+  local okM, model = pcall(CreateFrame, "PlayerModel", nil, P.stage)
+  if okM and model then
+    model:SetPoint("TOPLEFT", 4, -4); model:SetPoint("BOTTOMRIGHT", -4, 4)
+    P.model = model
+  end
+  P.stage:Hide()
 
   -- Character Logs
   logsView = CreateFrame("Frame", nil, f)
-  logsView:SetPoint("TOPLEFT", 14, -44); logsView:SetPoint("BOTTOMRIGHT", -14, 14)
-  local back2 = Button(logsView, "< All dungeons", 120, function() ShowView("home"); RenderHome() end)
-  back2:SetPoint("TOPLEFT", 8, -4)
+  logsView:SetPoint("TOPLEFT", 16, -52); logsView:SetPoint("BOTTOMRIGHT", -16, 16)
+  local back2 = FlatButton(logsView, "< All dungeons", 118, function() ShowView("home"); RenderHome() end, nil, 22)
+  back2:SetPoint("TOPLEFT", 6, -2)
   local lt = logsView:CreateFontString(nil, "OVERLAY"); Font(lt, { "GameFontNormalLarge" })
   lt:SetPoint("LEFT", back2, "RIGHT", 14, 0)
-  lt:SetText("Character Logs " .. GREY .. "- click a run for its details|r")
+  lt:SetText(Ico(ICON.clock, 18) .. "Character Logs " .. GREY .. "- click a run for its details|r")
   logsView.scroll = Scroll(logsView)
-  logsView.scroll:SetPoint("TOPLEFT", 8, -36); logsView.scroll:SetPoint("BOTTOMRIGHT", -28, 4)
+  logsView.scroll:SetPoint("TOPLEFT", 6, -34); logsView.scroll:SetPoint("BOTTOMRIGHT", -26, 4)
   logsView.empty = logsView:CreateFontString(nil, "OVERLAY"); Font(logsView.empty, { "GameFontHighlight" })
   logsView.empty:SetPoint("CENTER")
   logsView.empty:SetText("No runs yet. Every dungeon run is recorded on its own from now on.")
