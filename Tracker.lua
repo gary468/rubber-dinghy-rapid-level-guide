@@ -459,11 +459,24 @@ local function SmallButton(text, tip, onClick)
   return b
 end
 
+-- The tracker is pinned by its top-right corner, so its header stays put while the list below grows
+-- and shrinks. (The game re-anchors a dragged frame to whichever point is nearest - e.g. RIGHT, the
+-- middle of its right edge - which made the whole tracker jump up and down with every change.)
+local function SavePos()
+  local right, top = frame:GetRight(), frame:GetTop()
+  if not (right and top) then return end
+  frame:ClearAllPoints()
+  frame:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", right, top)
+  ns.db.trackerPos = { "TOPRIGHT", "BOTTOMLEFT", right, top }
+end
+
 local function Anchor()
   frame:ClearAllPoints()
   local p = ns.db.trackerPos
   if p then
     frame:SetPoint(p[1], UIParent, p[2], p[3], p[4])
+    -- an older save pinned by another point: convert it once to the top-right corner
+    if p[1] ~= "TOPRIGHT" or p[2] ~= "BOTTOMLEFT" then SavePos() end
     return
   end
   -- Where Blizzard's tracker actually is on screen. (Its anchor point is relative to a Forever
@@ -517,8 +530,7 @@ local function Init()
   header:SetScript("OnLeave", function() GameTooltip:Hide() end)
   header:SetScript("OnDragStop", function()
     frame:StopMovingOrSizing()
-    local p, _, rp, x, yy = frame:GetPoint(1)
-    ns.db.trackerPos = { p, rp, x, yy }
+    SavePos()
     ns.Queue() -- item buttons follow the tracker
   end)
   local hbg = header:CreateTexture(nil, "BACKGROUND")
@@ -616,8 +628,7 @@ local function Init()
   mover:SetScript("OnDragStart", function() frame:StartMoving() end)
   mover:SetScript("OnDragStop", function()
     frame:StopMovingOrSizing()
-    local p, _, rp, x, yy = frame:GetPoint(1)
-    ns.db.trackerPos = { p, rp, x, yy }
+    SavePos()
     ns.Queue()
   end)
   mover:Hide()
@@ -637,7 +648,16 @@ ns.inits.Tracker = Init
 ns.listeners.Tracker = Render
 
 function T.ApplyScale()
-  if frame then frame:SetScale(ns.db.trackerScale or 1) end
+  if not frame then return end
+  -- keep the top-right corner where it is on screen when the size changes
+  local s0, right, top = frame:GetEffectiveScale(), frame:GetRight(), frame:GetTop()
+  frame:SetScale(ns.db.trackerScale or 1)
+  if ns.db.trackerPos and right and top and s0 then
+    local k = s0 / frame:GetEffectiveScale()
+    frame:ClearAllPoints()
+    frame:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", right * k, top * k)
+    ns.db.trackerPos = { "TOPRIGHT", "BOTTOMLEFT", right * k, top * k }
+  end
 end
 function T.SetMoveMode(on)
   if not frame then return end
