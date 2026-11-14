@@ -719,7 +719,7 @@ local function Draw()
   local hlx, hly
   if hlStop then hlx, hly = ToCur(hlStop.map, hlStop.x, hlStop.y, cur) end
   -- (a spot shown from the Dungeon Journal is drawn even on a map with route stops)
-  local hlHere = hlx and (not onStep or hlStop.journal)
+  local hlHere = hlx and (not onStep or hlStop.journal or hlStop.spot)
   local w, h = canvas:GetWidth(), canvas:GetHeight()
   if not w or w == 0 then return end
   local scale = CanvasScale()
@@ -1298,6 +1298,12 @@ function Map.Highlight(s)
   dirty = true
 end
 
+--- Show a place that isn't a route stop (a "Look for" or "Hunt" hint) on the world map, with a pin.
+function ns.ShowSpotOnMap(map, x, y, name)
+  if not (map and x and y) then return end
+  ns.ShowOnMap({ map = map, x = x, y = y, name = name or "", actions = {}, index = "!", spot = true })
+end
+
 function ns.ShowOnMap(s)
   if not s or not WorldMapFrame then return end
   if not WorldMapFrame:IsShown() then
@@ -1317,8 +1323,9 @@ ns.listeners.Map = function(r)
   for _, s in ipairs(r.stops or {}) do
     for _, a in ipairs(s.actions or {}) do routeSet[a.row.id] = true end
   end
-  -- Keep a highlight across route updates (the stops are rebuilt): same place, same name.
-  if hlStop then
+  -- Keep a highlight across route updates (the stops are rebuilt): same place, same name. A spot
+  -- shown from a tracker line isn't a stop: it stays.
+  if hlStop and not hlStop.spot then
     local keep
     for _, s in ipairs(r.stops) do
       if s.map == hlStop.map and s.name == hlStop.name then keep = s; break end

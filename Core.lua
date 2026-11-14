@@ -525,7 +525,28 @@ local function AutoStep(level)
     local step = ns.steps[i]
     if Usable(step) and HasWork(step, level) then return i end
   end
+  -- Nothing to do at your level anywhere: the next step whose quests open soonest, never the step
+  -- you've just finished (a friend sat on an empty Stranglethorn return visit with only "Look for"
+  -- hints left). The tracker says what level it opens at.
+  for i = last + 1, #ns.steps do
+    local step = ns.steps[i]
+    if Usable(step) and not step.dungeon and ns.OpensAt(step, level) then return i end
+  end
   return last > 0 and last or #ns.steps
+end
+
+--- The lowest level at which one of this step's quests you haven't done can be taken (nil: none left).
+function ns.OpensAt(step, level)
+  local lo
+  for _, id in ipairs(step.quests or {}) do
+    local st = Status(id, level)
+    if st == SOON or st == LATER or st == OPEN then
+      local q = ns.quests[id]
+      local need = math.max(q.r or 0, (q.l or 0) - 4)
+      if not lo or need < lo then lo = need end
+    end
+  end
+  return lo
 end
 
 -- How efficient the route is, from the plan the search settled on (tools/plan_v2.json): XP per minute
@@ -1020,6 +1041,12 @@ end
 
 function ns.StopTooltip(owner, s, anchor)
   GameTooltip:SetOwner(owner, anchor or "ANCHOR_LEFT")
+  if s.spot then
+    GameTooltip:AddLine(s.name or "")
+    GameTooltip:AddLine(("%s %.1f, %.1f"):format(ns.MapName(s.map) or "?", s.x, s.y), 0.8, 0.8, 0.8)
+    GameTooltip:Show()
+    return
+  end
   GameTooltip:AddLine(s.index .. ". " .. ns.StopTitle(s))
   GameTooltip:AddLine(("%s %.1f, %.1f"):format(ns.MapName(s.map) or "?", s.x, s.y), 0.8, 0.8, 0.8)
   for _, a in ipairs(s.actions) do

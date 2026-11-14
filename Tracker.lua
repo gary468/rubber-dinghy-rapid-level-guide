@@ -97,6 +97,7 @@ local function NewLine()
   b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
   b:SetScript("OnClick", function(self, button)
     if button == "RightButton" and self.stop then T.SkipMenu(self.stop, self); return end
+    if button == "RightButton" and self.onRightClick then self.onRightClick(); return end
     if self.onClick then self.onClick() elseif self.stop then ns.ShowOnMap(self.stop) end
   end)
   return b
@@ -109,7 +110,7 @@ local function Add(text, opts)
   local b = pool[used]
   if not b then b = NewLine(); pool[used] = b end
   local indent = opts.indent or 0
-  b.stop, b.tip, b.onClick = opts.stop, opts.tip, opts.onClick
+  b.stop, b.tip, b.onClick, b.onRightClick = opts.stop, opts.tip, opts.onClick, opts.onRightClick
   b.text:SetFontObject(opts.font or LINE_FONT)
   if b.text.SetWordWrap then b.text:SetWordWrap(not opts.nowrap) end
   b.text:ClearAllPoints()
@@ -403,6 +404,16 @@ local function Render(r)
       Add(q.ot, { indent = 30, font = SMALL_FONT, color = GREY })
     end
   end
+  -- Nothing left to do here at your level (the step is ahead of you): say when it opens
+  if not step.dungeon and not step.prep and #r.stops == 0 and #r.loose == 0 and #(r.later or {}) == 0
+    and #(r.asYouGo or {}) == 0 and ns.OpensAt then
+    local at = ns.OpensAt(step, r.level)
+    if at and at > r.level then
+      Add(("|cffffd100Grind to level %d|r - this zone's quests open then"):format(at), { indent = 4, color = WHITE, nowrap = true,
+        tip = ("You're level %d and everything at your level is done. Kill what's around you here or on the way "
+          .. "until level %d, when %s's next quests open."):format(r.level, at, step.name) })
+    end
+  end
   -- Quests started by an item you can get in this zone: named mobs to hunt, things on the ground,
   -- random drops to look out for (Gary 14 Nov)
   if ns.Starters and y < maxH then
@@ -417,7 +428,19 @@ local function Render(r)
         break
       end
       local text, tip = ns.Starters.WatchText(w)
-      Add(text, { indent = 4, font = SMALL_FONT, color = WHITE, nowrap = true, tip = tip })
+      local id, kind, wx, wy, wm = w.id, w.kind, w.x, w.y, w.q.si and w.q.si[5]
+      Add(text, { indent = 4, font = SMALL_FONT, color = WHITE, nowrap = true,
+        tip = tip .. "\n|cff66ccffClick: show on the map.  Right-click: skip this quest.|r",
+        onClick = function()
+          if kind ~= "drop" and ns.ShowSpotOnMap then ns.ShowSpotOnMap(wm, wx, wy, w.src)
+          elseif ns.ShowOnMap and wm then ns.ShowOnMap({ map = wm, x = wx, y = wy, name = w.src, actions = {}, index = "!", spot = true }) end
+        end,
+        onRightClick = function()
+          ns.db.skip = ns.db.skip or {}
+          ns.db.skip[id] = true
+          ns.Print(('skipped %s. "Un-skip all" in settings brings it back.'):format(w.q.n))
+          ns.Queue()
+        end })
     end
   end
   -- Finished quests handed in in the zone you're passing through (Gary 14 Nov: March of the Silithid
