@@ -900,7 +900,10 @@ function ns.Recompute()
       end
     end
     for _, e in ipairs(logList) do
-      if earlier[e.id] and not here[e.id] and ns.quests[e.id] and Status(e.id, level) == READY then
+      -- only hand-ins in this step's own zone (Gary: far ones first "can't be efficient"); the rest
+      -- wait for the route's visit to their zone, or stay under Other Quests
+      local t = ns.quests[e.id] and ns.quests[e.id].t
+      if earlier[e.id] and not here[e.id] and t and t[2] == step.map and Status(e.id, level) == READY then
         rows[#rows + 1] = { id = e.id, s = READY, q = ns.quests[e.id], carried = true }
         counts[READY] = counts[READY] + 1
         here[e.id] = true
