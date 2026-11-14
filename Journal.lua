@@ -744,8 +744,11 @@ local function Row(i)
   if okF and face then
     face:SetAllPoints(r.icon)
     face:EnableMouse(false)
+    face.row = r
+    -- only once the game has drawn the creature does its face replace the skull
     pcall(face.SetScript, face, "OnModelLoaded", function(self)
       if self.SetPortraitZoom then pcall(self.SetPortraitZoom, self, 1) end
+      if self.want and self:IsShown() then self.row.icon:SetAlpha(0); self.row.faceBg:Show() end
     end)
     face:Hide()
     r.face = face
@@ -1016,40 +1019,29 @@ end
 
 -- The boss's 3D model on a stage of the dungeon's art (journal display when the client has it, else
 -- by NPC ID); hidden when there's neither.
-local noModel = {}   -- creatures the game drew nothing for: no empty stage for them next time
 
 --- A boss row's face: the creature's 3D portrait over its icon; the skull stays if the game has none.
 ShowFace = function(r, b)
   if not r.face then return false end
   local key = b.display and ("d" .. b.display) or ((b.npc and b.npc > 0) and ("n" .. b.npc))
-  if not key or noModel[key] then return false end
+  if not key then return false end
   local F = r.face
+  F.want = key            -- set first: a cached model can load during the call below
+  F:Show()
   local ok
   if b.display and F.SetDisplayInfo then ok = pcall(F.SetDisplayInfo, F, b.display)
   elseif F.SetCreature then ok = pcall(F.SetCreature, F, b.npc) end
-  if not ok then return false end
+  if not ok then F:Hide(); F.want = nil; return false end
   if F.SetPortraitZoom then pcall(F.SetPortraitZoom, F, 1) end
   if F.SetCamDistanceScale then pcall(F.SetCamDistanceScale, F, 1) end
   if F.SetRotation then pcall(F.SetRotation, F, 0.3) end
-  r.icon:SetAlpha(0); r.faceBg:Show(); F:Show()
-  F.want = key
-  if C_Timer and F.GetModelFileID then
-    C_Timer.After(1, function()
-      if F.want ~= key or not F:IsShown() then return end
-      local okF, file = pcall(F.GetModelFileID, F)
-      if okF and (not file or file == 0) then   -- nothing came: back to the skull
-        noModel[key] = true
-        F:Hide(); r.faceBg:Hide(); r.icon:SetAlpha(1)
-      end
-    end)
-  end
   return true
 end
 local function ShowModel(d, b)
   local M = pageView.model
   if not M or not b then pageView.stage:Hide(); return 0 end
   local key = b.display and ("d" .. b.display) or (b.npc and ("n" .. b.npc))
-  if not key or noModel[key] then pageView.stage:Hide(); return 0 end
+  if not key then pageView.stage:Hide(); return 0 end
   local ok = false
   if b.display and M.SetDisplayInfo then ok = pcall(M.SetDisplayInfo, M, b.display)
   elseif b.npc and b.npc > 0 and M.SetCreature then ok = pcall(M.SetCreature, M, b.npc) end
@@ -1058,16 +1050,6 @@ local function ShowModel(d, b)
   PaintArt(pageView.stage.art, d, 0.25, 0.75)
   M.zoom, M.rot = CAM_SCALE, 0.35
   FrameModel(M)
-  -- models load in a moment; if none came (the game doesn't know this creature), drop the stage
-  if C_Timer and M.GetModelFileID then
-    C_Timer.After(1, function()
-      local okF, file = pcall(M.GetModelFileID, M)
-      if okF and (not file or file == 0) and pageView.stage:IsShown() then
-        noModel[key] = true
-        if frame:IsShown() and tab == "bosses" then J.RenderPage() end
-      end
-    end)
-  end
   return STAGE_H + 6
 end
 
@@ -1172,7 +1154,7 @@ function J.RenderPage()
     r.text:SetPoint("RIGHT", -52, 0)
     local size = it.boss and 32 or 20
     r.icon:SetSize(size, size)
-    if r.face then r.face:Hide(); r.faceBg:Hide() end
+    if r.face then r.face:Hide(); r.face.want = nil; r.faceBg:Hide() end
     r.icon:SetAlpha(1)
     if it.boss then
       PaintPortrait(r.icon, it.boss); r.icon:Show()
