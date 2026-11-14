@@ -121,6 +121,7 @@ Map.BlizzQuestTemplates = BlizzQuestTemplates
 -- your log keeps its Blizzard marker and area, and so does the quest you've picked in the quest log
 -- (or clicked under Other Quests), route or not.
 local routeSet = {}
+local BuildHoverAreas   -- defined with the hover code below Draw
 -- The game always has some quest "selected" (often just the first in your log), so a selection only
 -- counts once it changes from the one you logged in with - i.e. you clicked a quest.
 local selBaseline, selPicked
@@ -345,7 +346,12 @@ local function Icon(i, canvas)
     GameTooltip:AddLine(("%s |cff999999[%s]|r"):format(q.n, q.l or "?"), 1, 0.82, 0)
     if self.kind == "avail" then GameTooltip:AddLine("Pick up from " .. (q.g and q.g[1] or "?"), 1, 1, 1)
     elseif self.kind == "turnin" then GameTooltip:AddLine("Finished: hand in to " .. (q.t and q.t[1] or "?"), 0.2, 1, 0.2)
-    else GameTooltip:AddLine((q.o and q.o[1]) or "Objective", 1, 1, 1) end
+    else
+      GameTooltip:AddLine((q.o and q.o[1]) or "Objective", 1, 1, 1)
+      for _, o in ipairs(ns.Objectives(self.qid)) do
+        if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. o.text, 1, 1, 1) end
+      end
+    end
     GameTooltip:AddLine(self.onRoute and "On your route" or "Not on the route", 0.7, 0.7, 0.7)
     GameTooltip:AddLine("Shift-click: hide this quest's icons", 0.4, 0.8, 1)
     GameTooltip:Show()
@@ -497,6 +503,7 @@ local function Draw()
   if not canvas or not WorldMapFrame:IsShown() then return end
   local cur = WorldMapFrame:GetMapID()
   ns.Safe("MapOthers", DrawOthers, canvas, cur)
+  ns.Safe("MapHover", BuildHoverAreas, cur)
   -- the quest you picked in the quest log, if it's not on the route: its area in green
   local chosen = Map.ChosenQuest()
   if chosen and chosen ~= 0 and not routeSet[chosen] and QuestsWithAreas(cur)[chosen] then
@@ -578,6 +585,78 @@ end
 
 local function SafeDraw() ns.Safe("Map", Draw) end
 
+---------------------------------------------------------------------------
+-- Hovering a mob area (ours, Blizzard's or another addon's tint): which quest it's for and your
+-- progress. Areas come from the quest data (spawn points and area centre), rebuilt when the map
+-- redraws; hovering only tests those points, so it costs nothing per frame but a few sums.
+---------------------------------------------------------------------------
+local hoverAreas, hoverKey, hoverAt = {}, nil, 0
+local HOVER_PT = 3.0     -- map % around a spawn point
+BuildHoverAreas = function(cur)
+  hoverAreas = {}
+  for _, e in ipairs(ns.QuestLog()) do
+    local q = ns.quests[e.id]
+    if q and q.o and q.o[2] == cur and not ns.IsReady(e.id) then
+      hoverAreas[#hoverAreas + 1] = { id = e.id, x = q.o[3], y = q.o[4], r = q.o[5], pts = q.o[6], title = e.title }
+    end
+  end
+end
+
+local function HoverOff()
+  if hoverKey then
+    hoverKey = nil
+    if GameTooltip:GetOwner() == WorldMapFrame.ScrollContainer then GameTooltip:Hide() end
+  end
+end
+
+local function MouseFocus()
+  if GetMouseFoci then local f = GetMouseFoci(); return f and f[1] end
+  if GetMouseFocus then return GetMouseFocus() end
+end
+
+local function AreaHover()
+  local sc = WorldMapFrame and WorldMapFrame.ScrollContainer
+  if ns.db.noMap or #hoverAreas == 0 or not (sc and sc.GetNormalizedCursorPosition and sc:IsMouseOver()) then return HoverOff() end
+  -- over one of our pins/icons (they have their own tooltip) or any button: leave it to them
+  local focus = MouseFocus()
+  if focus and focus ~= sc and focus.GetObjectType and focus:GetObjectType() == "Button" then return HoverOff() end
+  local cx, cy = sc:GetNormalizedCursorPosition()
+  if not cx then return HoverOff() end
+  cx, cy = cx * 100, cy * 100
+  local hits, key = {}, ""
+  for _, a in ipairs(hoverAreas) do
+    local hit = false
+    if a.x and a.y then
+      local rr = math.max(a.r or 0, 2)
+      hit = (cx - a.x) ^ 2 + (cy - a.y) ^ 2 <= rr * rr
+    end
+    if not hit and a.pts then
+      for k = 1, #a.pts - 1, 2 do
+        if math.abs(a.pts[k] - cx) < HOVER_PT and math.abs(a.pts[k + 1] - cy) < HOVER_PT then hit = true; break end
+      end
+    end
+    if hit then hits[#hits + 1] = a; key = key .. a.id .. "," end
+  end
+  if #hits == 0 then return HoverOff() end
+  -- same quests as last time: refresh the progress once a second, not every frame
+  local now = GetTime()
+  if key == hoverKey and now - hoverAt < 1 then return end
+  hoverKey, hoverAt = key, now
+  GameTooltip:SetOwner(sc, "ANCHOR_CURSOR")
+  for i, a in ipairs(hits) do
+    if i > 4 then GameTooltip:AddLine(("+ %d more"):format(#hits - 4), 0.6, 0.6, 0.6); break end
+    local q = ns.quests[a.id]
+    GameTooltip:AddLine(("%s |cff999999[%s]|r"):format(q.n or a.title or "?", q.l or "?"), 1, 0.82, 0)
+    GameTooltip:AddLine(routeSet[a.id] and "On your route" or "Not on the route", 0.6, 0.6, 0.6)
+    local objs = ns.Objectives(a.id)
+    if #objs == 0 and q.o[1] then GameTooltip:AddLine(q.o[1], 1, 1, 1) end
+    for _, o in ipairs(objs) do
+      if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. o.text, 1, 1, 1) end
+    end
+  end
+  GameTooltip:Show()
+end
+
 -- Like Questie: while the map is open, redraw when the zone, canvas size or zoom changes.
 local dirty = true
 function Map.MarkDirty() dirty = true end
@@ -586,8 +665,10 @@ local function StartDriver()
   local canvas = WorldMapFrame and WorldMapFrame.GetCanvas and WorldMapFrame:GetCanvas()
   if not canvas then return end
   local driver = CreateFrame("Frame", nil, canvas)
-  local sinceSuppress = 0
+  local sinceSuppress, sinceHover = 0, 0
   driver:SetScript("OnUpdate", function(_, elapsed)
+    sinceHover = sinceHover + (elapsed or 0)
+    if sinceHover > 0.1 then sinceHover = 0; ns.Safe("MapHover", AreaHover) end
     -- Blizzard re-acquires its quest pins on its own schedule; keep them hidden.
     sinceSuppress = sinceSuppress + (elapsed or 0)
     if sinceSuppress > 0.2 then sinceSuppress = 0; ns.Safe("MapSuppress", SuppressBlizzard) end
@@ -600,7 +681,7 @@ local function StartDriver()
       SafeDraw()
     end
   end)
-  driver:SetScript("OnHide", function() hlStop = nil; dirty = true end)
+  driver:SetScript("OnHide", function() hlStop = nil; dirty = true; HoverOff() end)
 end
 
 ---------------------------------------------------------------------------
