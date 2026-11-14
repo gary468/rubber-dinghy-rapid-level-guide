@@ -709,6 +709,7 @@ end
 ---------------------------------------------------------------------------
 local rows = {}
 local ROW_H = 28
+local ShowFace   -- below, with the boss models
 
 function J.Step(name)
   for _, st in ipairs(ns.steps or {}) do if st.dungeon == name then return st end end
@@ -736,6 +737,20 @@ local function Row(i)
   r.badge.text = r.badge:CreateFontString(nil, "OVERLAY"); Font(r.badge.text, { "GameFontHighlightSmall" })
   r.badge.text:SetPoint("CENTER", 0, 0)
   r.badge:Hide()
+  -- a boss's face: a small 3D portrait of the creature (the game draws it from the NPC ID)
+  r.faceBg = r:CreateTexture(nil, "ARTWORK")
+  r.faceBg:SetAllPoints(r.icon); r.faceBg:SetColorTexture(0, 0, 0, 0.55); r.faceBg:Hide()
+  local okF, face = pcall(CreateFrame, "PlayerModel", nil, r)
+  if okF and face then
+    face:SetAllPoints(r.icon)
+    face:EnableMouse(false)
+    pcall(face.SetScript, face, "OnModelLoaded", function(self)
+      if self.SetPortraitZoom then pcall(self.SetPortraitZoom, self, 1) end
+    end)
+    face:Hide()
+    r.face = face
+    r.badge:SetFrameLevel(face:GetFrameLevel() + 3)
+  end
   r.text = r:CreateFontString(nil, "OVERLAY"); Font(r.text, { "GameFontHighlight" })
   r.text:SetPoint("LEFT", r.icon, "RIGHT", 8, 0); r.text:SetPoint("RIGHT", -52, 0); r.text:SetJustifyH("LEFT")
   if r.text.SetWordWrap then r.text:SetWordWrap(false) end
@@ -1002,6 +1017,34 @@ end
 -- The boss's 3D model on a stage of the dungeon's art (journal display when the client has it, else
 -- by NPC ID); hidden when there's neither.
 local noModel = {}   -- creatures the game drew nothing for: no empty stage for them next time
+
+--- A boss row's face: the creature's 3D portrait over its icon; the skull stays if the game has none.
+ShowFace = function(r, b)
+  if not r.face then return false end
+  local key = b.display and ("d" .. b.display) or ((b.npc and b.npc > 0) and ("n" .. b.npc))
+  if not key or noModel[key] then return false end
+  local F = r.face
+  local ok
+  if b.display and F.SetDisplayInfo then ok = pcall(F.SetDisplayInfo, F, b.display)
+  elseif F.SetCreature then ok = pcall(F.SetCreature, F, b.npc) end
+  if not ok then return false end
+  if F.SetPortraitZoom then pcall(F.SetPortraitZoom, F, 1) end
+  if F.SetCamDistanceScale then pcall(F.SetCamDistanceScale, F, 1) end
+  if F.SetRotation then pcall(F.SetRotation, F, 0.3) end
+  r.icon:SetAlpha(0); r.faceBg:Show(); F:Show()
+  F.want = key
+  if C_Timer and F.GetModelFileID then
+    C_Timer.After(1, function()
+      if F.want ~= key or not F:IsShown() then return end
+      local okF, file = pcall(F.GetModelFileID, F)
+      if okF and (not file or file == 0) then   -- nothing came: back to the skull
+        noModel[key] = true
+        F:Hide(); r.faceBg:Hide(); r.icon:SetAlpha(1)
+      end
+    end)
+  end
+  return true
+end
 local function ShowModel(d, b)
   local M = pageView.model
   if not M or not b then pageView.stage:Hide(); return 0 end
@@ -1129,7 +1172,11 @@ function J.RenderPage()
     r.text:SetPoint("RIGHT", -52, 0)
     local size = it.boss and 32 or 20
     r.icon:SetSize(size, size)
-    if it.boss then PaintPortrait(r.icon, it.boss); r.icon:Show()
+    if r.face then r.face:Hide(); r.faceBg:Hide() end
+    r.icon:SetAlpha(1)
+    if it.boss then
+      PaintPortrait(r.icon, it.boss); r.icon:Show()
+      if not ShowFace(r, it.boss) then r.icon:SetAlpha(1) end
     elseif it.icon then r.icon:SetTexture(it.icon); r.icon:SetTexCoord(0, 1, 0, 1); r.icon:Show()
     else r.icon:Hide() end
     local lvl = it.boss and it.boss.level
