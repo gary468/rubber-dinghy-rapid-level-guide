@@ -219,7 +219,6 @@ local function Build()
 
   Header(f, y, "Rare & named mobs"); y = y - 22
   Check(f, y, "Alert me when one is nearby", "Rares, rare elites and named quest targets (\"... slain: 0/1\"). Seen on enemy nameplates, mouseover and your target, so turn enemy nameplates on (V) to spot them sooner.", "noRares", true, "rares"); y = y - 26
-  Check(f, y, "Mark it with a skull", "Puts the skull raid marker on it. In a group you need to be leader or assist.", "noRareSkull", true, "rares"); y = y - 26
   Check(f, y, "Play a sound", "The raid warning sound.", "noRareSound", true, "rares"); y = y - 30
   local testB = Button(f, "Test alert", 110, function() if ns.commands.raretest then ns.commands.raretest() end end,
     "Shows a sample alert and the Target button. Shift + drag the button to move it. Bind a key to it under Key Bindings > Rubber Dinghy.")

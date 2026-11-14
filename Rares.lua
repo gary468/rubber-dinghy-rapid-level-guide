@@ -1,16 +1,16 @@
 -- Rubber Dinghy - rare and named mob alerts.
 -- When a rare (or rare elite) or a named quest target comes into view, you get:
 --   * a raid-warning style alert and a sound,
---   * a skull on the mob (raid target 8),
 --   * a "Target" button (also bindable: Key Bindings > Rubber Dinghy) that targets it in one press.
 -- Blizzard doesn't let addons target a mob by themselves: targeting needs a click or key press, which
 -- is why the button exists (RareScanner works the same way).
 -- Seen via enemy nameplates, mouseover, your target, and minimap vignettes where the client has them.
+-- No automatic raid marker: Forever forbids addons from setting one (it raised the "blocked from an
+-- action only available to the Blizzard UI" popup), and Gary only wants the pop-up to click.
 local ADDON, ns = ...
 local R = {}
 ns.Rares = R
 
-local SKULL = 8
 local REALERT = 300           -- seconds before the same mob alerts again
 local SHOW_FOR = 60           -- seconds the Target button stays up
 local BUTTON = "RubberDinghyRareButton"
@@ -23,8 +23,8 @@ local current                 -- { name=, kind=, at= }
 local pending                 -- alert waiting for combat to end before the button can change
 local btn
 
--- Off inside dungeons and raids: there "slain: 0/1" targets are bosses, and the skull would fight the
--- tank's marks (with a raid-warning sound on every pull).
+-- Off inside dungeons and raids: there "slain: 0/1" targets are bosses (a raid-warning sound on every
+-- pull).
 local function InInstance()
   if not IsInInstance then return false end
   local inside, kind = IsInInstance()
@@ -167,12 +167,6 @@ end
 ---------------------------------------------------------------------------
 -- Alerts
 ---------------------------------------------------------------------------
-local function Mark(unit)
-  if ns.db.noRareSkull or not unit or not SetRaidTarget then return end
-  if GetRaidTargetIndex and GetRaidTargetIndex(unit) == SKULL then return end -- setting it again would clear it
-  pcall(SetRaidTarget, unit, SKULL)
-end
-
 local function Alert(name, kind)
   current = { name = name, kind = kind, at = GetTime() }
   local text = ("%s: %s"):format(kind, name)
@@ -192,7 +186,6 @@ function R.CheckUnit(unit)
   if not Enabled() then return end
   local kind, name, guid = R.Classify(unit)
   if not kind then return end
-  Mark(unit)
   local key = guid or name
   local now = GetTime()
   if seen[key] and now - seen[key] < REALERT then return end
@@ -253,6 +246,13 @@ ev:SetScript("OnEvent", function(_, event, arg1, arg2)
         end
       end
     end
+  elseif event == "ADDON_ACTION_BLOCKED" or event == "ADDON_ACTION_FORBIDDEN" then
+    if arg1 == ADDON then
+      ns.db.blocked = ns.db.blocked or {}
+      local fn = tostring(arg2)
+      if not ns.db.blocked[fn] then ns.Print("the game blocked an action (" .. fn .. "). Please report this.") end
+      ns.db.blocked[fn] = (ns.db.blocked[fn] or 0) + 1
+    end
   elseif event == "PLAYER_REGEN_ENABLED" then
     if pending == "hide" then R.Hide() elseif pending then ShowButton(pending) end
   end
@@ -269,7 +269,8 @@ end)
 ns.inits.Rares = function()
   Build()
   for _, e in ipairs({ "NAME_PLATE_UNIT_ADDED", "UPDATE_MOUSEOVER_UNIT", "PLAYER_TARGET_CHANGED",
-                       "QUEST_LOG_UPDATE", "PLAYER_REGEN_ENABLED", "VIGNETTE_MINIMAP_UPDATED", "VIGNETTES_UPDATED" }) do
+                       "QUEST_LOG_UPDATE", "PLAYER_REGEN_ENABLED", "VIGNETTE_MINIMAP_UPDATED", "VIGNETTES_UPDATED",
+                       "ADDON_ACTION_BLOCKED", "ADDON_ACTION_FORBIDDEN" }) do
     pcall(ev.RegisterEvent, ev, e) -- not every client has every event
   end
 end
