@@ -991,19 +991,41 @@ function J.ConfirmDelete(run)
   StaticPopup_Show("RUBBERDINGHY_DELETE_RUN", run.d or "a dungeon", nil, run)
 end
 
+local STAGE_H, CAM_SCALE = 240, 1.7
+local function FrameModel(M)
+  if M.SetPortraitZoom then pcall(M.SetPortraitZoom, M, 0) end
+  if M.SetCamDistanceScale then pcall(M.SetCamDistanceScale, M, M.zoom or CAM_SCALE) end
+  if M.SetPosition then pcall(M.SetPosition, M, 0, 0, 0) end
+  if M.SetRotation then pcall(M.SetRotation, M, M.rot or 0.35) end
+end
+
 -- The boss's 3D model on a stage of the dungeon's art (journal display when the client has it, else
 -- by NPC ID); hidden when there's neither.
+local noModel = {}   -- creatures the game drew nothing for: no empty stage for them next time
 local function ShowModel(d, b)
   local M = pageView.model
-  if not M then return 0 end
+  if not M or not b then pageView.stage:Hide(); return 0 end
+  local key = b.display and ("d" .. b.display) or (b.npc and ("n" .. b.npc))
+  if not key or noModel[key] then pageView.stage:Hide(); return 0 end
   local ok = false
-  if b and b.display and M.SetDisplayInfo then ok = pcall(M.SetDisplayInfo, M, b.display)
-  elseif b and b.npc and b.npc > 0 and M.SetCreature then ok = pcall(M.SetCreature, M, b.npc) end
+  if b.display and M.SetDisplayInfo then ok = pcall(M.SetDisplayInfo, M, b.display)
+  elseif b.npc and b.npc > 0 and M.SetCreature then ok = pcall(M.SetCreature, M, b.npc) end
   pageView.stage:SetShown(ok)
   if not ok then return 0 end
   PaintArt(pageView.stage.art, d, 0.25, 0.75)
-  if M.SetRotation then pcall(M.SetRotation, M, 0.35) end
-  return 190
+  M.zoom, M.rot = CAM_SCALE, 0.35
+  FrameModel(M)
+  -- models load in a moment; if none came (the game doesn't know this creature), drop the stage
+  if C_Timer and M.GetModelFileID then
+    C_Timer.After(1, function()
+      local okF, file = pcall(M.GetModelFileID, M)
+      if okF and (not file or file == 0) and pageView.stage:IsShown() then
+        noModel[key] = true
+        if frame:IsShown() and tab == "bosses" then J.RenderPage() end
+      end
+    end)
+  end
+  return STAGE_H + 6
 end
 
 -- The summary under the list: your progress here, at a glance.
@@ -1471,7 +1493,7 @@ local function Build()
   P.detail = Lines(P.detailScroll.child, W - LIST_W - 80, true)
   -- the boss model's stage, at the top of the page
   P.stage = CreateFrame("Frame", nil, P.detailScroll.child, BackdropTemplateMixin and "BackdropTemplate" or nil)
-  P.stage:SetPoint("TOPLEFT", 8, -6); P.stage:SetSize(W - LIST_W - 96, 184)
+  P.stage:SetPoint("TOPLEFT", 8, -6); P.stage:SetSize(W - LIST_W - 96, STAGE_H)
   if P.stage.SetBackdrop then P.stage:SetBackdrop({ edgeFile = TEX.tipBorder, edgeSize = 12 }); P.stage:SetBackdropBorderColor(0.42, 0.26, 0.1, 1) end
   P.stage.art = P.stage:CreateTexture(nil, "BACKGROUND")
   P.stage.art:SetPoint("TOPLEFT", 3, -3); P.stage.art:SetPoint("BOTTOMRIGHT", -3, 3)
@@ -1480,6 +1502,28 @@ local function Build()
   if okM and model then
     model:SetPoint("TOPLEFT", 4, -4); model:SetPoint("BOTTOMRIGHT", -4, 4)
     P.model = model
+    -- frame the whole creature once it has loaded (the default camera sits on its middle)
+    if model.SetScript then
+      pcall(model.SetScript, model, "OnModelLoaded", function(self) FrameModel(self) end)
+    end
+    -- mouse wheel zooms, dragging turns it (like the dressing room)
+    model:EnableMouse(true)
+    if model.EnableMouseWheel then model:EnableMouseWheel(true) end
+    model:SetScript("OnMouseWheel", function(self, delta)
+      self.zoom = math.max(0.6, math.min(4, (self.zoom or CAM_SCALE) - delta * 0.2))
+      if self.SetCamDistanceScale then pcall(self.SetCamDistanceScale, self, self.zoom) end
+    end)
+    model:SetScript("OnMouseDown", function(self) self.dragX = GetCursorPosition() end)
+    model:SetScript("OnMouseUp", function(self) self.dragX = nil end)
+    model:SetScript("OnUpdate", function(self)
+      if not self.dragX then return end
+      local x = GetCursorPosition()
+      self.rot = (self.rot or 0.35) + (x - self.dragX) * 0.01
+      self.dragX = x
+      if self.SetRotation then pcall(self.SetRotation, self, self.rot) end
+    end)
+    model:SetScript("OnEnter", function(self) Tip(self, { "Boss model", "Drag to turn it, mouse wheel to zoom." }) end)
+    model:SetScript("OnLeave", function() GameTooltip:Hide() end)
   end
   P.stage:Hide()
 

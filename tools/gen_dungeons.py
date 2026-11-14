@@ -339,7 +339,9 @@ def main(wow, out_path):
             for c in pos(q.get("objectives") or {}, 3) or []:
                 if isinstance(c, list) and c and isinstance(c[0], int):
                     it = db.item(c[0])
-                    for n in (it or {}).get("npcs") or []:
+                    npcs = (it or {}).get("npcs") or []
+                    if len(npcs) > 3: continue   # drops from lots of mobs (Dark Iron Scraps): not a boss's item
+                    for n in npcs:
                         drops.setdefault(n, []).append((it["name"], qid))
         bosses = []
         for bn in d.get("bosses") or []:
