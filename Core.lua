@@ -616,31 +616,72 @@ local function ObjName(text)
   t = t:gsub("^%s*%d+%s*/%s*%d+%s*", ""):gsub(":%s*%d+%s*/%s*%d+%s*$", ""):gsub("%s+slain$", "")
   return (t:gsub("^%s+", ""):gsub("%s+$", ""))
 end
-local function RemainingArea(r, o)
+ns.ObjName = ObjName
+-- q.om groups still to do; nil = use the quest's whole area (no per-objective data, or the quest log's
+-- objective names don't match it).
+local function LeftGroups(r)
   local om = r.q.om
-  if not om then return o end
+  if not om then return nil end
   local objs = ns.RawObjectives(r.id)
-  if #objs == 0 then return o end
+  if #objs == 0 then return nil end
   local doneBy = {}
   for _, ob in ipairs(objs) do doneBy[ObjName(ob.text)] = ob.done end
   local left = {}
   for _, g in ipairs(om) do
     local d = doneBy[g[1]:lower()]
-    if d == nil then return o end          -- can't tell which objective this is: keep it all
+    if d == nil then return nil end          -- can't tell which objective this is: keep it all
     if not d then left[#left + 1] = g end
   end
-  if #left == 0 or #left == #om then return o end
+  if #left == 0 then return nil end
+  return left
+end
+local function GroupLoc(o, groups)
   local pts, names, sx, sy, n = {}, {}, 0, 0, 0
-  for _, g in ipairs(left) do
+  for _, g in ipairs(groups) do
     names[#names + 1] = g[1]
-    local p = g[2]
-    for k = 1, #p - 1, 2 do
-      pts[#pts + 1], pts[#pts + 2] = p[k], p[k + 1]
-      sx, sy, n = sx + p[k], sy + p[k + 1], n + 1
+    local pp = g[2]
+    for k = 1, #pp - 1, 2 do
+      pts[#pts + 1], pts[#pts + 2] = pp[k], pp[k + 1]
+      sx, sy, n = sx + pp[k], sy + pp[k + 1], n + 1
     end
   end
   if n == 0 then return o end
   return { table.concat(names, ", "), o[2], sx / n, sy / n, o[5], pts }
+end
+-- Where a quest's objectives are done: one place, or - when its objectives are far apart - one per
+-- place, each with the objectives done there (Gary 14 Nov: Expedition Salvation's Crate of
+-- Foodstuffs at 69,37 and Research Equipment at 38,66 were one stop pinned at 38,66, so he walked past
+-- the crate). Returns { {loc=, only={objective name=true}|nil} }.
+local SPLIT = 15   -- map %: objectives further apart than this are separate stops
+local function Places(r, o)
+  local left = LeftGroups(r)
+  if not left then return { { loc = o } } end
+  local clusters = {}
+  for _, g in ipairs(left) do
+    local pp, sx, sy, n = g[2], 0, 0, 0
+    for k = 1, #pp - 1, 2 do sx, sy, n = sx + pp[k], sy + pp[k + 1], n + 1 end
+    if n > 0 then
+      local gx, gy = sx / n, sy / n
+      local home
+      for _, c in ipairs(clusters) do
+        if (c.x - gx) ^ 2 + (c.y - gy) ^ 2 < SPLIT * SPLIT then home = c; break end
+      end
+      if not home then home = { x = gx, y = gy, groups = {} }; clusters[#clusters + 1] = home end
+      home.groups[#home.groups + 1] = g
+    end
+  end
+  if #clusters == 0 then return { { loc = o } } end
+  if #clusters == 1 then
+    if #left == #r.q.om then return { { loc = o } } end
+    return { { loc = GroupLoc(o, clusters[1].groups) } }
+  end
+  local out = {}
+  for _, c in ipairs(clusters) do
+    local only = {}
+    for _, g in ipairs(c.groups) do only[g[1]:lower()] = true end
+    out[#out + 1] = { loc = GroupLoc(o, c.groups), only = only }
+  end
+  return out
 end
 local function Target(r)
   local q = r.q
@@ -656,7 +697,7 @@ local function Target(r)
   -- Dungeon step: quests you're doing are done inside, so the stop is the dungeon's entrance.
   if r.s == LOG and q.d and curStep and curStep.ent then return curStep.ent, "dungeon" end
   if r.s == LOG then
-    if q.o then return RemainingArea(r, q.o), "do" end
+    if q.o then return q.o, "do" end
     -- No mobs/objects to find (talk-to and delivery quests): head for the hand-in NPC.
     if q.t and not q.ob then return q.t, "go" end
     -- Has objectives but the database has no location for them: listed without a stop.
@@ -669,7 +710,10 @@ end
 local function BuildStops(rows, stepMap, current)
   local stops, loose = {}, {}
   for _, r in ipairs(rows) do
-    local loc, kind = Target(r)
+    local loc0, kind = Target(r)
+    local places = (kind == "do" and loc0 and loc0 == r.q.o) and Places(r, loc0) or { { loc = loc0 } }
+    for _, pl in ipairs(places) do
+    local loc = pl.loc
     if loc and loc[3] and loc[4] and loc[3] >= 0 and loc[2] and loc[2] > 0 then
       local found
       for _, s in ipairs(stops) do
@@ -694,9 +738,10 @@ local function BuildStops(rows, stepMap, current)
           for k = 1, #loc[6] do found.pts[#found.pts + 1] = loc[6][k] end
         end
       end
-      found.actions[#found.actions + 1] = { kind = kind, row = r }
+      found.actions[#found.actions + 1] = { kind = kind, row = r, only = pl.only }
     else
       loose[#loose + 1] = { kind = kind, row = r }
+    end
     end
   end
 
@@ -737,7 +782,13 @@ local function BuildStops(rows, stepMap, current)
     for _, s in ipairs(here) do
       local acts = {}
       for _, a in ipairs(s.actions) do
-        if Spread(a) then moved[#moved + 1] = a else acts[#acts + 1] = a end
+        if Spread(a) then
+          local dup = false
+          for _, m in ipairs(moved) do if m.row.id == a.row.id then dup = true end end
+          if not dup then moved[#moved + 1] = a end
+        else
+          acts[#acts + 1] = a
+        end
       end
       if #acts > 0 then others = others + 1 end
       keep[#keep + 1] = { s = s, acts = acts }
@@ -842,6 +893,24 @@ local function BuildStops(rows, stepMap, current)
         if r and (not s.rank or r < s.rank) then s.rank = r end
       end
     end
+    -- A quest split over two places (its objectives far apart): each part goes right after the
+    -- planned stop nearest it, so you grab the crate while you're by the Eastern Pylon.
+    for _, s in ipairs(here) do
+      local split = #s.actions > 0
+      for _, a in ipairs(s.actions) do if not a.only then split = false end end
+      if split then
+        local bd, br = math.huge, nil
+        for _, o in ipairs(here) do
+          local oSplit = #o.actions > 0
+          for _, a in ipairs(o.actions) do if not a.only then oSplit = false end end
+          if o ~= s and o.rank and not oSplit then
+            local d = ((o.cx or o.x) - (s.cx or s.x)) ^ 2 + ((o.cy or o.y) - (s.cy or s.y)) ^ 2
+            if d < bd then bd, br = d, o.rank end
+          end
+        end
+        if br then s.rank = br + 0.5 end
+      end
+    end
     -- A finished quest carried in (Williden's Journal, looted) is handed in when the route passes
     -- its NPC, not first (Gary 14 Nov: "you're telling me to hand this in straight away" - 750 yd
     -- back to Marshal's Refuge, where the route ends anyway): it joins the nearest planned stop.
@@ -868,7 +937,7 @@ local function BuildStops(rows, stepMap, current)
       local d, px2, py2 = Dist(s, cx, cy)
       d = d * (s.w or 1)
       if s.area and s.w == 1 then d = d + 4 end -- same distance: pick-ups before mob areas
-      if rank and s.tier == 2 then d = s.rank and (s.rank * 1e6) or (1e12 + d) end   -- planned order
+      if rank and s.tier == 2 then d = s.rank and (s.rank * 1e6 + d) or (1e12 + d) end   -- planned order (ties by distance)
       if s.tier < bt or (s.tier == bt and d < bd) then bi, bt, bd, bx, by = i, s.tier, d, px2, py2 end
     end
     local s = table.remove(here, bi)

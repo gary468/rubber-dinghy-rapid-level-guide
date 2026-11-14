@@ -220,7 +220,12 @@ local function Render(r)
   collapseBtn:SetCollapsed(db.collapsed)
   local slots = {} -- where quest item buttons go: {qid=, y=pixels below the tracker top}
   T.RefreshXP()
-  local function Slot(qid) slots[#slots + 1] = { qid = qid, y = TopH() + y } end
+  local slotted = {}   -- one quest item button per quest, even when the quest has two stops
+  local function Slot(qid)
+    if slotted[qid] then return end
+    slotted[qid] = true
+    slots[#slots + 1] = { qid = qid, y = TopH() + y }
+  end
   if db.collapsed or (db.noTracker and not db.unlocked) then
     for i = 1, #pool do pool[i]:Hide() end
     body:SetHeight(1); frame:SetHeight(header:GetHeight())
@@ -336,7 +341,14 @@ local function Render(r)
       for _, a in ipairs(s.actions) do
         if a.kind ~= "get" then Slot(a.row.id) end
         Add(ns.ActionText(a), { indent = 22, stop = s, color = WHITE, nowrap = true })
-        if (a.kind == "do" or a.kind == "turn" or a.kind == "go" or a.kind == "dungeon") and not objShown[a.row.id] then
+        if a.only then
+          -- a quest done in two places: each stop lists the objectives done there
+          for _, o in ipairs(ns.Objectives(a.row.id)) do
+            if not o.done and a.only[ns.ObjName(o.text)] then
+              Add(ns.ObjText(o, true), { indent = 30, font = SMALL_FONT, color = { 0.85, 0.85, 0.85 }, stop = s, nowrap = true })
+            end
+          end
+        elseif (a.kind == "do" or a.kind == "turn" or a.kind == "go" or a.kind == "dungeon") and not objShown[a.row.id] then
           objShown[a.row.id] = true
           -- only what's left to do; finished objectives drop off
           for _, o in ipairs(ns.Objectives(a.row.id)) do
