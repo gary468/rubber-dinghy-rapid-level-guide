@@ -454,9 +454,10 @@ end
 --      route order that still has something to do (quests to pick up, on the go, or to hand in);
 --   3. all of those done: the next step in route order with something to do (it may open a level
 --      or two later).
--- Where you stand, and quests left in your log from earlier steps, never hold or move it: levelling
--- past steps (grinding, a dungeon run) jumps ahead, and leftovers stay under Other Quests. The < and
--- > buttons still pick a step by hand.
+-- One place rule: in the zone of a step that's due by your level (levelled at most 2 past it) and
+-- still has work, that step - finish the zone you're in. Anywhere else, levelling past steps
+-- (grinding, a dungeon run) jumps ahead, and leftovers stay under Other Quests. The < and > buttons
+-- still pick a step by hand.
 local function Usable(step)
   return not (step.dungeon and ns.DungeonOff(step.dungeon))
 end
@@ -480,6 +481,18 @@ local function AutoStep(level)
       end
     end
     ns.db.goDungeon = nil   -- done (or dropped): back to the normal route
+  end
+  -- In the zone of a step that's due by your level and still has work: finish it (Gary: "if you are
+  -- in the zone it makes sense to finish it, otherwise nah"). Only steps you haven't levelled more
+  -- than 2 past, and never a step that isn't due yet. Your real position, not a flight's landing.
+  local pm = ns.PlayerPos()
+  if pm then
+    for i, step in ipairs(ns.steps) do
+      if step.map == pm and not step.dungeon and not step.grind and step.from <= level
+        and level <= step.to + 2 and HasWork(step, level) then
+        return i
+      end
+    end
   end
   -- the latest start at or below your level
   local L
