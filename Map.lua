@@ -882,16 +882,27 @@ local MINI_RANGE = 12       -- map % around you worth putting on the minimap
 -- once "Show the route on the map and minimap" is off.
 local BLANK = MEDIA .. "blank"
 local miniSuppressed = false
+-- Every minimap area the game draws for quests: quest areas, task (bonus objective) areas and their
+-- glowing border and ring. Alpha alone wasn't enough on Forever (Gary saw the blue border): the
+-- textures go blank too. Each setter separately, since a client may lack some of them.
+local MINI_SETTERS = {
+  { "SetPOIArrowTexture", BLANK },
+  { "SetQuestBlobInsideTexture", BLANK }, { "SetQuestBlobOutsideTexture", BLANK }, { "SetQuestBlobRingTexture", BLANK },
+  { "SetQuestBlobInsideAlpha", 0 }, { "SetQuestBlobOutsideAlpha", 0 }, { "SetQuestBlobRingAlpha", 0 },
+  { "SetQuestBlobOutsideSelectedTexture", BLANK }, { "SetQuestBlobRingScalar", 0 },
+  { "SetTaskBlobInsideTexture", BLANK }, { "SetTaskBlobOutsideTexture", BLANK }, { "SetTaskBlobRingTexture", BLANK },
+  { "SetTaskBlobInsideAlpha", 0 }, { "SetTaskBlobOutsideAlpha", 0 }, { "SetTaskBlobRingAlpha", 0 },
+  { "SetTaskBlobOutsideSelectedTexture", BLANK }, { "SetTaskBlobRingScalar", 0 },
+}
 local function SuppressMinimap()
   if not Minimap or ns.db.noMap or ns.db.keepBlizzMap then return end
-  pcall(function()
-    if Minimap.SetPOIArrowTexture then Minimap:SetPOIArrowTexture(BLANK) end
-    if Minimap.SetQuestBlobInsideAlpha then Minimap:SetQuestBlobInsideAlpha(0) end
-    if Minimap.SetQuestBlobOutsideAlpha then Minimap:SetQuestBlobOutsideAlpha(0) end
-    if Minimap.SetQuestBlobRingAlpha then Minimap:SetQuestBlobRingAlpha(0) end
-  end)
+  for _, s in ipairs(MINI_SETTERS) do
+    local fn = Minimap[s[1]]
+    if fn then pcall(fn, Minimap, s[2]) end
+  end
   miniSuppressed = true
 end
+Map.SuppressMinimap = SuppressMinimap
 
 local function MiniIcon(i)
   local p = miniIcons[i]
@@ -1219,6 +1230,8 @@ do
     t = t + (e or 0)
     if t < 3 then return end
     t = 0
+    -- Blizzard can reset its minimap quest areas (zone change, tracking): keep them hidden
+    if ns.db and not ns.disabled then ns.Safe("MinimapSuppress", SuppressMinimap) end
     if ns.db and not ns.disabled and not ns.db.noMap and not ns.db.noMiniPins and not ns.db.noOtherPins then
       ns.Safe("Minimap", UpdateMinimap)
     end
