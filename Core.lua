@@ -678,7 +678,7 @@ local function BuildStops(rows, stepMap, current)
       local acts = {}
       for _, a in ipairs(st.actions) do
         -- never decided by where you stand (Gary: one set route): pick-ups elsewhere always wait
-        local later = (a.kind == "get") or (a.kind == "turn" and VisitedLater(st.map) ~= nil)
+        local later = (a.kind == "get") or (a.kind == "turn" and not a.row.carried and VisitedLater(st.map) ~= nil)
         if later then
           ns.laterActions[#ns.laterActions + 1] = { action = a, stop = st, visit = VisitedLater(st.map) }
         else
@@ -727,6 +727,7 @@ local function BuildStops(rows, stepMap, current)
       if a.kind ~= "get" and a.row.started and s.w > STARTED_W then s.w = STARTED_W end
       if a.kind == "turn" and s.w > HANDIN_W then s.w = HANDIN_W end
       if a.kind ~= "get" and current and a.row.id == current then s.tier = 0 end
+      if a.row.carried and s.tier > 1 then s.tier = 1 end   -- finished quests from steps you passed: first
     end
     if s.area and pm == stepMap and s.tier > 1 and not s.done then
       local d = Dist(s, px, py)
@@ -768,7 +769,18 @@ local function BuildStops(rows, stepMap, current)
     cx, cy = s.x, s.y
   end
   table.sort(away, function(a, b) return a.map < b.map end)
-  for _, s in ipairs(away) do ordered[#ordered + 1] = s end
+  -- finished quests carried over from steps you levelled past come first, wherever they're handed in
+  -- (usually where you just were); other stops in other zones come last
+  local carriedAway, restAway = {}, {}
+  for _, s in ipairs(away) do
+    local carried = true
+    for _, a in ipairs(s.actions) do if not a.row.carried then carried = false end end
+    if carried then carriedAway[#carriedAway + 1] = s else restAway[#restAway + 1] = s end
+  end
+  if #carriedAway > 0 then
+    for i = #carriedAway, 1, -1 do table.insert(ordered, 1, carriedAway[i]) end
+  end
+  for _, s in ipairs(restAway) do ordered[#ordered + 1] = s end
   for i, s in ipairs(ordered) do s.index = i end
   return ordered, loose, (pm == stepMap) and { px, py } or nil
 end
@@ -872,6 +884,29 @@ function ns.Recompute()
   -- not part of the plan) stays under Other Quests and shows as a grey dot on the map - it never
   -- becomes a numbered stop.
   local logList = ns.QuestLog()
+  -- One exception (Gary 14 Nov): finished quests from steps you've levelled past. A hand-in is quick,
+  -- sure XP, so they join this step as stops ("carried") instead of waiting under Other Quests.
+  if not step.prep and not step.dungeon and idx > 1 then
+    local here = {}
+    for _, r in ipairs(rows) do here[r.id] = true end
+    -- every other step the route expects you to have reached by your level: earlier ones, and the
+    -- others starting at or below your level (several start at the same level, e.g. 51)
+    local earlier = {}
+    for i, st in ipairs(ns.steps) do
+      if i ~= idx and (i < idx or st.from <= level) and not (st.dungeon and ns.DungeonOff(st.dungeon)) then
+        for _, list in ipairs({ st.quests or {}, st.turn or {}, st.pick or {} }) do
+          for _, id in ipairs(list) do earlier[id] = true end
+        end
+      end
+    end
+    for _, e in ipairs(logList) do
+      if earlier[e.id] and not here[e.id] and ns.quests[e.id] and Status(e.id, level) == READY then
+        rows[#rows + 1] = { id = e.id, s = READY, q = ns.quests[e.id], carried = true }
+        counts[READY] = counts[READY] + 1
+        here[e.id] = true
+      end
+    end
+  end
   -- Which quests are started, and which one you're working on right now (its count just went up).
   -- The "current" quest is remembered across reloads and stays first until it's done.
   ns.lastProg = ns.lastProg or {}
