@@ -27,21 +27,25 @@ local HEADER_FONT, TITLE_FONT, LINE_FONT, SMALL_FONT
 ---------------------------------------------------------------------------
 local hideBlizz, hooked = false, false
 local vis = CreateFrame("Frame")
+-- Registered once, here: registering and unregistering it from inside the hook on Blizzard's tracker
+-- was blocked by the game in combat (Frame:RegisterEvent / UnregisterEvent, Gary 14 Nov).
+vis:RegisterEvent("PLAYER_REGEN_ENABLED")
+local waiting = false
 local function ApplyBlizz()
   local otf = ObjectiveTrackerFrame
   if otf then
     if InCombatLockdown() and (not hideBlizz or otf:IsProtected()) then
-      vis:RegisterEvent("PLAYER_REGEN_ENABLED")
+      waiting = true   -- done when combat ends
       return
     end
-    vis:UnregisterEvent("PLAYER_REGEN_ENABLED")
+    waiting = false
     if hideBlizz then otf:Hide() else otf:Show() end
   else
     local wf = QuestWatchFrame or WatchFrame
     if wf then if hideBlizz then wf:Hide() else wf:Show() end end
   end
 end
-vis:SetScript("OnEvent", ApplyBlizz)
+vis:SetScript("OnEvent", function() if waiting then ApplyBlizz() end end)
 
 local function SetBlizzHidden(hide)
   hideBlizz = hide

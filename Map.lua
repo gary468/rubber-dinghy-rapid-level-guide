@@ -208,13 +208,19 @@ local function SuppressBlizzard()
         -- quests our own "!", "?" and spawn icons, and the quest you pick in the log its area in
         -- green. (The game always has some quest "selected", so keeping that one's marker left a
         -- stray Blizzard "?" on the map.)
-        if pin:IsShown() then pin:Hide() end
+        -- Made invisible, never Hide()n: hiding runs Blizzard's pin scripts from addon code, which
+        -- taints the map's pins, and in combat the game then blocks Blizzard's own map update
+        -- ("blocked from an action only available to the Blizzard UI": Button:SetPassThroughButtons,
+        -- 192 times for Gary, 14 Nov). Alpha is a plain widget setting: nothing of Blizzard's runs.
+        if pin:GetAlpha() > 0 then pin:SetAlpha(0) end
       end
     end
     suppressed = true
   elseif suppressed then
     suppressed = false
-    if WorldMapFrame.RefreshAllDataProviders then pcall(WorldMapFrame.RefreshAllDataProviders, WorldMapFrame) end
+    for _, name in ipairs(BlizzQuestTemplates()) do
+      for pin in WorldMapFrame:EnumeratePinsByTemplate(name) do pin:SetAlpha(1) end
+    end
   end
 end
 
@@ -1310,7 +1316,8 @@ function ns.ShowOnMap(s)
     if InCombatLockdown and InCombatLockdown() then ns.Print("can't open the map in combat."); return end
     if OpenWorldMap then pcall(OpenWorldMap, s.map) elseif ToggleWorldMap then pcall(ToggleWorldMap) end
   end
-  if WorldMapFrame.SetMapID and WorldMapFrame:GetMapID() ~= s.map then
+  -- never switch Blizzard's map from addon code in combat (it taints the map; see SuppressBlizzard)
+  if WorldMapFrame.SetMapID and WorldMapFrame:GetMapID() ~= s.map and not (InCombatLockdown and InCombatLockdown()) then
     pcall(WorldMapFrame.SetMapID, WorldMapFrame, s.map)
   end
   hlStop = s
@@ -1353,8 +1360,9 @@ function ns.ShowQuestOnMap(id)
   if not WorldMapFrame:IsShown() then
     if OpenWorldMap then pcall(OpenWorldMap, m) elseif ToggleWorldMap then pcall(ToggleWorldMap) end
   end
+  -- no forced refresh of Blizzard's data providers: selecting the quest (above) refreshes the map
+  -- itself, and refreshing from addon code taints the map's pins
   if m and m > 0 and WorldMapFrame.SetMapID then pcall(WorldMapFrame.SetMapID, WorldMapFrame, m) end
-  if WorldMapFrame.RefreshAllDataProviders then pcall(WorldMapFrame.RefreshAllDataProviders, WorldMapFrame) end
   dirty = true
 end
 

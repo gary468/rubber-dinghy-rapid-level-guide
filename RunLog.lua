@@ -4,8 +4,10 @@
 -- mob XP and kills (with first/last kill time), quest XP, money looted, deaths, your level, bosses
 -- killed, and time spent outside. The route planner reads these to calibrate dungeon XP and time.
 --
--- Cost: outside dungeons only two zone events are watched. Inside, the combat log adds one
--- CombatLogGetCurrentEventInfo per event, and only deaths are looked at.
+-- Cost: outside dungeons only two zone events are watched. Inside: XP, money, quests, bosses, deaths.
+-- No combat log: Forever forbids addons from registering COMBAT_LOG_EVENT_UNFILTERED (the game's
+-- "blocked from an action only available to the Blizzard UI" pop-up on entering a dungeon, Gary
+-- 14 Nov). Kills are counted from XP gains that aren't a quest hand-in; bosses from ENCOUNTER_END.
 local ADDON, ns = ...
 local RL = {}
 ns.RunLog = RL
@@ -14,22 +16,11 @@ RubberDinghyNS = ns
 
 local MAX_RUNS = 200
 local SAME_RUN_GAP = 45 * 60   -- back inside the same instance within 45 min (and no reset): same run
-local HOSTILE = 0x00000040     -- COMBATLOG_OBJECT_REACTION_HOSTILE
-local CleuInfo = CombatLogGetCurrentEventInfo
-local band = bit and bit.band or function(a, b)   -- the game has bit; this is only for test clients
-  local r, m = 0, 1
-  while a > 0 and b > 0 do
-    if a % 2 == 1 and b % 2 == 1 then r = r + m end
-    a, b, m = math.floor(a / 2), math.floor(b / 2), m * 2
-  end
-  return r
-end
-
 local f = CreateFrame("Frame")
+local lastTurnIn               -- when a quest was last handed in (its XP isn't a kill)
 local cur                     -- the run going on (inside, or stepped out of)
 local inside = false
 local lastXP, lastMax, lastMoney
-local seenDead = {}           -- GUIDs already counted (UNIT_DIED can repeat)
 local bossByNpc, bossByName = {}, {}   -- for the dungeon you're in
 
 local function Now() return time() end
@@ -88,20 +79,17 @@ local function NewRun(place, instID)
                 lv0 = UnitLevel("player"), lv1 = UnitLevel("player"), bosses = {} }
   runs[#runs + 1] = run
   while #runs > MAX_RUNS do table.remove(runs, 1) end
-  wipe(seenDead)
   return run
 end
 
 local function Watch(on)
   if on then
-    f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     f:RegisterEvent("PLAYER_XP_UPDATE")
     f:RegisterEvent("PLAYER_MONEY")
     f:RegisterEvent("QUEST_TURNED_IN")
     f:RegisterEvent("ENCOUNTER_END")
     f:RegisterEvent("PLAYER_DEAD")
   else
-    f:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     f:UnregisterEvent("PLAYER_XP_UPDATE")
     f:UnregisterEvent("PLAYER_MONEY")
     f:UnregisterEvent("QUEST_TURNED_IN")
@@ -154,37 +142,21 @@ local function BossDown(name, wing)
   if ns.Journal and ns.Journal.RefreshIfShown then ns.Safe("Journal", ns.Journal.RefreshIfShown) end
 end
 
-local function OnDeath(guid, flags)
-  if seenDead[guid] or not guid then return end
-  local kind, _, _, _, zuid, npc = strsplit("-", guid)
-  if kind ~= "Creature" or band(flags or 0, HOSTILE) == 0 then return end
-  seenDead[guid] = true
-  -- a different copy of the dungeon (it was reset): a new run
-  if cur.zuid and zuid and cur.zuid ~= zuid and cur.kills > 0 then
-    local place = cur.place
-    cur = NewRun(place, cur.inst)
-    seenDead[guid] = true
-  end
-  cur.zuid = cur.zuid or zuid
-  local now = Now()
-  cur.kills = cur.kills + 1
-  cur.k0 = cur.k0 or now
-  cur.k1 = now
-  cur.t1 = now
-  local b = bossByNpc[tonumber(npc)]
-  if b then BossDown(b[1], b[2]) end
-end
-
 f:SetScript("OnEvent", function(_, event, ...)
-  if event == "COMBAT_LOG_EVENT_UNFILTERED" then
-    if not cur then return end
-    local _, sub, _, _, _, _, _, dstGUID, _, dstFlags = CleuInfo()
-    if sub == "UNIT_DIED" or sub == "PARTY_KILL" then OnDeath(dstGUID, dstFlags) end
-  elseif event == "PLAYER_XP_UPDATE" then
+  if event == "PLAYER_XP_UPDATE" then
     if not cur then return end
     local xp, max = UnitXP("player"), UnitXPMax("player")
     local gained = (xp >= (lastXP or xp)) and (xp - (lastXP or xp)) or ((lastMax or 0) - (lastXP or 0) + xp)
-    if gained > 0 then cur.xp = cur.xp + gained end
+    if gained > 0 then
+      cur.xp = cur.xp + gained
+      -- a kill: XP that isn't a quest hand-in (grey mobs give none and aren't counted)
+      if Now() - (lastTurnIn or 0) > 2 then
+        local now = Now()
+        cur.kills = cur.kills + 1
+        cur.k0 = cur.k0 or now
+        cur.k1, cur.t1 = now, now
+      end
+    end
     lastXP, lastMax = xp, max
     cur.lv1 = UnitLevel("player")
   elseif event == "PLAYER_MONEY" then
@@ -193,6 +165,7 @@ f:SetScript("OnEvent", function(_, event, ...)
     if lastMoney and m > lastMoney then cur.money = cur.money + (m - lastMoney) end
     lastMoney = m
   elseif event == "QUEST_TURNED_IN" then
+    lastTurnIn = Now()
     if not cur then return end
     local _, xp, money = ...
     cur.qxp = cur.qxp + (tonumber(xp) or 0)

@@ -138,7 +138,7 @@ end
 local ev = CreateFrame("Frame")
 ev:SetScript("OnEvent", function(_, event)
   if event == "PLAYER_REGEN_ENABLED" then
-    ev:UnregisterEvent("PLAYER_REGEN_ENABLED")
+    if not waiting then return end
     waiting = false
     ns.Safe("Items", Apply)
   elseif event == "BAG_UPDATE_COOLDOWN" then
@@ -147,6 +147,8 @@ ev:SetScript("OnEvent", function(_, event)
     if ns.db and not ns.disabled then ns.Queue() end -- an item may have appeared or run out
   end
 end)
+-- registered once: (un)registering it at runtime in combat can be blocked by the game
+ev:RegisterEvent("PLAYER_REGEN_ENABLED")
 ev:RegisterEvent("BAG_UPDATE_COOLDOWN")
 ev:RegisterEvent("BAG_UPDATE_DELAYED")
 
@@ -154,7 +156,7 @@ ev:RegisterEvent("BAG_UPDATE_DELAYED")
 function Items.Place(slots, tracker)
   pendingSlots, pendingTracker = slots, tracker
   if InCombatLockdown() then
-    if not waiting then waiting = true; ev:RegisterEvent("PLAYER_REGEN_ENABLED") end
+    waiting = true   -- applied when combat ends (the event is registered once, below)
     return
   end
   Apply()
