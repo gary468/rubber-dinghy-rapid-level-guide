@@ -691,17 +691,18 @@ local function BuildStops(rows, stepMap, current)
     return bd, bx, by
   end
 
-  -- Finish what you've started before anything new; distance only decides within a tier.
+  -- Order: what you're on first, then by distance from where you are.
   --   tier 0: the quest you're making progress on right now (its count went up last)
   --   tier 1: a quest whose mobs are around you (within ~5% of one of its spawns)
-  --   tier 2: finished quests to hand in here - they give XP and often unlock follow-ups
-  --   tier 3: other quests you've already started (some progress, not done)
-  --   tier 4: everything else (pick-ups, untouched quests), nearest first
+  --   tier 2: everything else, nearest first - with a head start for hand-ins (XP, follow-ups)
+  --           and quests you've started, but never a cross-zone detour: a hand-in on the far
+  --           side waits until the route gets there (it used to jump the queue and zigzag).
+  local HANDIN_W, STARTED_W = 0.5, 0.75   -- weights on squared distance
   for _, s in ipairs(here) do
-    s.tier = 4
+    s.tier, s.w = 2, 1
     for _, a in ipairs(s.actions) do
-      if a.kind ~= "get" and a.row.started and s.tier > 3 then s.tier = 3 end
-      if a.kind == "turn" and s.tier > 2 then s.tier = 2 end
+      if a.kind ~= "get" and a.row.started and s.w > STARTED_W then s.w = STARTED_W end
+      if a.kind == "turn" and s.w > HANDIN_W then s.w = HANDIN_W end
       if a.kind ~= "get" and current and a.row.id == current then s.tier = 0 end
     end
     if s.area and pm == stepMap and s.tier > 1 and not s.done then
@@ -714,7 +715,8 @@ local function BuildStops(rows, stepMap, current)
     local bi, bt, bd, bx, by = 1, math.huge, math.huge, nil, nil
     for i, s in ipairs(here) do
       local d, px2, py2 = Dist(s, cx, cy)
-      if s.area and s.tier == 4 then d = d + 4 end -- same distance: pick-ups before mob areas
+      d = d * (s.w or 1)
+      if s.area and s.w == 1 then d = d + 4 end -- same distance: pick-ups before mob areas
       if s.tier < bt or (s.tier == bt and d < bd) then bi, bt, bd, bx, by = i, s.tier, d, px2, py2 end
     end
     local s = table.remove(here, bi)
