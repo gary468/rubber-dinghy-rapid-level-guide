@@ -884,24 +884,63 @@ MiniStops = function()
   miniStops = {}
   if not HBD then return end
   local mode = ns.db.areaMode or "next"
+  local areasLeft = (mode == "all") and 99 or (mode == "off" and 0) or 1
+  local withArea = {}
   for i, s in ipairs(route.stops or {}) do
     if i > MINI_MAX then break end
     local wx, wy, inst = HBD:GetWorldCoordinatesFromZone(s.x / 100, s.y / 100, s.map)
     if wx then
-      local ryd
-      if s.area and s.r and mode ~= "off" and (mode == "all" or i == 1) then
-        local w, h
-        if HBD.GetZoneSize then w, h = HBD:GetZoneSize(s.map) end
-        if w and w > 0 then ryd = s.r / 100 * (w + (h or w)) / 2 end
+      local st = { wx = wx, wy = wy, inst = inst, map = s.map }
+      -- the same areas as the world map: Blizzard's shapes where the game has them, else a circle
+      -- around the whole area (its centre, not the nearest spawn)
+      if s.area and areasLeft > 0 then
+        areasLeft = areasLeft - 1
+        withArea[s.map] = withArea[s.map] or QuestsWithAreas(s.map)
+        for _, a in ipairs(s.actions) do
+          if a.kind == "do" and withArea[s.map][a.row.id] then
+            st.blobs = st.blobs or {}
+            st.blobs[#st.blobs + 1] = a.row.id
+          end
+        end
+        if not st.blobs and s.r then
+          local w, h
+          if HBD.GetZoneSize then w, h = HBD:GetZoneSize(s.map) end
+          local cwx, cwy = HBD:GetWorldCoordinatesFromZone((s.cx or s.x) / 100, (s.cy or s.y) / 100, s.map)
+          if w and w > 0 and cwx then st.ryd, st.cwx, st.cwy = s.r / 100 * (w + (h or w)) / 2, cwx, cwy end
+        end
       end
-      miniStops[#miniStops + 1] = { wx = wx, wy = wy, inst = inst, ryd = ryd }
+      miniStops[#miniStops + 1] = st
     end
   end
 end
 
+-- Blizzard's quest-area shapes on the minimap: a QuestPOIFrame the size of the whole zone, placed
+-- so the zone lines up with the minimap (the world map uses the same frame type over its canvas).
+local miniBlob, miniBlobOK, miniBlobKey, miniBlobW
+local function MiniBlob(box)
+  if miniBlobOK == false then return nil end
+  if not miniBlob then
+    local ok, f = pcall(CreateFrame, "QuestPOIFrame", nil, box)
+    if not ok or not f or not f.DrawBlob then miniBlobOK = false; return nil end
+    miniBlob, miniBlobOK = f, true
+  end
+  local alpha = math.floor(math.min(0.6, (ns.db.areaAlpha or 0.2) * 1.2) * 255 + 0.5)
+  pcall(function()
+    miniBlob:SetFillTexture(AREA_FILL)
+    miniBlob:SetBorderTexture(AREA_EDGE)
+    miniBlob:SetFillAlpha(alpha)
+    miniBlob:SetBorderAlpha(math.min(255, alpha * 2))
+    miniBlob:SetBorderScalar(0.2)
+  end)
+  return miniBlob
+end
+
 local function MiniDraw()
   MiniHide()
-  if not HBD or #miniStops == 0 or ns.db.noMap or ns.db.noMiniPins then return end
+  if not HBD or #miniStops == 0 or ns.db.noMap or ns.db.noMiniPins then
+    if miniBlob then miniBlob:Hide(); miniBlobKey = nil end
+    return
+  end
   local px, py, pinst = HBD:GetPlayerWorldPosition()
   if not px then return end
   local box = MiniBox()
@@ -921,6 +960,41 @@ local function MiniDraw()
     return dx / R * hw, -dy / R * hh
   end
   local alphaArea = (ns.db.areaAlpha or 0.2) * 1.2
+  -- Blizzard's area shapes for the stops in the zone you're in (not with a rotating minimap:
+  -- frames can't rotate, so those keep circles)
+  local pm = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+  local blobIds = {}
+  if pm and not sinf then
+    for _, st in ipairs(miniStops) do
+      if st.map == pm and st.blobs then for _, id in ipairs(st.blobs) do blobIds[#blobIds + 1] = id end end
+    end
+  end
+  local fb = #blobIds > 0 and MiniBlob(box) or nil
+  if fb then
+    local ox, oy = HBD:GetWorldCoordinatesFromZone(0, 0, pm)
+    local ex, ey = HBD:GetWorldCoordinatesFromZone(1, 1, pm)
+    if ox and ex then
+      local x0, y0 = XY(ox, oy)
+      local x1, y1 = XY(ex, ey)
+      local w, h = math.abs(x1 - x0), math.abs(y1 - y0)
+      fb:ClearAllPoints()
+      fb:SetPoint("TOPLEFT", box, "CENTER", math.min(x0, x1), math.max(y0, y1))
+      fb:SetSize(w, h)
+      fb:SetFrameLevel(box:GetFrameLevel())
+      local key = pm .. ":" .. table.concat(blobIds, ",")
+      if key ~= miniBlobKey or not miniBlobW or math.abs(w - miniBlobW) > 1 then
+        miniBlobKey, miniBlobW = key, w
+        if fb.SetMapID then pcall(fb.SetMapID, fb, pm) end
+        pcall(fb.DrawNone, fb)
+        for _, id in ipairs(blobIds) do pcall(fb.DrawBlob, fb, id, true) end
+      end
+      fb:Show()
+    else
+      fb:Hide()
+    end
+  elseif miniBlob then
+    miniBlob:Hide(); miniBlobKey = nil
+  end
   local nl, na = 0, 0
   local lx, ly = 0, 0   -- the line starts at you (the minimap centre)
   for _, st in ipairs(miniStops) do
@@ -936,6 +1010,10 @@ local function MiniDraw()
       l:SetEndPoint("CENTER", box, x, y)
       l:Show()
     end
+    if st.blobs and sinf and not st.ryd then
+      -- rotating minimap: no shapes, so a small circle at the stop instead
+      st.ryd, st.cwx, st.cwy = 40, st.wx, st.wy
+    end
     if st.ryd then
       na = na + 1
       local a = miniAreas[na]
@@ -945,9 +1023,10 @@ local function MiniDraw()
         miniAreas[na] = a
       end
       local rp = st.ryd / R * hw
+      local axp, ayp = XY(st.cwx or st.wx, st.cwy or st.wy)
       a:SetSize(rp * 2, rp * 2)
       a:ClearAllPoints()
-      a:SetPoint("CENTER", box, "CENTER", x, y)
+      a:SetPoint("CENTER", box, "CENTER", axp, ayp)
       a:SetVertexColor(1, 0.78, 0.16, math.min(0.6, alphaArea))
       a:Show()
     end
