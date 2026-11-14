@@ -1278,6 +1278,7 @@ local function Build()
   f:SetFrameStrata("DIALOG")   -- same layer as the settings and Dungeons windows; the last one opened is in front
   f:SetToplevel(true)
   f:SetClampedToScreen(true)
+  if f.SetClampRectInsets then f:SetClampRectInsets(0, 0, 18, 0) end   -- keep the title plate (above the frame) on screen
   f:EnableMouse(true)
   f:SetMovable(true)
   f:RegisterForDrag("LeftButton")
