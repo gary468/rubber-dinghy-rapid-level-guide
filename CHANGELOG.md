@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.41
+- **Updated for Questie's latest Forever data** (21 new quests, 81 changed) and re-planned: about
+  87 hours from level 14 to 60, with fewer zone visits.
+- **Mount Hyjal is one visit.** Questie had Ketharas in Moonglade; he's in Hyjal (73, 82), so
+  there's no more trip to Moonglade and back.
+- **Tighter walking order inside every zone** (Hyjal's path is now shorter than going nearest-first).
+- Into The Maw of Madness no longer makes a step named after the Kalimdor continent map.
+
 ## v1.0.40
 - **Stop order fixes.** Named mobs and other single-spot objectives keep their quest's planned
   place (v1.0.39 could push them behind a later hand-in). Stops the plan has for a later visit to
