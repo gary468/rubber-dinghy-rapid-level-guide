@@ -483,29 +483,15 @@ local function HasWork(step, level)
   local _, c = ScanStep(step, level)
   return c[READY] + c[LOG] + c[OPEN] > 0
 end
-local function AutoStep(level)
-  local dn = ns.CurrentDungeon()
-  if dn then
-    local i = DungeonStepFor(dn, level)
-    if i then return i end
-  end
-  local go = ns.db and ns.db.goDungeon
-  if go then
-    for i, step in ipairs(ns.steps) do
-      if step.dungeon == go then
-        local _, c = ScanStep(step, level)
-        if c[READY] + c[LOG] > 0 and ns.DungeonOn(go) then return i end
-      end
-    end
-    ns.db.goDungeon = nil   -- done (or dropped): back to the normal route
-  end
-  -- In the zone of a step that's due by your level and still has work: finish it (Gary: "if you are
-  -- in the zone it makes sense to finish it, otherwise nah"). Only steps you haven't levelled more
-  -- than 2 past, and never a step that isn't due yet. Your real position, not a flight's landing.
+-- Where the route starts for you when there's no bookmark yet (a new character, or you've levelled far
+-- past it): the latest step at or below your level with work, else the next one with work.
+local function FreshStep(level)
+  -- placing the bookmark: a step due for your level in the zone you're standing in comes first ("if
+  -- you are in the zone it makes sense to finish it"); after that only the bookmark decides
   local pm = ns.PlayerPos()
   if pm then
     for i, step in ipairs(ns.steps) do
-      if step.map == pm and not step.dungeon and not step.grind and ForMyRace(step) and step.from <= level
+      if step.map == pm and Usable(step) and not step.dungeon and not step.grind and step.from <= level
         and level <= step.to + 2 and HasWork(step, level) then
         return i
       end
@@ -538,6 +524,68 @@ local function AutoStep(level)
     if Usable(step) and not step.dungeon and ns.OpensAt(step, level) then return i end
   end
   return last > 0 and last or #ns.steps
+end
+
+-- One straight route (Gary 15 Nov: "it still kinda jumps around ... the prio should be just one straight
+-- guide that is as efficient as possible"): a bookmark (db.cursor) that only moves forward. It moves
+-- on when the step's work is done or skipped, when you've levelled 3+ past it, or when you're already
+-- in the zone of a later step that's due for your level (you went ahead). Leftovers in an earlier
+-- zone, or standing in an old zone on another continent, never pull it back. < > still move freely.
+local function AutoStep(level)
+  local dn = ns.CurrentDungeon()
+  if dn then
+    local i = DungeonStepFor(dn, level)
+    if i then return i end
+  end
+  local go = ns.db and ns.db.goDungeon
+  if go then
+    for i, step in ipairs(ns.steps) do
+      if step.dungeon == go then
+        local _, c = ScanStep(step, level)
+        if c[READY] + c[LOG] > 0 and ns.DungeonOn(go) then return i end
+      end
+    end
+    ns.db.goDungeon = nil   -- done (or dropped): back to the normal route
+  end
+  local db = ns.db or {}
+  local cur = db.cursor
+  -- no bookmark, a stale one (data changed), or one well ahead of you: start from your level
+  if not (cur and ns.steps[cur] and ForMyRace(ns.steps[cur])) or ns.steps[cur].from > level + 3 then
+    cur = FreshStep(level)
+    db.cursor = cur
+    return cur
+  end
+  -- you went ahead: you're in the zone of a later step that's due for your level and has work
+  local pm = ns.PlayerPos()
+  if pm then
+    for j = cur + 1, #ns.steps do
+      local st = ns.steps[j]
+      if st.from > level then break end
+      if st.map == pm and Usable(st) and not st.dungeon and not st.grind and HasWork(st, level) then
+        db.cursor = j
+        return j
+      end
+    end
+  end
+  local st = ns.steps[cur]
+  if Usable(st) and level <= st.to + 2 and HasWork(st, level) then return cur end
+  -- this step is done, skipped or out-levelled: the next one (in route order) with work for you
+  for j = cur + 1, #ns.steps do
+    local nx = ns.steps[j]
+    if Usable(nx) and level <= nx.to + 2 and HasWork(nx, level) then
+      db.cursor = j
+      return j
+    end
+  end
+  -- nothing doable right now: the next step whose quests open soonest (the tracker says "grind to N")
+  for j = cur + 1, #ns.steps do
+    local nx = ns.steps[j]
+    if Usable(nx) and not nx.dungeon and ns.OpensAt(nx, level) then
+      db.cursor = j
+      return j
+    end
+  end
+  return cur
 end
 
 --- The lowest level at which one of this step's quests you haven't done can be taken (nil: none left).
@@ -1186,6 +1234,9 @@ function ns.Step(delta)
 end
 
 function ns.Auto()
+  -- back to automatic from a step you moved ahead to with >: the route carries on from there
+  local st = ns.db.step
+  if st and ns.steps[st] and st > (ns.db.cursor or 0) then ns.db.cursor = st end
   ns.db.step, ns.db.prep = nil, nil
   ns.Recompute()
 end
