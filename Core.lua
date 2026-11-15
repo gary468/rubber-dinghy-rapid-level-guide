@@ -693,18 +693,36 @@ end
 ns.ObjName = ObjName
 -- q.om groups still to do; nil = use the quest's whole area (no per-objective data, or the quest log's
 -- objective names don't match it).
+local LOG_VERBS = { "marked", "slain", "killed", "destroyed", "found", "used", "activated", "explored",
+  "freed", "rescued", "investigated", "burned", "cleansed", "placed", "planted", "captured", "defeated" }
 local function LeftGroups(r)
   local om = r.q.om
   if not om then return nil end
   local objs = ns.RawObjectives(r.id)
   if #objs == 0 then return nil end
-  local doneBy = {}
-  for _, ob in ipairs(objs) do doneBy[ObjName(ob.text)] = ob.done end
+  -- Match each place to its quest-log line. The log's words can differ from the object's name
+  -- ("Tower Two marked" vs "Andorhal Tower Two"): a trailing verb goes, and one name containing the
+  -- other counts (Gary 15 Nov, All Along the Watchtowers: one merged stop, Tower One already done).
+  local logs = {}
+  for _, ob in ipairs(objs) do
+    local key = ObjName(ob.text)
+    local core = key
+    for _, verb in ipairs(LOG_VERBS) do
+      local cut = core:match("^(.-)%s+" .. verb .. "$")
+      if cut then core = cut; break end
+    end
+    logs[#logs + 1] = { key = key, core = core, done = ob.done }
+  end
   local left = {}
   for _, g in ipairs(om) do
-    local d = doneBy[g[1]:lower()]
-    if d == nil then return nil end          -- can't tell which objective this is: keep it all
-    if not d then left[#left + 1] = g end
+    local label = g[1]:lower()
+    local hit
+    for _, l in ipairs(logs) do
+      if label == l.key or label == l.core or (#l.core >= 4 and label:find(l.core, 1, true))
+        or (#label >= 4 and l.core:find(label, 1, true)) then hit = l; break end
+    end
+    if not hit then return nil end          -- can't tell which objective this is: keep it all
+    if not hit.done then left[#left + 1] = { g[1], g[2], key = hit.key } end
   end
   if #left == 0 then return nil end
   return left
@@ -745,6 +763,17 @@ local function Places(r, o)
     end
   end
   if #clusters == 0 then return { { loc = o } } end
+  -- Objectives that are single spots (towers, monuments, one chest each): one stop each, so the route
+  -- takes them nearest-first instead of one merged stop pinned at one of them.
+  local spots = #left > 1
+  for _, g in ipairs(left) do if #g[2] > 4 then spots = false end end
+  if spots then
+    local out = {}
+    for _, g in ipairs(left) do
+      out[#out + 1] = { loc = GroupLoc(o, { g }), only = { [g.key] = true } }
+    end
+    return out
+  end
   if #clusters == 1 then
     if #left == #r.q.om then return { { loc = o } } end
     return { { loc = GroupLoc(o, clusters[1].groups) } }
@@ -752,7 +781,7 @@ local function Places(r, o)
   local out = {}
   for _, c in ipairs(clusters) do
     local only = {}
-    for _, g in ipairs(c.groups) do only[g[1]:lower()] = true end
+    for _, g in ipairs(c.groups) do only[g.key or g[1]:lower()] = true end
     out[#out + 1] = { loc = GroupLoc(o, c.groups), only = only }
   end
   return out
