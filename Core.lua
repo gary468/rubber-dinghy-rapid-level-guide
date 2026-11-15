@@ -226,6 +226,7 @@ local function ReadPlayerBits()
   raceBit = raceID and 2 ^ (raceID - 1) or nil
   classBit = classID and 2 ^ (classID - 1) or nil
 end
+ns.ReadPlayerBits = ReadPlayerBits
 
 -- Texture/font helpers: use Forever's own art when the client has it, else a plain fallback.
 function ns.HasAtlas(name)
@@ -470,8 +471,12 @@ end
 -- still has work, that step - finish the zone you're in. Anywhere else, levelling past steps
 -- (grinding, a dungeon run) jumps ahead, and leftovers stay under Other Quests. The < and > buttons
 -- still pick a step by hand.
+local function ForMyRace(step)
+  return not (step.race and raceBit and band(step.race, raceBit) == 0)
+end
+ns.ForMyRace = ForMyRace
 local function Usable(step)
-  return not (step.dungeon and ns.DungeonOff(step.dungeon))
+  return ForMyRace(step) and not (step.dungeon and ns.DungeonOff(step.dungeon))
 end
 local function HasWork(step, level)
   if step.grind then return level < step.to end
@@ -500,7 +505,7 @@ local function AutoStep(level)
   local pm = ns.PlayerPos()
   if pm then
     for i, step in ipairs(ns.steps) do
-      if step.map == pm and not step.dungeon and not step.grind and step.from <= level
+      if step.map == pm and not step.dungeon and not step.grind and ForMyRace(step) and step.from <= level
         and level <= step.to + 2 and HasWork(step, level) then
         return i
       end
@@ -557,7 +562,7 @@ function ns.RouteStats()
   if routeStats then return routeStats end
   local xp, secs, n, lo, hi = 0, 0, 0, 99, 0
   for _, s in ipairs(ns.steps) do
-    if not s.optional and s.xp then
+    if not s.optional and s.xp and ForMyRace(s) then   -- your own starting zone only
       xp, secs, n = xp + s.xp, secs + (s.secs or 0), n + 1
       lo, hi = math.min(lo, s.from), math.max(hi, s.to)
     end
@@ -1173,6 +1178,8 @@ function ns.Step(delta)
   ns.db.prep = nil    -- changing step leaves a get-ready side route
   local cur = ns.db.step or AutoStep(UnitLevel("player") or 1)
   local n = cur + delta
+  -- < and > skip other races' starting-zone steps
+  while ns.steps[n] and not ForMyRace(ns.steps[n]) do n = n + (delta < 0 and -1 or 1) end
   if n < 1 then n = 1 elseif n > #ns.steps then n = #ns.steps end
   ns.db.step = n
   ns.Recompute()

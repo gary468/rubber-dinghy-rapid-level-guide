@@ -402,8 +402,10 @@ local function Render(r)
 
   for _, a in ipairs(r.loose) do
     if y > maxH then break end
-    -- no spot in any database yet: the quest's own words say where (e.g. "...in Wildhammer Keep")
-    Add(ns.ActionText(a), { indent = 22, color = WHITE })
+    -- no spot in any database yet: the quest's own words say where (e.g. "...in Wildhammer Keep"); a
+    -- pick-up says who gives it (Dun Morogh's NPCs have no positions in the data yet)
+    local giver = a.kind == "get" and a.row.q and a.row.q.g and a.row.q.g[1]
+    Add(ns.ActionText(a) .. ((giver and giver ~= "(item drop)") and ("|cff999999 - " .. giver .. "|r") or ""), { indent = 22, color = WHITE })
     local q = a.row.q
     if a.kind == "do" and q and q.ot then
       Add(q.ot, { indent = 30, font = SMALL_FONT, color = GREY })

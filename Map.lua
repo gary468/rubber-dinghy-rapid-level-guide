@@ -660,7 +660,8 @@ local function DrawAhead(canvas, cur, fx, fy, P, scale)
   for i = route.idx + 1, #ns.steps do
     if n >= AHEAD then break end
     local st = ns.steps[i]
-    if not (st.dungeon and ns.DungeonOff and ns.DungeonOff(st.dungeon)) and not st.grind then
+    if not (st.dungeon and ns.DungeonOff and ns.DungeonOff(st.dungeon)) and not st.grind
+      and not (ns.ForMyRace and not ns.ForMyRace(st)) then
       local hub = StepHub(st)
       local hx, hy = ToCur(st.map, hub[1], hub[2], cur)
       if not hx then break end   -- the route leaves this map (another continent): stop here

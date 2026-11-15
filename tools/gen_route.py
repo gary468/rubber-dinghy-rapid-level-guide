@@ -69,10 +69,10 @@ STEPS = [
     # 20-30
     dict(name="Redridge Mountains", lv=(20, 24), zones=[44], extra=[], note="Lakeshire."),
     dict(name="Westfall", lv=(20, 20), zones=[40], extra=[], note="Sentinel Hill."),
-    # 10-20 (starting zones' later quests included)
-    dict(name="Elwynn Forest", lv=(10, 12), zones=[12], extra=[], note="Goldshire."),
-    dict(name="Dun Morogh", lv=(10, 12), zones=[1], extra=[], note="Kharanos."),
-    dict(name="Teldrassil", lv=(10, 12), zones=[141], extra=[], note="Dolanaar."),
+    # Starting zones, level 1 up (each race's own route to 12 comes from tools/plan_start_*.json)
+    dict(name="Elwynn Forest", lv=(1, 12), zones=[12], extra=[], note="Goldshire."),
+    dict(name="Dun Morogh", lv=(1, 12), zones=[1], extra=[], note="Kharanos."),
+    dict(name="Teldrassil", lv=(1, 12), zones=[141], extra=[], note="Dolanaar."),
 ]
 RAIDS = {2717, 2159, 2677, 1977, 3428, 3429, 3456, 19}
 ALLIANCE_RACES = 1 | 4 | 8 | 64
@@ -430,7 +430,7 @@ for st in STEPS:
         lvl = q.get("questLevel") or 0
         # Any quest from this zone's NPCs up to 62 belongs to the step (follow-ups like Zorbin's 55s
         # included); ones far above you just show as "later" in game.
-        if not (min(lo - 6, 8) <= lvl <= 62): continue   # the route runs 10-60
+        if not (min(lo - 6, 8) <= lvl <= 62): continue   # starting zones from level 1, the rest 8+
         g = givers.get(qid)
         if not g or g["area"] not in st["zones"]: continue
         if g.get("fac") and "A" not in str(g["fac"]): continue
@@ -452,7 +452,7 @@ track = {}
 for qid, q in Q.items():
     if qid in used or not eligible(qid, q): continue
     lvl = q.get("questLevel") or 0
-    if not (8 <= lvl <= 62): continue
+    if not (1 <= lvl <= 62): continue   # capitals' level 1-7 quests too (the starting routes use them)
     g = givers.get(qid)
     if g and g.get("fac") and "A" not in str(g["fac"]): continue
     o = _objective_area(qid, None)
@@ -486,6 +486,26 @@ if PLAN:
     seen = collections.Counter()
     new_steps, new_used = [], {}
     zone_name = {int(k): v for k, v in (d.get("zones") or {}).items() if isinstance(v, str)}
+    # Each race's own route from level 1 (tools/plan_start_*.json, planned in its starting zone and
+    # capital): steps the addon only shows to that race, before the shared route.
+    starts = []
+    for fn, mask in (("plan_start_human.json", 1), ("plan_start_dwarf.json", 4 | 64), ("plan_start_nelf.json", 8)):
+        try:
+            for v in json.load(open(HERE + "\\" + fn, encoding="utf-8")):
+                if v.get("kind") == "zone": starts.append(dict(v, _race=mask))
+        except FileNotFoundError:
+            pass
+    # A race whose starting zone couldn't be planned (Dun Morogh: Questie's Forever data has no NPC
+    # positions there yet): its quests in level order as a plain step, until players' learned spots
+    # let tools/plan_v2.py plan it.
+    for mask, zname in ((4 | 64, "Dun Morogh"), (1, "Elwynn Forest"), (8, "Teldrassil")):
+        if any(v.get("_race") == mask for v in starts): continue
+        zst = next((ids for st, ids in steps_out if st["name"] == zname), [])
+        qs = [q for q in zst if (Q[q].get("questLevel") or 0) <= 14]
+        m = next((uimap.get(z) for st, _ in steps_out if st["name"] == zname for z in st["zones"]), None)
+        if qs and m:
+            starts.append(dict(kind="zone", map=m, name=zname, lv_in=1, lv_out=12, quests=qs, pick=[], turn=[], _race=mask))
+    plan = starts + [v for v in plan if v.get("lv_out", 99) > 12 or v.get("kind") != "zone" or not starts]
     for v in plan:
         if v["name"].startswith("map ") or v["name"] == "here":
             for a in sorted(map_areas.get(v["map"], [])):
@@ -514,19 +534,20 @@ if PLAN:
                            f"(about {round(v.get('secs', 0) / 60)} min), ideally in a dungeon group.", extra=[], grind=True)
         else:
             if not ids and not pick and not turn: continue
-            seen[m] += 1
+            seen[(v.get("_race"), m)] += 1
             note = zone_note.get(m, f"Go to {v['name']}.")
             if not ids and (pick or turn):
                 note = "On the way: " + " and ".join(x for x in (
                     "pick up quests for later" if pick else "", "hand in finished quests" if turn else "") if x) + "."
-            elif seen[m] > 1: note = "Back for the quests that have opened up at your level. " + note
+            elif seen[(v.get("_race"), m)] > 1: note = "Back for the quests that have opened up at your level. " + note
             if pick and ids: note += " Pick up quests here for later in the route."
             if (v.get("grind_s") or 0) >= 300:   # route v2: levels ground here to unlock this zone's quests
                 note += f" Includes about {round(v['grind_s'] / 60)} min of grinding: some quests here need a level or two more."
-            st = dict(name=v["name"] + ("" if seen[m] == 1 else " (return visit)"), lv=lv,
+            st = dict(name=v["name"] + ("" if seen[(v.get("_race"), m)] == 1 else " (return visit)"), lv=lv,
                       zones=sorted(map_areas.get(m, [])) or [0], map_id=m, note=note, extra=[], pick=pick,
                       turn=turn, ord=v.get("order"))
         st["xp"], st["secs"] = int(v.get("xp") or 0), int(v.get("secs") or 0)
+        if v.get("_race"): st["race"] = v["_race"]
         for q in ids: new_used[q] = st
         new_steps.append((st, ids))
     dungeon_quests = {q for st, ids in new_steps if st.get("dungeon") for q in ids}
@@ -573,6 +594,7 @@ for st, ids in steps_out:
         if st.get("optional"): extra += ", optional=true"
         if st.get("cost") is not None: extra += f", cost={int(st['cost'])}"
     if st.get("grind"): extra += ", grind=true"
+    if st.get("race"): extra += f", race={st['race']}"   # a starting zone's step: only for these races
     if st.get("xp"): extra += f", xp={st['xp']}, secs={st['secs']}"
     out.append(f"  {{name={lstr(st['name'])}, from={st['lv'][0]}, to={st['lv'][1]}, map={m}, note={lstr(st['note'])}, quests={{{','.join(map(str, ids))}}}{extra}}},")
 out.append("}")
@@ -606,8 +628,18 @@ obj_npcs = {}   # creature NPC id -> quests that need it killed
 # learned.json "spots": {qid: [[uiMap, x, y], ...]}).
 try:
     LEARNED_SPOTS = {int(k): v for k, v in (json.load(open(HERE + r"\learned.json", encoding="utf-8")).get("spots") or {}).items()}
+    LEARNED_NPCS = json.load(open(HERE + r"\learned.json", encoding="utf-8")).get("npcs") or {}
 except (FileNotFoundError, ValueError):
     LEARNED_SPOTS = {}
+    LEARNED_NPCS = {}
+_AREA_OF_MAP = {}
+for _a, _m in uimap.items(): _AREA_OF_MAP.setdefault(_m, _a)
+def with_learned(qid, kind, loc):
+    """A giver / hand-in with no position in the data: where players stood when its quest window
+    opened (Learn.lua), if any."""
+    v = LEARNED_NPCS.get(f"{kind}{qid}")
+    if not loc or loc.get("x") is not None or not v or v[0] not in _AREA_OF_MAP: return loc
+    return dict(loc, area=_AREA_OF_MAP[v[0]], x=v[1], y=v[2])
 # Spots players told us about (tools/overrides.json "spots"), for objectives no database places.
 try:
     for _k, _v in (json.load(open(HERE + r"\overrides.json", encoding="utf-8")).get("quests") or {}).items():
@@ -680,7 +712,7 @@ for qid in sorted(set(used) | set(track)):
     ql_ = q.get("questLevel") or 0
     rl_ = q.get("requiredLevel") or (max(1, ql_ - 2) if ql_ >= 10 else 0)
     parts = [f"n={lstr(q.get('name'))}", f"l={ql_}", f"r={rl_}",
-             f"g={lloc(givers.get(qid))}", f"t={lloc(t)}"]
+             f"g={lloc(with_learned(qid, 'g', givers.get(qid)))}", f"t={lloc(with_learned(qid, 't', t))}"]
     if (givers.get(qid) or {}).get("name") == "(item drop)":
         si, si_npcs = start_item(qid)
         if si:

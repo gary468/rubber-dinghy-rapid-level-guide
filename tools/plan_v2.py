@@ -22,6 +22,14 @@ args = [a for i, a in enumerate(sys.argv[1:], 1) if not a.startswith("--") and s
 DATA, WOW, QMETA, PLAN, OUT = args[:5]
 MINUTES = float(sys.argv[sys.argv.index("--minutes") + 1]) if "--minutes" in sys.argv else 10
 START_LEVEL = int(os.environ.get("START_LEVEL", 10))
+# A starting zone's route (level 1 to UNTIL_LEVEL): RACE = that race's bit, MAPS = the only maps whose
+# quests it may use (the starting zone and its capital). The main route: MAPS_EXCLUDE = the starting
+# zones, so nobody is sent to another race's start.
+TARGET = int(os.environ.get("UNTIL_LEVEL", 60))
+MAPS = {int(m) for m in os.environ.get("MAPS", "").split(",") if m.strip()}
+MAPS_EXCLUDE = {int(m) for m in os.environ.get("MAPS_EXCLUDE", "").split(",") if m.strip()}
+if os.environ.get("RACE"): R.RACE = int(os.environ["RACE"])
+NO_CLASS = bool(os.environ.get("NO_CLASS"))   # starting zones: leave class quests to the player
 LOG_MAX = 40   # Forever's quest log holds 40 (the game shows 26/40); Classic's 20 left good quests out
 ACC_S, RET_S = 12, 12                    # talking to the NPC (the walk there is travel)
 WINDOW = 60                              # how far an action may move in one step of the search
@@ -47,9 +55,13 @@ G, O, E = {}, {}, {}
 for qid, q in quests.items():
     if q.get("rep") or q.get("d") or qid not in base or base[qid][1] <= 0: continue
     if q.get("ra") and not (q["ra"] & R.RACE): continue
-    if q.get("cl") and not (q["cl"] & R.CLASS): continue
+    if q.get("cl") and (NO_CLASS or not (q["cl"] & R.CLASS)): continue
     g, t = place(q.get("g")), place(q.get("t"))
     if not g or not t: continue
+    _maps = {g[0], t[0]} | ({place(q.get("o"))[0]} if place(q.get("o")) else set())
+    if MAPS and not _maps <= MAPS: continue
+    if MAPS_EXCLUDE and _maps & MAPS_EXCLUDE: continue
+    if MAPS and (q.get("l") or 0) > TARGET + 2: continue
     G[qid], E[qid] = g, t
     o = place(q.get("o"))
     if o: O[qid] = o
@@ -86,7 +98,7 @@ def simulate(seq, record=False):
     done, log, objd = set(), set(), set()
     recs, gained, ground = [], 0, 0.0
     for i, a in enumerate(seq):
-        if lv >= 60: break
+        if lv >= TARGET: break
         kind, q = a
         Q = quests[q]
         if kind == "acc":
@@ -114,11 +126,13 @@ def simulate(seq, record=False):
             qx = R.quest_xp(base, q, lv); xp += qx; gained += qx; log.discard(q); done.add(q)
         if pos is not None and p[0] != pos[0]: t += ZONE_SWITCH_S
         pos = p
-        while lv < 60 and xp >= R.level_xp(lv):
+        while lv < TARGET and xp >= R.level_xp(lv):
             xp -= R.level_xp(lv); lv += 1
         if record: recs.append((i, lv, t, tr, gained, ground))
-    while lv < 60:
+    while lv < TARGET:
         t += (R.level_xp(lv) - xp) / GRIND[lv] * 3600; xp = 0; lv += 1
+    if MAPS:   # a starting zone: every quest gets done, so one left undone costs an hour (never pays)
+        t += 3600 * len({a[1] for a in seq} - done)
     return t / 3600, recs
 
 
@@ -237,7 +251,8 @@ def search(seq, minutes, rng):
             j = max(0, min(len(cand), i + rng.randint(-WINDOW, WINDOW)))
             cand.insert(j, a)
             if not valid_order(cand, a[1]): continue
-        elif r < 0.85 and cand:                                 # drop a quest
+        elif r < 0.85 and cand and not MAPS:                    # drop a quest (never in a starting zone:
+            # you do its quests - nothing else on the route would - so only their order is planned)
             q = rng.choice(cand)[1]
             cand = [a for a in cand if a[1] != q]
         else:                                                   # add a quest at its cheapest spots
@@ -293,8 +308,8 @@ def to_plan(seq):
         cur["xp"] += int(gained - x_prev)
         cur["grind_s"] = cur.get("grind_s", 0) + round(ground - g_prev)   # levels ground here to unlock quests
         lv_prev, t_prev, x_prev, g_prev = lv, t, gained, ground
-    # optional dungeons from the old plan, placed by level
-    for v in old_plan:
+    # optional dungeons from the old plan, placed by level (not on a starting zone's route)
+    for v in ([] if MAPS else old_plan):
         if not v.get("optional"): continue
         at = len(out)
         for k, z in enumerate(out):
@@ -309,6 +324,10 @@ if __name__ == "__main__":
         prev = json.load(open(sys.argv[sys.argv.index("--from") + 1]))
         seed = [tuple(a) for v in prev if v.get("kind") == "zone" for a in v.get("order", [])]
         seed = [a for a in seed if a[1] in POOL]
+    elif MAPS:
+        qs = sorted(POOL, key=lambda q: (quests[q].get("l") or 0, q))
+        acts = [a for q in qs for a in ([("acc", q)] + ([("obj", q)] if q in O else []) + [("ret", q)])]
+        seed = nearest_order(acts, G[qs[0]] if qs else None, set())
     else:
         seed = build_seed()
     h0, _ = simulate(seed)
@@ -316,6 +335,6 @@ if __name__ == "__main__":
     h, plan = to_plan(seq)
     json.dump(plan, open(OUT, "w"), indent=1)
     zones = [p for p in plan if p["kind"] == "zone"]
-    print(f"\nBEST {h:.2f} h played to 60 (seed {h0:.2f} h): {sum(1 for a in seq if a[0] == 'ret')} quests, "
+    print(f"\nBEST {h:.2f} h played to {TARGET} from {START_LEVEL} (seed {h0:.2f} h): {sum(1 for a in seq if a[0] == 'ret')} quests, "
           f"{len(zones)} zone visits, {sum(len(p.get('pick', [])) for p in zones)} pick-ups on the way, "
           f"{sum(len(p.get('turn', [])) for p in zones)} hand-ins on the way")

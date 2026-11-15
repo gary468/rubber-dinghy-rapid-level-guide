@@ -74,6 +74,24 @@ local function RecordSpot(id)
   d.spots[id] = list .. (list ~= "" and ";" or "") .. ("%d:%.1f,%.1f"):format(m, x, y)
 end
 
+---------------------------------------------------------------------------
+-- Where a quest's giver / hand-in NPC stands, for quests whose NPC has no position in the data
+-- (Questie's Forever data has none for almost all of Dun Morogh): the spot you're on when the
+-- quest window opens. tools/learn.py hands them to the route generator.
+---------------------------------------------------------------------------
+local function RecordNpc(kind)
+  local id = GetQuestID and GetQuestID()
+  if not id or id == 0 then return end
+  local q = ns.quests and ns.quests[id]
+  local loc = q and (kind == "g" and q.g or q.t)
+  if not loc or (loc[3] and loc[4]) then return end    -- unknown quest, or the data has the spot
+  local d = DB(); if not d then return end
+  local m, x, y = ns.PlayerPos()
+  if not m then return end
+  d.npc = d.npc or {}
+  d.npc[kind .. id] = ("%d:%.1f,%.1f"):format(m, x, y)
+end
+
 local function ScanLog()
   if not DB() then return end
   for _, e in ipairs(ns.QuestLog()) do
@@ -110,7 +128,9 @@ f:SetScript("OnUpdate", function(_, dt)
   tick = tick + dt
   if tick > 1 then tick = 0; if DB() then CheckTaxi() end end
 end)
-f:SetScript("OnEvent", function()
+f:SetScript("OnEvent", function(_, event)
+  if event == "QUEST_DETAIL" then ns.Safe("Learn", RecordNpc, "g"); return end
+  if event == "QUEST_PROGRESS" or event == "QUEST_COMPLETE" then ns.Safe("Learn", RecordNpc, "t"); return end
   if pending or not DB() then return end
   pending = true
   C_Timer.After(1, function() pending = false; ns.Safe("Learn", ScanLog) end)
@@ -119,6 +139,7 @@ end)
 ns.inits.Learn = function()
   pcall(f.RegisterEvent, f, "QUEST_ACCEPTED")
   pcall(f.RegisterEvent, f, "QUEST_LOG_UPDATE")
+  for _, e in ipairs({ "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE" }) do pcall(f.RegisterEvent, f, e) end
   ns.Safe("Learn", ScanLog)
 end
 

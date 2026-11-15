@@ -10,6 +10,7 @@ from lupa import lua51
 
 WOW, OUT = sys.argv[1], sys.argv[2]
 counts, flights, spots, legs = {}, [], {}, {}
+npcs = {}   # "g123" / "t123" -> [uiMap, x, y]: where that quest's giver / hand-in stands
 for path in glob.glob(WOW + r"\WTF\Account\*\*\*\SavedVariables\RubberDinghyRapidLevelGuide.lua"):
     L = lua51.LuaRuntime(unpack_returned_tuples=True)
     try:
@@ -30,6 +31,10 @@ for path in glob.glob(WOW + r"\WTF\Account\*\*\*\SavedVariables\RubberDinghyRapi
             elif kind in ("o", "e", "x", "l"): c["o"] += n
         counts[int(qid)] = c
     # where objectives are, for quests with no location in the data: "map:x,y;map:x,y"
+    for key, v in (learn.npc or {}).items():
+        m, xy = str(v).split(":")
+        x, y = xy.split(",")
+        npcs[str(key)] = [int(m), float(x), float(y)]
     for qid, s in (learn.spots or {}).items():
         lst = spots.setdefault(int(qid), [])
         for part in str(s).split(";"):
@@ -46,7 +51,7 @@ for path in glob.glob(WOW + r"\WTF\Account\*\*\*\SavedVariables\RubberDinghyRapi
             flights.append(int(fl.s))
             if fl.fn and fl.tn: legs.setdefault(f"{fl.fn}|{fl.tn}", []).append(int(fl.s))
 
-out = {"counts": counts, "spots": {str(k): v for k, v in spots.items() if v},
+out = {"counts": counts, "npcs": npcs, "spots": {str(k): v for k, v in spots.items() if v},
        "legs": {k: statistics.median(v) for k, v in legs.items()}}
 if len(flights) >= 3:
     out["flight_s"] = statistics.median(flights)
