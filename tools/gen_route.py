@@ -747,6 +747,7 @@ for qid in sorted(set(used) | set(track)):
             parts.append(f"ot={lstr(ot[0][:160])}")
     if has_objectives(qid) or (FC_OBJ.get(str(qid)) or {}).get("need"): parts.append("ob=true")
     if (q.get("specialFlags") or 0) & 1: parts.append("rep=true")
+    if (q.get("questFlags") or 0) & 2: parts.append("esc=true")   # escort / group event: starts for the party
     # Candidate quest items for the tracker's item button (Questie's rule): the item the quest gives
     # you, items it requires, and objective items. The addon shows one only if it's in your bags and
     # has a "Use:" effect.

@@ -54,6 +54,21 @@ end
 
 local function Shift() return IsShiftKeyDown and IsShiftKeyDown() end
 
+-- Quests the route plans for you: every step's quests, pick-ups and hand-ins (built once, then a lookup).
+local routeSet
+function A.OnRoute(id)
+  if not id then return false end
+  if not routeSet then
+    routeSet = {}
+    for _, st in ipairs(ns.steps or {}) do
+      for _, list in ipairs({ st.quests or {}, st.pick or {}, st.turn or {} }) do
+        for _, q in ipairs(list) do routeSet[q] = true end
+      end
+    end
+  end
+  return routeSet[id] or false
+end
+
 -- NPC ID of the NPC you're talking to (nil when the game hides it from addons).
 local function NpcId()
   local g = UnitGUID and UnitGUID("npc")
@@ -134,6 +149,16 @@ local function OnDetail()
     ns.Print(("Not auto-accepting %s: it %s, so it's off the route."):format(GetTitleText and GetTitleText() or "this quest", why))
     return
   end
+  -- Escorts and group events are never accepted for you: accepting one starts it for the whole
+  -- party, and the auto hand-in of the quest before it would kick it off while the group isn't ready
+  -- (Gary 15 Nov: "stop griefing the rest of the group by accident").
+  local q = id and ns.quests and ns.quests[id]
+  if q and q.esc then
+    ns.Print(("%s is an escort: accept it yourself when your group is ready."):format(q.n))
+    return
+  end
+  -- "Only accept quests on the route" (settings): anything else stays open for you to decide
+  if ns.db.routeQuestsOnly and id and id > 0 and not A.OnRoute(id) then return end
   if QuestGetAutoAccept and QuestGetAutoAccept() then
     CloseQuest()        -- the game already accepted it
   elseif not LogFull() then
@@ -192,7 +217,9 @@ local function OnGossipQuests()
   end
   if LogFull() then return end
   for _, q in ipairs(G.GetAvailableQuests and G.GetAvailableQuests() or {}) do
-    if q.questID and not picked[q.questID] and not Skipped(q.questID) then
+    if q.questID and not picked[q.questID] and not Skipped(q.questID)
+      and not (ns.db.routeQuestsOnly and not A.OnRoute(q.questID))
+      and not (ns.quests and ns.quests[q.questID] and ns.quests[q.questID].esc) then
       picked[q.questID] = true
       return G.SelectAvailableQuest(q.questID)
     end
@@ -359,6 +386,7 @@ local QUEST_EVENTS = { QUEST_DETAIL = true, QUEST_ACCEPT_CONFIRM = true, QUEST_P
                        QUEST_AUTOCOMPLETE = true, QUEST_GREETING = true }
 local f = CreateFrame("Frame")
 f:SetScript("OnEvent", function(_, event, arg1, arg2)
+  if event == "QUEST_ACCEPTED" then return ns.Safe("OffRoute", A.OnQuestAccepted, arg1, arg2) end
   if QUEST_EVENTS[event] then
     if not A.On("quests") or Shift() then return end
     if event == "QUEST_DETAIL" then ns.Safe("Automation", OnDetail)
@@ -401,7 +429,7 @@ end
 ns.inits.Automation = function()
   for _, e in ipairs({ "QUEST_DETAIL", "QUEST_ACCEPT_CONFIRM", "QUEST_PROGRESS", "QUEST_COMPLETE", "QUEST_AUTOCOMPLETE",
                        "QUEST_GREETING", "GOSSIP_SHOW", "CONFIRM_SUMMON", "RESURRECT_REQUEST", "MERCHANT_SHOW",
-                       "MERCHANT_CLOSED", "UI_ERROR_MESSAGE", "LOOT_READY" }) do
+                       "MERCHANT_CLOSED", "UI_ERROR_MESSAGE", "LOOT_READY", "QUEST_ACCEPTED" }) do
     pcall(f.RegisterEvent, f, e)
   end
   pcall(hooksecurefunc, "StaticPopup_Show", function(which) ns.Safe("Automation", ReleaseInPvP, which) end)
@@ -410,4 +438,21 @@ ns.inits.Automation = function()
     ns.Print("Leatrix Plus is still doing: " .. table.concat(lea, ", ") .. ". I'm leaving those to it. "
       .. "To let this addon do them, turn them off in Leatrix Plus (/ltp > Automation) and /reload.")
   end
+end
+
+---------------------------------------------------------------------------
+-- Picked up a quest that isn't on the route (by hand, or the auto-accept took it): say so once, so
+-- you can abandon it and keep your log for the route. Quests you start from an item, dungeon quests
+-- and repeatables aren't flagged.
+---------------------------------------------------------------------------
+local warned = {}
+function A.OnQuestAccepted(a1, a2)
+  if not ns.db or ns.disabled or ns.db.noOffRouteWarning then return end
+  local id = (type(a2) == "number" and a2 > 0 and a2) or a1
+  if type(id) ~= "number" or id <= 0 or warned[id] or A.OnRoute(id) then return end
+  local q = ns.quests and ns.quests[id]
+  if q and (q.d or q.rep or q.si or (q.g and q.g[1] == "(item drop)")) then return end
+  warned[id] = true
+  local title = (q and q.n) or (C_QuestLog and C_QuestLog.GetTitleForQuestID and C_QuestLog.GetTitleForQuestID(id)) or "a quest"
+  ns.Print(("|cffff8040%s isn't on the route.|r It's still routed in its zone, marked (not on the route). Keep it, or abandon it to keep your log for the route."):format(title))
 end

@@ -1057,7 +1057,13 @@ end
 ---------------------------------------------------------------------------
 ns.C = { TURN = "|cff33ff33", DO = "|cffffd100", GET = "|cffffffff", SOON = "|cff999999", DIM = "|cff999999" }
 
+local ActionTextPlain
 function ns.ActionText(a)
+  local t = ActionTextPlain(a)
+  if a.row.offRoute then t = t .. " |cffff8040(not on the route)|r" end
+  return t
+end
+function ActionTextPlain(a)
   local q = a.row.q
   -- "(dungeon)" marks dungeon quests on the leveling route; on a get-ready route they all are
   -- "(dungeon)" marks dungeon quests on a zone step; on a dungeon step or get-ready route they all are
@@ -1172,11 +1178,21 @@ function ns.Recompute()
   if not step.prep and not step.dungeon then
     local here = {}
     for _, r in ipairs(rows) do here[r.id] = true end
+    local OnRoute = ns.Automation and ns.Automation.OnRoute
     for _, e in ipairs(logList) do
-      local t = ns.quests[e.id] and ns.quests[e.id].t
-      if not here[e.id] and t and t[2] == step.map and Status(e.id, level) == READY then
-        rows[#rows + 1] = { id = e.id, s = READY, q = ns.quests[e.id], carried = true }
+      local q = ns.quests[e.id]
+      local t = q and q.t
+      local st = q and Status(e.id, level)
+      local off = OnRoute and not OnRoute(e.id)
+      if not here[e.id] and t and t[2] == step.map and st == READY then
+        rows[#rows + 1] = { id = e.id, s = READY, q = q, carried = true, offRoute = off }
         counts[READY] = counts[READY] + 1
+        here[e.id] = true
+      elseif not here[e.id] and off and st == LOG and q.o and q.o[2] == step.map then
+        -- a quest you picked up that isn't on the route (Gary 15 Nov: "should still be routed but
+        -- just with a warning on the guide"): its objectives here are a stop, marked as such
+        rows[#rows + 1] = { id = e.id, s = LOG, q = q, carried = true, offRoute = true }
+        counts[LOG] = counts[LOG] + 1
         here[e.id] = true
       end
     end
