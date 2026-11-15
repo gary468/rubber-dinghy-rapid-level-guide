@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.39
+- **Quests with several single-spot objectives** (All Along the Watchtowers' towers) get one stop
+  per spot, nearest first, and each drops off as you do it, even when the quest log words it
+  differently from the object ("Tower Two marked" for Andorhal Tower Two).
+
 ## v1.0.38
 - **Quests that aren't on the route** are still routed in their zone, marked "(not on the route)",
   and picking one up (by hand or by the auto-accept) says so in chat. New setting: "Only accept
