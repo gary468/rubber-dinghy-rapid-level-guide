@@ -988,6 +988,7 @@ local function BuildStops(rows, stepMap, current)
   -- Route v2: the planned order of every action (step.ord, "a916,o916,r916"): a stop's rank is its
   -- earliest action. Ranked stops keep that order (no live re-sorting), after tiers 0 and 1.
   local rank
+  local ordList = {}   -- planned actions in order: {code, questID}
   if curStep and curStep.ord then
     rank = {}
     local i = 0
@@ -995,6 +996,7 @@ local function BuildStops(rows, stepMap, current)
       i = i + 1
       local key = code .. id
       if not rank[key] then rank[key] = i end
+      ordList[i] = { code, tonumber(id) }
     end
     local CODE = { get = "a", ["do"] = "o", go = "o", turn = "r", dungeon = "o", dungeonturn = "r" }
     for _, s in ipairs(here) do
@@ -1043,6 +1045,62 @@ local function BuildStops(rows, stepMap, current)
     end
   end
   local ordered = {}
+  if rank then
+    -- One set order, fixed by the plan (Gary 15 Nov: "it should be a set route"). Planned stops in
+    -- planned order; stops the plan has no place for in this visit (a hand-in planned for a later
+    -- visit, an objective you're carrying) are slotted in where they add the least travel - not
+    -- tacked on at the end, which sent Gary to Chillwind, back to Andorhal and back to Mulgris.
+    -- The route starts where the plan has you just before its next stop, never where you stand.
+    local early, ranked, loose2 = {}, {}, {}
+    for _, s in ipairs(here) do
+      if s.tier < 2 then early[#early + 1] = s
+      elseif s.rank then ranked[#ranked + 1] = s
+      else loose2[#loose2 + 1] = s end
+    end
+    table.sort(ranked, function(a, b) return a.rank < b.rank end)
+    local ax, ay = cx, cy
+    if ranked[1] then
+      for k = math.floor(ranked[1].rank) - 1, 1, -1 do
+        local e = ordList[k]
+        local q = e and ns.quests[e[2]]
+        local loc = q and ((e[1] == "a" and q.g) or (e[1] == "r" and q.t) or q.o or q.t)
+        if loc and loc[2] == stepMap and loc[3] then ax, ay = loc[3], loc[4]; break end
+      end
+    end
+    local function P(st) return st.cx or st.x, st.cy or st.y end
+    local function D(x1, y1, x2, y2) return math.sqrt((x1 - x2) ^ 2 + (y1 - y2) ^ 2) end
+    table.sort(loose2, function(a, b)
+      local x1, y1 = P(a); local x2, y2 = P(b)
+      return D(ax, ay, x1, y1) < D(ax, ay, x2, y2)
+    end)
+    for _, st in ipairs(loose2) do
+      local sx, sy = P(st)
+      local bestK, bestC = #ranked + 1, math.huge
+      for k = 1, #ranked + 1 do
+        local px, py
+        if k == 1 then px, py = ax, ay else px, py = P(ranked[k - 1]) end
+        local nx, ny
+        if ranked[k] then nx, ny = P(ranked[k]) end
+        local c
+        if px and nx then c = D(px, py, sx, sy) + D(sx, sy, nx, ny) - D(px, py, nx, ny)
+        elseif px then c = D(px, py, sx, sy)
+        else c = 0 end
+        if c < bestC - 1e-9 then bestC, bestK = c, k end
+      end
+      table.insert(ranked, bestK, st)
+    end
+    local seq = {}
+    for _, st in ipairs(early) do seq[#seq + 1] = st end
+    for _, st in ipairs(ranked) do seq[#seq + 1] = st end
+    local px, py = ax, ay
+    for _, st in ipairs(seq) do
+      local _, bx, by = Dist(st, px, py)
+      if st.area and bx then st.x, st.y = bx, by end   -- pin, arrow and line go to the nearest part
+      ordered[#ordered + 1] = st
+      px, py = st.x, st.y
+    end
+    here = {}
+  end
   while #here > 0 do
     local bi, bt, bd, bx, by = 1, math.huge, math.huge, nil, nil
     for i, s in ipairs(here) do
