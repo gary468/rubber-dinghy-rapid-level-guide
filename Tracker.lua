@@ -283,7 +283,7 @@ local function Render(r)
           onClick = function() if ns.ShowSpotOnMap then ns.ShowSpotOnMap(q.g[2], q.g[3], q.g[4], q.g[1]) end end })
       end
       for _, c in ipairs(o.camps) do
-        Add(("|cffffd100Grind:|r %s (%d-%d) at %.0f,%.0f"):format(c.name, c.lo, c.hi, c.x, c.y), { font = SMALL_FONT,
+        Add(("|cffffd100Grind:|r %s (%d-%d) - %s %.0f,%.0f"):format(c.name, c.lo, c.hi, c.zone or "", c.x, c.y), { font = SMALL_FONT,
           color = WHITE, indent = 12, nowrap = true,
           tip = ("About %d %s spawn around %.0f, %.0f. Kill there until you're level %d, then carry on with the route.")
             :format(c.n, c.name, c.x, c.y, step.from),
