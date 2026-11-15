@@ -56,5 +56,34 @@
       "requiredClasses": 64,
       "note": "Challenge of the Desert Wolf: a shaman class quest (ForeverChanges files it under Shaman; the Odd Totem offers nothing to other classes). Gary (mage) was sent to it, 15 Nov 2026."
     }
+  },
+  "npcs": {
+    "_about": "NPC positions Questie's Forever data has wrong. Each applies only where the data has the stated wrong spot (from), so other quests of the same NPC are untouched. to = [uiMap, x, y]; null x/y = position unknown (the addon learns it when you talk to them).",
+    "Ketharas": {
+      "from": [
+        1450,
+        56.2,
+        30.6
+      ],
+      "to": [
+        2482,
+        73.3,
+        81.7
+      ],
+      "note": "Questie files him in Moonglade; ForeverChanges' quest pages (Seeds for a New Season) put him in Mount Hyjal 73.3, 81.7, and Gary did his quests in Hyjal. 15 Nov 2026."
+    },
+    "Dendrite Starblaze": {
+      "from": [
+        1450,
+        56.2,
+        30.6
+      ],
+      "to": [
+        2482,
+        null,
+        null
+      ],
+      "note": "Same Moonglade placeholder spot as Ketharas; ForeverChanges files his Forever quests (The Pact) under Mount Hyjal but has no position. 15 Nov 2026."
+    }
   }
 }

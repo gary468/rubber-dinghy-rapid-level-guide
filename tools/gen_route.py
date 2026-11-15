@@ -573,9 +573,37 @@ else:
 def lstr(s):
     return '"' + str(s).replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ") + '"'
 
+# Spots Questie files on a whole continent's map (Into The Maw of Madness: Mistress Natalia Mar'alith
+# on "Kalimdor") become the zone they fall in, using the game's map rectangles (tools/geo.json), so
+# the route never gets a step named after a continent.
+try:
+    _GEO = json.load(open(HERE + r"\geo.json", encoding="utf-8"))["maps"]
+except (FileNotFoundError, ValueError, KeyError):
+    _GEO = {}
+def zone_of(m, x, y):
+    g = _GEO.get(str(m))
+    if not g or g.get("type") != 2 or x is None or y is None: return m, x, y
+    wy = g["y1"] + (g["y2"] - g["y1"]) * x / 100.0          # map x (left-right) = world Y
+    wx = g["x1"] + (g["x2"] - g["x1"]) * y / 100.0          # map y (top-bottom) = world X
+    best = None
+    for k, z in _GEO.items():
+        if z.get("type") != 3 or z.get("cont") != g.get("cont"): continue
+        u = (wy - z["y1"]) / (z["y2"] - z["y1"]) * 100.0
+        v = (wx - z["x1"]) / (z["x2"] - z["x1"]) * 100.0
+        off = max(0.0, -u, u - 100.0) + max(0.0, -v, v - 100.0)   # 0 = inside the zone
+        if best is None or off < best[0]: best = (off, int(k), min(100.0, max(0.0, u)), min(100.0, max(0.0, v)))
+    if best and best[0] < 10: return best[1], best[2], best[3]
+    return m, x, y
+
 def lloc(e, with_r=False):
     if not e: return "nil"
     m = uimap.get(e["area"] or 0, 0)
+    if str(m) in _GEO and _GEO[str(m)].get("type") == 2 and e.get("x") is not None:
+        m2, x2, y2 = zone_of(m, e["x"], e["y"])
+        if m2 != m:
+            pts = [zone_of(m, u, v)[1:] for u, v in (e.get("pts") or [])]
+            e = dict(e, x=x2, y=y2, pts=pts or e.get("pts"))
+            m = m2
     x = "nil" if e.get("x") is None else f"{e['x']:.1f}"
     y = "nil" if e.get("y") is None else f"{e['y']:.1f}"
     extra = f",{e['r']:.1f}" if with_r and e.get("r") else ""
@@ -644,9 +672,19 @@ except (FileNotFoundError, ValueError):
     LEARNED_NPCS = {}
 _AREA_OF_MAP = {}
 for _a, _m in uimap.items(): _AREA_OF_MAP.setdefault(_m, _a)
+try:
+    NPC_FIX = {k: v for k, v in (json.load(open(HERE + r"\overrides.json", encoding="utf-8")).get("npcs") or {}).items()
+               if isinstance(v, dict)}
+except FileNotFoundError:
+    NPC_FIX = {}
 def with_learned(qid, kind, loc):
     """A giver / hand-in with no position in the data: where players stood when its quest window
-    opened (Learn.lua), if any."""
+    opened (Learn.lua), if any. NPCs the data has in the wrong place (overrides.json "npcs") first."""
+    fix = loc and NPC_FIX.get(loc.get("name"))
+    if fix and loc.get("x") is not None and uimap.get(loc.get("area") or 0) == fix["from"][0] \
+            and abs(loc["x"] - fix["from"][1]) < 0.15 and abs(loc["y"] - fix["from"][2]) < 0.15:
+        to = fix["to"]
+        loc = dict(loc, area=_AREA_OF_MAP.get(to[0], loc.get("area")), x=to[1], y=to[2])
     v = LEARNED_NPCS.get(f"{kind}{qid}")
     if not loc or loc.get("x") is not None or not v or v[0] not in _AREA_OF_MAP: return loc
     return dict(loc, area=_AREA_OF_MAP[v[0]], x=v[1], y=v[2])

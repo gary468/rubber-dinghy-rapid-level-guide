@@ -278,6 +278,59 @@ def search(seq, minutes, rng):
 # --------------------------------------------------------------------------------------------
 # Output: zone visits for gen_route.py (consecutive actions on one map), each with its action order
 # --------------------------------------------------------------------------------------------
+def polish(seq):
+    """The walk inside each zone visit, untangled (Gary 15 Nov, Mount Hyjal: the planned path was 18%
+    longer than plain nearest-first). For every run of actions on one map: nearest-first from where
+    the route enters it (pick-up < objective < hand-in, chains respected), then single moves that
+    shorten the walk. A visit's new order is kept only if the whole route gets faster in simulate()."""
+    best, _ = simulate(seq)
+    i = 0
+    while i < len(seq):
+        m = where(seq[i])[0]
+        j = i
+        while j < len(seq) and where(seq[j])[0] == m: j += 1
+        if j - i >= 4:
+            start = where(seq[i - 1]) if i > 0 else where(seq[i])
+            done = {a[1] for a in seq[:i] if a[0] == "ret"}
+            seg = nearest_order(seq[i:j], start, set(done))
+            segset = set(seg)
+            def ok(order):
+                seen, dn = set(), set(done)
+                for k, q in order:
+                    if k == "acc" and not prereqs_met(q, dn): return False
+                    if k == "obj" and ("acc", q) in segset and ("acc", q) not in seen: return False
+                    if k == "ret" and any((x, q) in segset and (x, q) not in seen for x in ("acc", "obj")): return False
+                    seen.add((k, q))
+                    if k == "ret": dn.add(q)
+                return True
+            def walk(order):
+                L, pos = 0.0, start
+                for a in order:
+                    L += travel(pos, where(a), 60); pos = where(a)
+                return L
+            cur = walk(seg)
+            improved, rounds = True, 0
+            while improved and rounds < 6:
+                improved, rounds = False, rounds + 1
+                for k in range(len(seg)):
+                    a = seg[k]
+                    rest = seg[:k] + seg[k + 1:]
+                    for t in range(len(rest) + 1):
+                        if t == k: continue
+                        cand = rest[:t] + [a] + rest[t:]
+                        w = walk(cand)
+                        if w < cur - 1e-6 and ok(cand):
+                            seg, cur, improved = cand, w, True
+                            break
+            trial = seq[:i] + seg + seq[j:]
+            h, _ = simulate(trial)
+            if h < best - 1e-6:
+                print(f"  polish map {m}: {best:.3f} -> {h:.3f} h", flush=True)
+                best, seq = h, trial
+        i = j
+    return best, seq
+
+
 def to_plan(seq):
     h, recs = simulate(seq, record=True)
     by_i = {r[0]: r[1:] for r in recs}
@@ -332,6 +385,7 @@ if __name__ == "__main__":
         seed = build_seed()
     h0, _ = simulate(seed)
     best, seq = search(seed, MINUTES, rng)
+    best, seq = polish(seq)
     h, plan = to_plan(seq)
     json.dump(plan, open(OUT, "w"), indent=1)
     zones = [p for p in plan if p["kind"] == "zone"]
