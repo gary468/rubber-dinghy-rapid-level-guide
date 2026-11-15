@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.0.37
+Restart the game after updating (there's a new file).
+- **One straight route.** The route keeps your place and only moves forward: when a step is done
+  or skipped, when you've out-levelled it, or when you've already gone ahead to the next zone.
+  Leftover quests in earlier zones, or standing in an old zone on another continent, no longer pull
+  it back. Skip ahead with > and press A to carry on from there.
+- **Behind the route? Catch-up options.** When you're below a step's planned level, the tracker
+  offers the best way back on track from anywhere: quests at your level, grinding camps, and
+  dungeons that fit (click a dungeon to add it to your route).
+- **Challenge of the Desert Wolf** (Tanaris) is a shaman quest and no longer shows for other
+  classes.
+
 ## v1.0.36
 - **The route now starts at level 1, in your race's own starting zone.**
   - Humans: Elwynn Forest and Stormwind, level 1 to about 15.
