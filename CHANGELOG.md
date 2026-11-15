@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.0.36
+- **The route now starts at level 1, in your race's own starting zone.**
+  - Humans: Elwynn Forest and Stormwind, level 1 to about 15.
+  - Night elves: Teldrassil and Darnassus, level 1 to about 14.
+  - Dwarves and gnomes: Dun Morogh's quests in level order, with who gives each. Forever's quest
+    data has no map positions there yet; the addon now learns them as you talk to quest givers, so
+    Dun Morogh gets a full route later.
+  - Then everyone joins the shared route at about level 14 (re-planned: about 89 hours to 60). Other
+    races' starting zones never show up.
+- **Fixed the "blocked from an action only available to the Blizzard UI" pop-up.** The dungeon run
+  log no longer uses the combat log (Forever forbids it), and the map no longer hides or refreshes
+  Blizzard's own map pins.
+
 ## v1.0.35
 - **Fixed "Tooltip failed ... UnitGUID ... Secret values" errors in chat.** Forever sometimes hands
   addons a hidden unit; the tooltip and the rare-mob check now skip it instead of erroring.
