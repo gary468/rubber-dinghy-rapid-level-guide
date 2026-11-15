@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.38
+- **Quests that aren't on the route** are still routed in their zone, marked "(not on the route)",
+  and picking one up (by hand or by the auto-accept) says so in chat. New setting: "Only accept
+  quests on the route" (off by default).
+- **Escorts are never auto-accepted**, so handing in the quest before one can't start it for your
+  whole group by accident. Accept it yourself when everyone's ready.
+
 ## v1.0.37
 Restart the game after updating (there's a new file).
 - **One straight route.** The route keeps your place and only moves forward: when a step is done
