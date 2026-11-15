@@ -263,6 +263,46 @@ local function Render(r)
         lines[#lines + 1] = "|cff999999< and > in the header change step, A goes back to automatic.|r"
         return table.concat(lines, "\n")
       end })
+  -- Behind the route's planned level: ways to catch up (quests, grinding, dungeons), folded by default
+  local behind = ns.CatchUp and ns.CatchUp.Behind(step, r.level) or 0
+  if behind >= 1 then
+    local open = ns.db.catchUpOpen
+    Add(("%s |cffff6040%d level%s behind|r - catch up"):format(open and "-" or "+", behind, behind == 1 and "" or "s"),
+      { font = SMALL_FONT, color = WHITE, indent = 4, nowrap = true,
+        tip = ("This step is planned from level %d and you're %d. Click for quests, grinding spots and dungeons at your level.")
+          :format(step.from, r.level),
+        onClick = function() ns.db.catchUpOpen = not ns.db.catchUpOpen; Render(ns.route) end })
+    if open then
+      local o = ns.CatchUp.Options(step, r.level)
+      for _, e in ipairs(o.quests) do
+        local id, q = e.id, e.q
+        Add(("|cffffd100Quest:|r %s [%d] - %s, %s"):format(q.n, q.l or 0, q.g[1] or "?", e.zone), { font = SMALL_FONT,
+          color = WHITE, indent = 12, nowrap = true,
+          tip = ("Pick up %s from %s in %s (%.0f, %.0f). Not on the route: a catch-up quest at your level.")
+            :format(q.n, q.g[1] or "?", e.zone, q.g[3] or 0, q.g[4] or 0),
+          onClick = function() if ns.ShowSpotOnMap then ns.ShowSpotOnMap(q.g[2], q.g[3], q.g[4], q.g[1]) end end })
+      end
+      for _, c in ipairs(o.camps) do
+        Add(("|cffffd100Grind:|r %s (%d-%d) at %.0f,%.0f"):format(c.name, c.lo, c.hi, c.x, c.y), { font = SMALL_FONT,
+          color = WHITE, indent = 12, nowrap = true,
+          tip = ("About %d %s spawn around %.0f, %.0f. Kill there until you're level %d, then carry on with the route.")
+            :format(c.n, c.name, c.x, c.y, step.from),
+          onClick = function() if ns.ShowSpotOnMap then ns.ShowSpotOnMap(c.map, c.x, c.y, c.name) end end })
+      end
+      for i, d in ipairs(o.dungeons) do
+        if i > 3 then break end
+        local on = ns.DungeonOn and ns.DungeonOn(d.full)
+        Add(("|cffffd100Dungeon:|r %s (%d-%d)%s"):format(d.full, d.lo, d.hi, on and " |cff999999- on your route|r" or ""),
+          { font = SMALL_FONT, color = WHITE, indent = 12, nowrap = true,
+            tip = on and "Already on your route: it shows as a step at its level."
+              or "Click to add it to your route (settings > Dungeons). Find a group with LFG.",
+            onClick = function() if not on and ns.SetDungeon then ns.SetDungeon(d.full, true) end end })
+      end
+      if #o.quests + #o.camps + #o.dungeons == 0 then
+        Add("Nothing near your level here - grind what's around you.", { font = SMALL_FONT, color = GREY, indent = 12 })
+      end
+    end
+  end
   -- Items in your bags that start a quest (looted or picked up: A Mangled Journal, Message in a Bottle)
   for _, it in ipairs(ns.Starters and ns.Starters.List() or {}) do
     Add(("|cffffd100Starts a quest:|r %s - right-click it in your bags"):format(it.item), {

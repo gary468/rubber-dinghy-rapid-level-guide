@@ -27,6 +27,7 @@ Map.lua
 Tracker.lua
 Items.lua
 Starters.lua
+CatchUp.lua
 Arrow.lua
 Options.lua
 Minimap.lua

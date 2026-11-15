@@ -847,6 +847,40 @@ out.append("-- Rare mobs (open world), [npcId] = name")
 out.append("ns.rareNpcs = {" + ", ".join(f"[{i}]={lstr(n)}" for i, n in sorted(rares.items())) + "}")
 out.append("-- Named quest targets (a mob with 1-3 spawns that a quest needs killed): [npcId] = {name, {questIds}}")
 out.append("ns.namedNpcs = {" + ", ".join(f"[{i}]={{{lstr(n)},{{{','.join(map(str, qs))}}}}}" for i, (n, qs) in sorted(named.items())) + "}")
+# Grinding camps per zone, for catching up when you're behind the route: hostile, non-elite mobs in
+# a dense spot (8+ spawns within 6% of the map), with their levels. {uiMap = {{name, lo, hi, x, y, n}}}
+camps = {}
+for k in list(meta):
+    mm = re.match(r"X-Npc-(\d+)-S$", k)
+    if not mm: continue
+    row = get(k) or {}
+    nm, lo, hi, rank, fac = pos(row, 1), pos(row, 4) or 0, pos(row, 5) or 0, pos(row, 6) or 0, pos(row, 13)
+    if not nm or fac or rank or not (5 <= (hi or lo) <= 62): continue
+    e = ent("npc", int(mm.group(1)))
+    by_map = {}
+    for a, x, y in pts(e) or []:
+        m = uimap.get(a)
+        if m and a not in dungeons: by_map.setdefault(m, []).append((x, y))
+    for m, ps in by_map.items():
+        if len(ps) < 8: continue
+        best, bn = None, 0
+        for x, y in ps[:300]:
+            n = sum(1 for u, v in ps if (u - x) ** 2 + (v - y) ** 2 <= 36)
+            if n > bn: best, bn = (x, y), n
+        if bn < 8: continue
+        near = [(u, v) for u, v in ps if (u - best[0]) ** 2 + (v - best[1]) ** 2 <= 36]
+        cx = sum(u for u, _ in near) / len(near); cy = sum(v for _, v in near) / len(near)
+        camps.setdefault(m, []).append((nm, lo or hi, hi or lo, cx, cy, bn))
+out.append("-- Grinding camps per zone (catch-up when you're behind): [uiMap] = {{name, lo, hi, x, y, spawns}}")
+out.append("ns.grindCamps = {")
+for m in sorted(camps):
+    best = {}
+    for c in sorted(camps[m], key=lambda c: -c[5]):
+        best.setdefault(c[0], c)            # one camp per mob name
+    top = sorted(best.values(), key=lambda c: -c[5])[:14]
+    out.append(f"  [{m}]={{" + ",".join("{" + f"{lstr(c[0])},{c[1]},{c[2]},{c[3]:.0f},{c[4]:.0f},{c[5]}" + "}" for c in top) + "},")
+out.append("}")
+print("grind camps:", sum(min(14, len(v)) for v in camps.values()), "in", len(camps), "zones")
 # Service NPCs (vendor, flight master, trainer, banker, battlemaster, auctioneer, stable master,
 # repair; QuestieDB's Classic npcFlags), for skipping their one-option gossip. Innkeepers are left
 # out on purpose: their gossip binds your hearthstone.
