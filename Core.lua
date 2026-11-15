@@ -770,7 +770,7 @@ local function Places(r, o)
   if spots then
     local out = {}
     for _, g in ipairs(left) do
-      out[#out + 1] = { loc = GroupLoc(o, { g }), only = { [g.key] = true } }
+      out[#out + 1] = { loc = GroupLoc(o, { g }), only = { [g.key] = true }, spot = true }
     end
     return out
   end
@@ -848,7 +848,7 @@ local function BuildStops(rows, stepMap, current)
           for k = 1, #loc[6] do found.pts[#found.pts + 1] = loc[6][k] end
         end
       end
-      found.actions[#found.actions + 1] = { kind = kind, row = r, only = pl.only }
+      found.actions[#found.actions + 1] = { kind = kind, row = r, only = pl.only, spot = pl.spot }
     else
       loose[#loose + 1] = { kind = kind, row = r }
     end
@@ -1006,8 +1006,10 @@ local function BuildStops(rows, stepMap, current)
     -- A quest split over two places (its objectives far apart): each part goes right after the
     -- planned stop nearest it, so you grab the crate while you're by the Eastern Pylon.
     for _, s in ipairs(here) do
+      -- (spot objectives - towers, named mobs - keep the quest's own planned place: they're the plan's
+      -- own objective, just shown one spot at a time; Gary 15 Nov, Radley and Durgen slid behind Mulgris)
       local split = #s.actions > 0
-      for _, a in ipairs(s.actions) do if not a.only then split = false end end
+      for _, a in ipairs(s.actions) do if not a.only or a.spot then split = false end end
       if split then
         local bd, br = math.huge, nil
         for _, o in ipairs(here) do
