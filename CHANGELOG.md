@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.40
+- **Stop order fixes.** Named mobs and other single-spot objectives keep their quest's planned
+  place (v1.0.39 could push them behind a later hand-in). Stops the plan has for a later visit to
+  the zone - a hand-in, an objective you're carrying - now slot in where they add the least travel
+  instead of trailing at the end. No more Chillwind, back to Andorhal, back to Mulgris.
+
 ## v1.0.39
 - **Quests with several single-spot objectives** (All Along the Watchtowers' towers) get one stop
   per spot, nearest first, and each drops off as you do it, even when the quest log words it
