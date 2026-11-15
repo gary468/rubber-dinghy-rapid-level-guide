@@ -51,6 +51,10 @@
     "89015": {
       "drop": true,
       "note": "Deadliest Catch: Berdun Cliffbrew doesn't offer it (Gary, 14 Nov 2026) and ForeverChanges has no page for it - probably not in the game."
+    },
+    "95753": {
+      "requiredClasses": 64,
+      "note": "Challenge of the Desert Wolf: a shaman class quest (ForeverChanges files it under Shaman; the Odd Totem offers nothing to other classes). Gary (mage) was sent to it, 15 Nov 2026."
     }
   }
 }

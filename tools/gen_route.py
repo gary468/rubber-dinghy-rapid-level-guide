@@ -391,8 +391,18 @@ try:
         if _v.get("drop"): black.add(int(_k))
         if _v.get("noAccept"): NO_ACCEPT[int(_k)] = _v["noAccept"]
         if _q is not None:
-            for _f in ("preQuestGroup", "preQuestSingle", "requiredLevel"):
+            for _f in ("preQuestGroup", "preQuestSingle", "requiredLevel", "requiredClasses"):
                 if _f in _v: _q[_f] = _v[_f]
+except FileNotFoundError:
+    pass
+# Class quests QuestieDB doesn't mark (Forever-only): ForeverChanges files them under the class
+# ("level 45 quest in Shaman"), read by tools/fetch_categories.py. Classic class bits.
+CLASS_BITS = {"Warrior": 1, "Paladin": 2, "Hunter": 4, "Rogue": 8, "Priest": 16, "Shaman": 64,
+              "Mage": 128, "Warlock": 256, "Druid": 1024}
+try:
+    for _k, _v in json.load(open(HERE + r"\forever_categories.json", encoding="utf-8")).items():
+        _q = Q.get(int(_k))
+        if _q is not None and _v in CLASS_BITS and not _q.get("requiredClasses"): _q["requiredClasses"] = CLASS_BITS[_v]
 except FileNotFoundError:
     pass
 # Minimum levels QuestieDB lacks (mostly Forever-only quests), read from ForeverChanges' quest pages
