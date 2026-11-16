@@ -11521,5 +11521,181 @@
 "map": 1423,
 "start": null,
 "end": null
+},
+"93615": {
+"map": 2482,
+"start": [
+"Shalla'kal",
+31.5,
+50.4
+],
+"end": [
+"Shalla'kal",
+31.5,
+50.4
+]
+},
+"95569": {
+"map": 2482,
+"start": [
+"Ketharas",
+73.3,
+81.7
+],
+"end": [
+"Ketharas",
+73.3,
+81.7
+]
+},
+"95766": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"91697": {
+"map": 2482,
+"start": null,
+"end": [
+"Elder Mistpaw",
+21.7,
+79.0
+]
+},
+"93826": {
+"map": 2482,
+"start": null,
+"end": [
+"Elder Pinespeaker",
+21.6,
+79.4
+]
+},
+"93833": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"93825": {
+"map": 2482,
+"start": [
+"Suma Mossmane",
+20.9,
+79.8
+],
+"end": [
+"Suma Mossmane",
+20.9,
+79.8
+]
+},
+"90750": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"95218": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"94832": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"96558": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"93567": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"91696": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"97263": {
+"map": 1455,
+"start": null,
+"end": [
+"Eldrun Stormbreaker",
+47.6,
+13.5
+]
+},
+"95041": {
+"map": 1455,
+"start": null,
+"end": [
+"Jemma Quikswitch",
+67.8,
+43.8
+]
+},
+"92873": {
+"map": 2652,
+"start": [
+"Orgrul",
+35.7,
+12.8
+],
+"end": [
+"Orgrul",
+35.7,
+12.8
+]
+},
+"92894": {
+"map": 2652,
+"start": [
+"Orgrul",
+35.7,
+12.8
+],
+"end": [
+"Orgrul",
+35.7,
+12.8
+]
+},
+"4185": {
+"map": 1453,
+"start": [
+"Highlord Bolvar Fordragon",
+80.2,
+38.3
+],
+"end": [
+"Highlord Bolvar Fordragon",
+80.2,
+38.3
+]
+},
+"4186": {
+"map": 1453,
+"start": null,
+"end": null
+},
+"6603": {
+"map": 1452,
+"start": null,
+"end": [
+"Donova Snowden",
+31.3,
+45.2
+]
 }
 }

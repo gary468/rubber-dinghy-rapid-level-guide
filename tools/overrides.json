@@ -52,6 +52,26 @@
       "drop": true,
       "note": "Deadliest Catch: Berdun Cliffbrew doesn't offer it (Gary, 14 Nov 2026) and ForeverChanges has no page for it - probably not in the game."
     },
+    "92100": {
+      "drop": true,
+      "note": "Anywhere But Here: the Veteran of the Third War is a spirit ('A spirit materializes before you') at Mount Hyjal 20.8,59.7 per ForeverChanges, but Gary (level 56) found nobody there, 16 Nov 2026. What makes him appear is unknown. Off the route with the rest of his chain."
+    },
+    "96550": {
+      "drop": true,
+      "note": "Battle Recall: follows Anywhere But Here (92100), which is off the route."
+    },
+    "93567": {
+      "drop": true,
+      "note": "Ends Meet: from the Veteran of the Third War spirit (27.5,50.9), whose first quest Gary couldn't find (16 Nov 2026). Off the route until someone sees how he appears."
+    },
+    "96558": {
+      "drop": true,
+      "note": "Soldier's Solace: from the Veteran of the Third War spirit (27.5,50.9); off the route like Ends Meet."
+    },
+    "96674": {
+      "drop": true,
+      "note": "Ewe Wandered Off: Mirt (Elderwild 15.9,52.7) stands there but offers nothing to Gary (level 56), 16 Nov 2026. ForeverChanges has no page for it."
+    },
     "95753": {
       "requiredClasses": 64,
       "note": "Challenge of the Desert Wolf: a shaman class quest (ForeverChanges files it under Shaman; the Odd Totem offers nothing to other classes). Gary (mage) was sent to it, 15 Nov 2026."
