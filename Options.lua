@@ -249,6 +249,7 @@ local function Build()
   end
   Check(f, y, "Only accept quests on the route", "Auto-accept takes only the quests the route uses. Others stay open for you to accept or close. Escorts are never accepted for you either way: they start for your whole group.", "routeQuestsOnly", false); y = y - 24
   Check(f, y, "Warn about quests off the route", "Says so in chat when you pick up a quest the route doesn't use. It's still routed in its zone, marked (not on the route).", "noOffRouteWarning", true); y = y - 24
+  Check(f, y, "Skip quests a giver doesn't offer", "When you talk to a quest giver and the quest the route wants isn't in their list, the route skips it and says so in chat. It comes back by itself when they offer it.", "noGiverSkip", true); y = y - 24
   y = y - 12
 
   local moveB = Button(f, "", 150, function() ns.SetMoveMode(not ns.db.unlocked) end,

@@ -1377,7 +1377,7 @@ function ns.SkipCount()
 end
 function ns.UnskipAll()
   local n = ns.SkipCount()
-  ns.db.skip = nil
+  ns.db.skip, ns.db.notOffered = nil, nil
   ns.Print(("%d skipped %s back in the route."):format(n, n == 1 and "quest is" or "quests are"))
   ns.Recompute()
 end

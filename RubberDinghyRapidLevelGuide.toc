@@ -34,4 +34,5 @@ Minimap.lua
 Tooltip.lua
 Rares.lua
 RunLog.lua
+NotOffered.lua
 Automation.lua
