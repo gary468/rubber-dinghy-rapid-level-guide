@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.46
+- **Quest givers who don't offer the quest yet:** when you talk to a giver and the quest the route
+  wants isn't in their list, the route skips it and says so in chat. It comes back by itself when
+  that giver offers it. It never judges while you're handing a quest in to them (follow-ups often
+  appear only after), below the quest's level, or from a quest a player shares. Settings: "Skip
+  quests a giver doesn't offer". `/rdr unskip` clears it all.
+
 ## v1.0.45
 - **Mount Hyjal:** the Veteran of the Third War quests are off the route. He's a spirit who only
   appears when you use an Embroidered Scabbard at the Elderwild overlook, nobody knows where that
