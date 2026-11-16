@@ -55,6 +55,42 @@
     "95753": {
       "requiredClasses": 64,
       "note": "Challenge of the Desert Wolf: a shaman class quest (ForeverChanges files it under Shaman; the Odd Totem offers nothing to other classes). Gary (mage) was sent to it, 15 Nov 2026."
+    },
+    "94504": {
+      "preQuestSingle": [
+        91697
+      ],
+      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
+    },
+    "93828": {
+      "preQuestSingle": [
+        91697
+      ],
+      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
+    },
+    "93830": {
+      "preQuestSingle": [
+        91697
+      ],
+      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
+    },
+    "93833": {
+      "preQuestSingle": [
+        91697
+      ],
+      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
+    },
+    "93834": {
+      "preQuestSingle": [
+        91697
+      ],
+      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
+    },
+    "96666": {
+      "preQuestSingle": [
+        91697
+      ],
+      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
     }
   },
   "npcs": {
