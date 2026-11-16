@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.44
+- **The whole route re-checked against ForeverChanges.** Quest givers and hand-ins in the wrong place
+  are corrected: Tooga (Oasis, Tanaris) was about 3,000 yards off, the Alliance Brigadier General is
+  in Darnassus, and 120+ NPCs with no position now have one.
+- **Dwarves and gnomes get a full starting route**: Dun Morogh and Ironforge, level 1 to about 11,
+  with map stops.
+- **Mount Hyjal's Barkskin Burrow:** the camp's quests wait until you've done its reputation chain
+  (up to Meet the Elders), instead of sending you into a hostile camp.
+- Re-planned: about 86.5 hours from level 14 to 60.
+
 ## v1.0.43
 - **Map and minimap show kill areas the same way:** gold circles round every spawn (the stop you're
   on bright, later ones faint) and the same gold dots on the nearby mobs.
