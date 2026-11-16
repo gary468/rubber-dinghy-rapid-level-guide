@@ -830,6 +830,151 @@ local function Target(r)
   return nil, "soon"
 end
 
+--- The zone's stop order, kept once set (Gary 16 Nov, Mount Hyjal: "the route is completely
+--- cooked"). The plan's order is right for someone arriving and doing the zone the plan's way; do
+--- things in another order and what's left of it zig-zags (about 400 map-% for Gary, back and forth
+--- across Hyjal). So: the first time a step is routed, its order is the plan's, or a tour from where
+--- you start when that's at least 15% shorter. After that the order is kept - walking around never
+--- changes it, finished stops just drop off, new stops slot in where they add the least. Only when a
+--- stop finishes or appears is the rest re-checked, and replaced by a fresh tour from where you stand
+--- if that is at least 20% shorter. Returns the order and the point it starts from.
+local function StopKey(st)
+  local t = {}
+  for _, a in ipairs(st.actions) do t[#t + 1] = (a.kind or "?") .. tostring(a.row.id) end
+  table.sort(t)
+  -- a quest split over two places is two stops with the same actions: the name tells them apart
+  return (st.name or "") .. "|" .. table.concat(t, ",")
+end
+local function PathCost(list, x, y, P, D)
+  local c = 0
+  for _, st in ipairs(list) do
+    local sx, sy = P(st)
+    if x and sx then c = c + D(x, y, sx, sy) end
+    x, y = sx, sy
+  end
+  return c
+end
+--- Nearest stop first from (x, y), then 2-opt (reverse a stretch whenever that's shorter). The last
+--- stop stays last: it's where the plan ends the zone (the hub you hand in at before leaving), so a
+--- tour never sends you there first (Gary 14 Nov: "you're telling me to hand this in straight away").
+local function Tour(list, x, y, P, D)
+  local last = list[#list]
+  local ex, ey = P(last)
+  local left, out = {}, {}
+  for i = 1, #list - 1 do left[i] = list[i] end
+  local qx, qy = x, y
+  while #left > 0 do
+    local bi, bd = 1, math.huge
+    for i, st in ipairs(left) do
+      local sx, sy = P(st)
+      local d = (qx and sx) and D(qx, qy, sx, sy) or 0
+      if d < bd then bi, bd = i, d end
+    end
+    local st = table.remove(left, bi)
+    out[#out + 1] = st
+    qx, qy = P(st)
+  end
+  local n, improved, pass = #out, true, 0
+  while improved and pass < 25 do
+    improved, pass = false, pass + 1
+    for i = 1, n - 1 do
+      for j = i + 1, n do
+        local px, py = x, y
+        if i > 1 then px, py = P(out[i - 1]) end
+        local ix, iy = P(out[i])
+        local jx, jy = P(out[j])
+        local before, after = 0, 0
+        if px then before, after = D(px, py, ix, iy), D(px, py, jx, jy) end
+        local nx, ny = ex, ey
+        if j < n then nx, ny = P(out[j + 1]) end
+        if nx then before, after = before + D(jx, jy, nx, ny), after + D(ix, iy, nx, ny) end
+        if after < before - 1e-6 then
+          local a, b = i, j
+          while a < b do out[a], out[b] = out[b], out[a]; a, b = a + 1, b - 1 end
+          improved = true
+        end
+      end
+    end
+  end
+  out[#out + 1] = last
+  return out
+end
+local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
+  local db = ns.db
+  if not db or #ranked < 2 then return ranked, ax, ay end
+  -- a finished quest carried in goes with the stop it was attached to (handed in as you pass)
+  local inList, attached, rest = {}, {}, {}
+  for _, st in ipairs(ranked) do inList[st] = true end
+  for _, st in ipairs(ranked) do
+    if st.attach and inList[st.attach] then attached[#attached + 1] = st else rest[#rest + 1] = st end
+  end
+  if #attached > 0 then
+    local out, sx, sy = KeptTour(rest, stepMap, curStep, ax, ay, P, D)
+    for _, st in ipairs(attached) do
+      for i, o in ipairs(out) do
+        if o == st.attach then table.insert(out, i + 1, st); break end
+      end
+    end
+    return out, sx, sy
+  end
+  if #ranked < 2 then return ranked, ax, ay end
+  local stepKey = curStep and ((curStep.name or "?") .. "@" .. tostring(curStep.from)) or tostring(stepMap)
+  local pm, hx, hy = ns.HerePos()
+  local inZone = pm == stepMap and hx ~= nil
+  local sx, sy = ax, ay
+  if inZone then sx, sy = hx, hy end
+  local tour = db.tour
+  if tour and tour.step ~= stepKey then tour = nil end
+  local out
+  if not tour then
+    out = ranked
+    local fresh = Tour(ranked, sx, sy, P, D)
+    if PathCost(fresh, sx, sy, P, D) < 0.85 * PathCost(ranked, sx, sy, P, D) then out = fresh end
+  else
+    local byKey = {}
+    for _, st in ipairs(ranked) do
+      local k = StopKey(st)
+      byKey[k] = byKey[k] or {}
+      table.insert(byKey[k], st)
+    end
+    local placed, changed = {}, false
+    out = {}
+    for _, k in ipairs(tour.keys or {}) do
+      local st = byKey[k] and table.remove(byKey[k], 1)
+      if st then out[#out + 1] = st; placed[st] = true else changed = true end
+    end
+    -- every stop not in the kept order (new, or renamed) slots in where it adds the least
+    for _, st in ipairs(ranked) do
+      if not placed[st] then
+        placed[st], changed = true, true
+        local px0, py0 = P(st)
+        local bestK, bestC = #out + 1, math.huge
+        for i = 1, #out + 1 do
+          local px, py = sx, sy
+          if i > 1 then px, py = P(out[i - 1]) end
+          local c
+          if out[i] then
+            local nx, ny = P(out[i])
+            c = (px and D(px, py, px0, py0) or 0) + D(px0, py0, nx, ny) - (px and D(px, py, nx, ny) or 0)
+          else
+            c = px and D(px, py, px0, py0) or 0
+          end
+          if c < bestC - 1e-9 then bestC, bestK = c, i end
+        end
+        table.insert(out, bestK, st)
+      end
+    end
+    if changed and inZone then
+      local fresh = Tour(out, hx, hy, P, D)
+      if PathCost(fresh, hx, hy, P, D) < 0.8 * PathCost(out, hx, hy, P, D) then out = fresh end
+    end
+  end
+  local keys = {}
+  for i, st in ipairs(out) do keys[i] = StopKey(st) end
+  db.tour = { step = stepKey, keys = keys }
+  return out, sx, sy
+end
+
 local function BuildStops(rows, stepMap, current)
   local stops, loose = {}, {}
   for _, r in ipairs(rows) do
@@ -1044,14 +1189,14 @@ local function BuildStops(rows, stepMap, current)
     for _, s in ipairs(here) do
       if s.tier == 1 then
         if not s.rank then
-          local bd, br = math.huge, nil
+          local bd, br, bo = math.huge, nil, nil
           for _, o in ipairs(here) do
             if o ~= s and o.rank then
               local d = ((o.cx or o.x) - (s.cx or s.x)) ^ 2 + ((o.cy or o.y) - (s.cy or s.y)) ^ 2
-              if d < bd then bd, br = d, o.rank end
+              if d < bd then bd, br, bo = d, o.rank, o end
             end
           end
-          if br then s.rank = br + 0.5 end
+          if br then s.rank = br + 0.5; s.attach = bo end   -- the kept tour keeps it right after bo
         end
         if s.rank then s.tier = 2 end
       end
@@ -1102,6 +1247,7 @@ local function BuildStops(rows, stepMap, current)
       end
       table.insert(ranked, bestK, st)
     end
+    ranked, ax, ay = KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
     local seq = {}
     for _, st in ipairs(early) do seq[#seq + 1] = st end
     for _, st in ipairs(ranked) do seq[#seq + 1] = st end
