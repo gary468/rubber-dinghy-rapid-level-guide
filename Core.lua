@@ -483,6 +483,7 @@ local function HasWork(step, level)
   local _, c = ScanStep(step, level)
   return c[READY] + c[LOG] + c[OPEN] > 0
 end
+local StepIndexOf, SetCursor
 -- Where the route starts for you when there's no bookmark yet (a new character, or you've levelled far
 -- past it): the latest step at or below your level with work, else the next one with work.
 local function FreshStep(level)
@@ -531,6 +532,15 @@ end
 -- on when the step's work is done or skipped, when you've levelled 3+ past it, or when you're already
 -- in the zone of a later step that's due for your level (you went ahead). Leftovers in an earlier
 -- zone, or standing in an old zone on another continent, never pull it back. < > still move freely.
+local function StepKey(st) return st and (st.name .. "@" .. tostring(st.from)) or nil end
+function StepIndexOf(key)
+  if not key then return nil end
+  for i, st in ipairs(ns.steps) do if StepKey(st) == key then return i end end
+end
+function SetCursor(i)
+  if ns.db then ns.db.cursorKey = StepKey(ns.steps[i]); ns.db.cursor = nil end
+end
+ns.StepKey, ns.StepIndexOf, ns.SetCursor = StepKey, StepIndexOf, SetCursor
 local function AutoStep(level)
   local dn = ns.CurrentDungeon()
   if dn then
@@ -548,11 +558,14 @@ local function AutoStep(level)
     ns.db.goDungeon = nil   -- done (or dropped): back to the normal route
   end
   local db = ns.db or {}
-  local cur = db.cursor
-  -- no bookmark, a stale one (data changed), or one well ahead of you: start from your level
-  if not (cur and ns.steps[cur] and ForMyRace(ns.steps[cur])) or ns.steps[cur].from > level + 3 then
+  -- The bookmark is the step itself (name and start level), not its number: a re-planned route has
+  -- different numbers (Gary 16 Nov: a saved "84" pointed at Dire Maul: East after the update, in Hyjal).
+  local cur = StepIndexOf(db.cursorKey)
+  -- no bookmark, a step that's gone, one you can't use (a dungeon you skip), or one well ahead of
+  -- you: start from your level
+  if not (cur and ForMyRace(ns.steps[cur]) and Usable(ns.steps[cur])) or ns.steps[cur].from > level + 3 then
     cur = FreshStep(level)
-    db.cursor = cur
+    SetCursor(cur)
     return cur
   end
   -- you went ahead: you're in the zone of a later step that's due for your level and has work
@@ -562,7 +575,7 @@ local function AutoStep(level)
       local st = ns.steps[j]
       if st.from > level then break end
       if st.map == pm and Usable(st) and not st.dungeon and not st.grind and HasWork(st, level) then
-        db.cursor = j
+        SetCursor(j)
         return j
       end
     end
@@ -573,7 +586,7 @@ local function AutoStep(level)
   for j = cur + 1, #ns.steps do
     local nx = ns.steps[j]
     if Usable(nx) and level <= nx.to + 2 and HasWork(nx, level) then
-      db.cursor = j
+      SetCursor(j)
       return j
     end
   end
@@ -581,7 +594,7 @@ local function AutoStep(level)
   for j = cur + 1, #ns.steps do
     local nx = ns.steps[j]
     if Usable(nx) and not nx.dungeon and ns.OpensAt(nx, level) then
-      db.cursor = j
+      SetCursor(j)
       return j
     end
   end
@@ -1341,7 +1354,7 @@ end
 function ns.Auto()
   -- back to automatic from a step you moved ahead to with >: the route carries on from there
   local st = ns.db.step
-  if st and ns.steps[st] and st > (ns.db.cursor or 0) then ns.db.cursor = st end
+  if st and ns.steps[st] and st > (StepIndexOf(ns.db.cursorKey) or 0) then SetCursor(st) end
   ns.db.step, ns.db.prep = nil, nil
   ns.Recompute()
 end
