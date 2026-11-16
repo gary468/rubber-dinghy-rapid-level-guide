@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.42
+- **Fixed: after updating, the route could jump to a dungeon** (Dire Maul: East at level 56). The
+  route remembered your place by step number, and the new route has different numbers. It now
+  remembers the step itself, and never lands on a dungeon you haven't added.
+
 ## v1.0.41
 - **Updated for Questie's latest Forever data** (21 new quests, 81 changed) and re-planned: about
   87 hours from level 14 to 60, with fewer zone visits.
