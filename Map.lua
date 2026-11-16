@@ -116,6 +116,7 @@ local FAINT = 0.3
 -- the current stop's spawns near its pin. Blizzard's own area shapes aren't used: the minimap can't
 -- draw them, so the two never matched.
 local AREA_YD = 30
+local DISC_A = 0.22   -- each disc's opacity, the same on the map and the minimap (overlaps add up)
 --- The current stop's spawns worth a gold dot: within 12% of the map of its pin, at least the nearest 8.
 function Map.NearSpawns(st)
   local pts, near, out = st and st.pts, {}, {}
@@ -272,12 +273,12 @@ WorldLayer = function(canvas, faint)
   if not l then
     l = CreateFrame("Frame", nil, canvas)
     l:SetAllPoints(canvas)
-    if l.SetFlattensRenderLayers then pcall(l.SetFlattensRenderLayers, l, true) end
     l.discs = {}
     worldLayers[k] = l
   end
   l:SetFrameLevel(OVERLAY_LEVEL - (faint and 2 or 1))
-  l:SetAlpha(math.min(0.6, (ns.db.areaAlpha or 0.2) * 1.2) * (faint and FAINT or 1))
+  l:SetAlpha(1)
+  l.faint = faint
   l:Show()
   return l
 end
@@ -287,9 +288,9 @@ WorldDisc = function(layer)
   if not d then
     d = layer:CreateTexture(nil, "ARTWORK")
     d:SetTexture(CIRCLE)
-    d:SetVertexColor(1, 0.78, 0.16, 1)
     layer.discs[layer.n] = d
   end
+  d:SetVertexColor(1, 0.78, 0.16, DISC_A * (layer.faint and FAINT or 1))
   return d
 end
 local function HideWorldDiscs()
@@ -1246,7 +1247,9 @@ local function MiniLayer(box, faint)
   if not miniLayers[k] then
     local l = CreateFrame("Frame", nil, box)
     l:SetAllPoints(box)
-    if l.SetFlattensRenderLayers then miniFlat = pcall(l.SetFlattensRenderLayers, l, true) end
+    -- no render-layer flattening: on the minimap it turned the discs into a solid lime shape with a
+    -- blue rim (Gary's /fstack, 16 Nov). Plain discs, same as the world map.
+    miniFlat = false
     miniLayers[k] = l
   end
   miniLayer = miniLayers[k]
@@ -1307,12 +1310,12 @@ local function MiniDraw()
       a:SetSize(rp * 2, rp * 2)
       a:ClearAllPoints()
       a:SetPoint("CENTER", box, "CENTER", cx, cy)
-      if miniFlat then a:SetVertexColor(1, 0.78, 0.16, 1) else a:SetVertexColor(1, 0.78, 0.16, alpha * 0.5) end
+      a:SetVertexColor(1, 0.78, 0.16, DISC_A * (st.faint and FAINT or 1))
       a:Show()
     end
     if st.spawns or st.ryd then
       layer = MiniLayer(box, st.faint)
-      layer:SetAlpha(miniFlat and alpha or 1)
+      layer:SetAlpha(1)
     end
     if st.spawns then
       local rp = SPAWN_YD / R * hw
