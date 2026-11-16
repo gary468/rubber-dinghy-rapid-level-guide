@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.0.47
+- **Stop order that doesn't zig-zag.** The route used to follow the plan's order even after you'd
+  done a zone your own way, which sent you back and forth (about 390 map-% across Mount Hyjal).
+  Now, if a tour from where you are is clearly shorter, the zone gets that tour, and it's kept:
+  walking around never reorders it, finished stops drop off, new ones slot in where they add the
+  least. The zone's last planned stop stays last, and finished quests you carry are still handed
+  in as you pass the giver.
+- **Mount Hyjal gathering quests have map areas:** Sweetpaw Jam (Bear Berries), Crystalline
+  Collection, Prickly Pinecones, Hope for Hatchlings, Seeds for a New Season, Rub Some Dirt In It,
+  Branch Out, A Thorn in the Paw, Resupply, Tarnished Treasures and Barkbound Blessings. Their
+  objects are new in Forever and missing from QuestieDB; positions from Wowhead's Forever database.
+- **Veteran of the Third War** is back on the route, at Mourning's Rest (24, 55) where he really
+  stands. Anywhere But Here and Battle Recall follow.
+
 ## v1.0.46
 - **Quest givers who don't offer the quest yet:** when you talk to a giver and the quest the route
   wants isn't in their list, the route skips it and says so in chat. It comes back by itself when
