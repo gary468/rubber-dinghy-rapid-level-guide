@@ -1013,12 +1013,30 @@ local MINI_SETTERS = {
   { "SetTaskBlobInsideAlpha", 0 }, { "SetTaskBlobOutsideAlpha", 0 }, { "SetTaskBlobRingAlpha", 0 },
   { "SetTaskBlobOutsideSelectedTexture", BLANK }, { "SetTaskBlobRingScalar", 0 },
 }
+-- Blizzard's quest areas themselves: the texture setters above don't reach Forever's minimap (Gary
+-- 16 Nov: a green area with a glowing blue rim under our gold discs). The game's own setting
+-- "questPOI" switches them off; we turn it off while the route draws its areas and put your value
+-- back when the route's map display is turned off. (Questie already handles questPOI = 0.)
+local function SetQuestPOI(hide)
+  if not (GetCVar and SetCVar) or (InCombatLockdown and InCombatLockdown()) then return end
+  local ok, cur = pcall(GetCVar, "questPOI")
+  if not ok or cur == nil then return end
+  if hide and cur ~= "0" then
+    ns.db.prevQuestPOI = cur
+    pcall(SetCVar, "questPOI", "0")
+  elseif not hide and ns.db.prevQuestPOI then
+    pcall(SetCVar, "questPOI", ns.db.prevQuestPOI)
+    ns.db.prevQuestPOI = nil
+  end
+end
 local function SuppressMinimap()
-  if not Minimap or ns.db.noMap or ns.db.keepBlizzMap then return end
+  if not Minimap then return end
+  if ns.db.noMap or ns.db.keepBlizzMap or ns.db.noMiniPins then SetQuestPOI(false); return end
   for _, s in ipairs(MINI_SETTERS) do
     local fn = Minimap[s[1]]
     if fn then pcall(fn, Minimap, s[2]) end
   end
+  SetQuestPOI(true)
   miniSuppressed = true
 end
 Map.SuppressMinimap = SuppressMinimap
