@@ -580,6 +580,12 @@ try:
     _GEO = json.load(open(HERE + r"\geo.json", encoding="utf-8"))["maps"]
 except (FileNotFoundError, ValueError, KeyError):
     _GEO = {}
+def world_of(m, x, y):
+    """(continent, world X, world Y) in yards for a spot on a map, from the game's map rectangles."""
+    g = _GEO.get(str(m))
+    if not g or x is None or y is None: return None
+    return g.get("cont"), g["x1"] + (g["x2"] - g["x1"]) * y / 100.0, g["y1"] + (g["y2"] - g["y1"]) * x / 100.0
+
 def zone_of(m, x, y):
     g = _GEO.get(str(m))
     if not g or g.get("type") != 2 or x is None or y is None: return m, x, y
@@ -673,6 +679,16 @@ except (FileNotFoundError, ValueError):
 _AREA_OF_MAP = {}
 for _a, _m in uimap.items(): _AREA_OF_MAP.setdefault(_m, _a)
 try:
+    FC_LOCS = json.load(open(HERE + r"\forever_locs.json", encoding="utf-8"))
+except (FileNotFoundError, ValueError):
+    FC_LOCS = {}
+# every NPC ForeverChanges pins anywhere: name -> (uiMap, x, y), for givers and hand-ins with no position
+FC_NPC_POS = {}
+for _r in FC_LOCS.values():
+    for _k in ("start", "end"):
+        _p = _r.get(_k)
+        if _p and _r.get("map") and _p[0] not in FC_NPC_POS: FC_NPC_POS[_p[0]] = (_r["map"], _p[1], _p[2])
+try:
     NPC_FIX = {k: v for k, v in (json.load(open(HERE + r"\overrides.json", encoding="utf-8")).get("npcs") or {}).items()
                if isinstance(v, dict)}
 except FileNotFoundError:
@@ -685,6 +701,22 @@ def with_learned(qid, kind, loc):
             and abs(loc["x"] - fix["from"][1]) < 0.15 and abs(loc["y"] - fix["from"][2]) < 0.15:
         to = fix["to"]
         loc = dict(loc, area=_AREA_OF_MAP.get(to[0], loc.get("area")), x=to[1], y=to[2])
+    # ForeverChanges' start / end pin for this quest (tools/fetch_fc_locs.py), when it's the same NPC
+    # and our data has no position, another zone, or a spot more than 5% of the map away
+    pin = (FC_LOCS.get(str(qid)) or {})
+    fcp = pin.get("start" if kind == "g" else "end")
+    if loc and fcp and pin.get("map") in _AREA_OF_MAP and fcp[0] == loc.get("name") and fcp[0] not in ("Chicken",):
+        m0 = uimap.get(loc.get("area") or 0)
+        # compared in the world, not map %: an Ironforge NPC is the same spot on ForeverChanges' Dun
+        # Morogh map. Only a missing position, another continent or 200+ yards apart counts.
+        wa = world_of(m0, loc.get("x"), loc.get("y"))
+        wb = world_of(pin["map"], fcp[1], fcp[2])
+        if loc.get("x") is None or (wa and wb and (wa[0] != wb[0] or math.hypot(wa[1] - wb[1], wa[2] - wb[2]) > 200)):
+            loc = dict(loc, area=_AREA_OF_MAP[pin["map"]], x=fcp[1], y=fcp[2])
+    # still no position: the same NPC pinned on any other ForeverChanges quest page
+    if loc and loc.get("x") is None and loc.get("name") in FC_NPC_POS:
+        m2, x2, y2 = FC_NPC_POS[loc["name"]]
+        if m2 in _AREA_OF_MAP: loc = dict(loc, area=_AREA_OF_MAP[m2], x=x2, y=y2)
     v = LEARNED_NPCS.get(f"{kind}{qid}")
     if not loc or loc.get("x") is not None or not v or v[0] not in _AREA_OF_MAP: return loc
     return dict(loc, area=_AREA_OF_MAP[v[0]], x=v[1], y=v[2])

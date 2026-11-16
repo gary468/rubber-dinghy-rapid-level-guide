@@ -1,0 +1,11525 @@
+{
+"91923": {
+"map": 2482,
+"start": null,
+"end": [
+"Thylaen",
+54.8,
+84.6
+]
+},
+"91755": {
+"map": 2482,
+"start": [
+"Hyacinth",
+54.1,
+84.2
+],
+"end": [
+"Hyacinth",
+54.1,
+84.2
+]
+},
+"91754": {
+"map": 2482,
+"start": [
+"Hyacinth",
+54.1,
+84.2
+],
+"end": [
+"Hyacinth",
+54.1,
+84.2
+]
+},
+"95317": {
+"map": 2482,
+"start": [
+"Curious Crow",
+48.2,
+85.7
+],
+"end": [
+"Curious Crow",
+48.2,
+85.7
+]
+},
+"95320": {
+"map": 2482,
+"start": null,
+"end": [
+"Felflick",
+49.4,
+77.1
+]
+},
+"95318": {
+"map": 2482,
+"start": [
+"Felflick",
+49.4,
+77.1
+],
+"end": [
+"Felflick",
+49.4,
+77.1
+]
+},
+"95319": {
+"map": 2482,
+"start": [
+"Felflick",
+49.4,
+77.1
+],
+"end": [
+"Felflick",
+49.4,
+77.1
+]
+},
+"95378": {
+"map": 2482,
+"start": [
+"Felflick",
+49.4,
+77.1
+],
+"end": [
+"Felflick",
+49.4,
+77.1
+]
+},
+"95379": {
+"map": 2482,
+"start": [
+"Felflick",
+49.4,
+77.1
+],
+"end": [
+"Felflick",
+49.4,
+77.1
+]
+},
+"96435": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"95380": {
+"map": 2482,
+"start": [
+"Curious Crow",
+48.2,
+85.7
+],
+"end": [
+"Curious Crow",
+48.2,
+85.7
+]
+},
+"96262": {
+"map": 2482,
+"start": [
+"Curious Crow",
+48.2,
+85.7
+],
+"end": [
+"Curious Crow",
+48.2,
+85.7
+]
+},
+"95316": {
+"map": 2482,
+"start": [
+"Curious Crow",
+48.2,
+85.7
+],
+"end": [
+"Curious Crow",
+48.2,
+85.7
+]
+},
+"91881": {
+"map": null,
+"start": null,
+"end": null
+},
+"96255": {
+"map": 2482,
+"start": null,
+"end": [
+"Felflick",
+49.4,
+77.1
+]
+},
+"96321": {
+"map": 2482,
+"start": null,
+"end": [
+"Curious Crow",
+48.2,
+85.7
+]
+},
+"92702": {
+"map": null,
+"start": null,
+"end": null
+},
+"92064": {
+"map": null,
+"start": null,
+"end": null
+},
+"96559": {
+"map": null,
+"start": null,
+"end": null
+},
+"93383": {
+"map": null,
+"start": null,
+"end": null
+},
+"94504": {
+"map": 2482,
+"start": [
+"Elder Mistpaw",
+21.7,
+79.0
+],
+"end": [
+"Elder Mistpaw",
+21.7,
+79.0
+]
+},
+"96666": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"93834": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"93828": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"93830": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"93952": {
+"map": 2482,
+"start": null,
+"end": null
+},
+"92100": {
+"map": 2482,
+"start": null,
+"end": [
+"Embroidered Scabbard",
+8.8,
+46.5
+]
+},
+"92449": {
+"map": 2482,
+"start": null,
+"end": null
+},
+"92591": {
+"map": null,
+"start": null,
+"end": null
+},
+"96674": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"92433": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"95027": {
+"map": 2482,
+"start": null,
+"end": null
+},
+"90702": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"96979": {
+"map": 2482,
+"start": [
+"Galvinquam Leafsyre",
+32.9,
+54.3
+],
+"end": [
+"Galvinquam Leafsyre",
+32.9,
+54.3
+]
+},
+"96991": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"96145": {
+"map": 2482,
+"start": null,
+"end": [
+"Phoebe Highfeather",
+54.4,
+63.8
+]
+},
+"96296": {
+"map": 2482,
+"start": null,
+"end": [
+"Phoebe Highfeather",
+54.4,
+63.8
+]
+},
+"91883": {
+"map": 2482,
+"start": [
+"Skylord Omnuron",
+54.3,
+63.9
+],
+"end": [
+"Skylord Omnuron",
+54.3,
+63.9
+]
+},
+"92147": {
+"map": 2482,
+"start": [
+"Phoebe Highfeather",
+54.4,
+63.8
+],
+"end": [
+"Phoebe Highfeather",
+54.4,
+63.8
+]
+},
+"96252": {
+"map": 2482,
+"start": [
+"Phoebe Highfeather",
+54.4,
+63.8
+],
+"end": [
+"Phoebe Highfeather",
+54.4,
+63.8
+]
+},
+"92594": {
+"map": 2482,
+"start": [
+"Kaylaena Springwhisper",
+60.2,
+61.4
+],
+"end": [
+"Kaylaena Springwhisper",
+60.2,
+61.4
+]
+},
+"93422": {
+"map": 2482,
+"start": [
+"Rhylin Stonethorn",
+70.7,
+51.2
+],
+"end": [
+"Rhylin Stonethorn",
+70.7,
+51.2
+]
+},
+"93127": {
+"map": 2482,
+"start": [
+"Tiala Whitemane",
+68.9,
+50.5
+],
+"end": [
+"Tiala Whitemane",
+68.9,
+50.5
+]
+},
+"93407": {
+"map": 2482,
+"start": [
+"Tiala Whitemane",
+68.9,
+50.5
+],
+"end": [
+"Tiala Whitemane",
+68.9,
+50.5
+]
+},
+"93547": {
+"map": 2482,
+"start": [
+"Tiala Whitemane",
+68.9,
+50.5
+],
+"end": [
+"Tiala Whitemane",
+68.9,
+50.5
+]
+},
+"93584": {
+"map": 2482,
+"start": null,
+"end": null
+},
+"92533": {
+"map": 2482,
+"start": [
+"Toron Rockhoof",
+69.0,
+47.2
+],
+"end": [
+"Toron Rockhoof",
+69.0,
+47.2
+]
+},
+"93444": {
+"map": null,
+"start": null,
+"end": null
+},
+"92017": {
+"map": 2482,
+"start": [
+"Marn Euhorn",
+68.5,
+46.7
+],
+"end": [
+"Marn Euhorn",
+68.5,
+46.7
+]
+},
+"97009": {
+"map": 2482,
+"start": [
+"Maerion Thaelemaches",
+63.3,
+25.9
+],
+"end": [
+"Maerion Thaelemaches",
+63.3,
+25.9
+]
+},
+"96959": {
+"map": 2482,
+"start": [
+"Yashiro",
+49.4,
+32.7
+],
+"end": [
+"Yashiro",
+49.4,
+32.7
+]
+},
+"96983": {
+"map": 2482,
+"start": [
+"Yashiro",
+49.4,
+32.7
+],
+"end": [
+"Yashiro",
+49.4,
+32.7
+]
+},
+"95793": {
+"map": 2482,
+"start": null,
+"end": [
+"Witherbeard",
+43.8,
+32.1
+]
+},
+"92960": {
+"map": 2482,
+"start": null,
+"end": [
+"Elaena Moonwhisper",
+43.7,
+32.2
+]
+},
+"92015": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"92014": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"96992": {
+"map": null,
+"start": null,
+"end": null
+},
+"92593": {
+"map": null,
+"start": null,
+"end": null
+},
+"96494": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"97010": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"96003": {
+"map": 2482,
+"start": null,
+"end": [
+"Elaena Moonwhisper",
+43.8,
+32.3
+]
+},
+"96025": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"92016": {
+"map": 2482,
+"start": [
+"Marn Euhorn",
+68.5,
+46.7
+],
+"end": [
+"Marn Euhorn",
+68.5,
+46.7
+]
+},
+"96302": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"96303": {
+"map": null,
+"start": null,
+"end": null
+},
+"96833": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"94479": {
+"map": 2482,
+"start": null,
+"end": [
+"Ketharas",
+73.3,
+81.7
+]
+},
+"95568": {
+"map": 2482,
+"start": [
+"Ketharas",
+73.3,
+81.7
+],
+"end": [
+"Ketharas",
+73.3,
+81.7
+]
+},
+"93747": {
+"map": 2482,
+"start": [
+"Ketharas",
+73.3,
+81.7
+],
+"end": [
+"Ketharas",
+73.3,
+81.7
+]
+},
+"91770": {
+"map": 2482,
+"start": null,
+"end": [
+"Fraxinus",
+53.6,
+84.3
+]
+},
+"92959": {
+"map": 2482,
+"start": [
+"Fraxinus",
+53.6,
+84.3
+],
+"end": [
+"Fraxinus",
+53.6,
+84.3
+]
+},
+"96322": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"92111": {
+"map": 2482,
+"start": null,
+"end": [
+"Osi Mistpaw",
+21.1,
+80.2
+]
+},
+"93831": {
+"map": 2482,
+"start": [
+"Osi Mistpaw",
+21.1,
+80.2
+],
+"end": [
+"Osi Mistpaw",
+21.1,
+80.2
+]
+},
+"96550": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"92842": {
+"map": null,
+"start": null,
+"end": null
+},
+"783": {
+"map": 1429,
+"start": null,
+"end": [
+"Marshal McBride",
+48.9,
+41.6
+]
+},
+"7": {
+"map": 1429,
+"start": [
+"Marshal McBride",
+48.9,
+41.6
+],
+"end": [
+"Marshal McBride",
+48.9,
+41.6
+]
+},
+"33": {
+"map": 1429,
+"start": [
+"Eagan Peltskinner",
+48.9,
+40.2
+],
+"end": [
+"Eagan Peltskinner",
+48.9,
+40.2
+]
+},
+"5261": {
+"map": 1429,
+"start": null,
+"end": [
+"Eagan Peltskinner",
+48.9,
+40.2
+]
+},
+"18": {
+"map": 1429,
+"start": [
+"Deputy Willem",
+48.2,
+42.9
+],
+"end": [
+"Deputy Willem",
+48.2,
+42.9
+]
+},
+"15": {
+"map": 1429,
+"start": [
+"Marshal McBride",
+48.9,
+41.6
+],
+"end": [
+"Marshal McBride",
+48.9,
+41.6
+]
+},
+"21": {
+"map": 1429,
+"start": [
+"Marshal McBride",
+48.9,
+41.6
+],
+"end": [
+"Marshal McBride",
+48.9,
+41.6
+]
+},
+"3903": {
+"map": 1429,
+"start": null,
+"end": [
+"Milly Osworth",
+50.7,
+39.3
+]
+},
+"6": {
+"map": 1429,
+"start": [
+"Deputy Willem",
+48.2,
+42.9
+],
+"end": [
+"Deputy Willem",
+48.2,
+42.9
+]
+},
+"3904": {
+"map": 1429,
+"start": [
+"Milly Osworth",
+50.7,
+39.3
+],
+"end": [
+"Milly Osworth",
+50.7,
+39.3
+]
+},
+"3905": {
+"map": 1429,
+"start": null,
+"end": [
+"Brother Neals",
+49.5,
+41.6
+]
+},
+"54": {
+"map": 1429,
+"start": null,
+"end": [
+"Marshal Dughan",
+42.1,
+65.9
+]
+},
+"96627": {
+"map": 1429,
+"start": null,
+"end": [
+"Sam Sarsaparilla",
+45.0,
+63.3
+]
+},
+"2158": {
+"map": 1429,
+"start": null,
+"end": [
+"Innkeeper Farley",
+43.8,
+65.8
+]
+},
+"99127": {
+"map": 1429,
+"start": null,
+"end": [
+"Jason Mathers",
+47.5,
+62.3
+]
+},
+"99143": {
+"map": 1429,
+"start": null,
+"end": [
+"Lee Brown",
+47.4,
+62.2
+]
+},
+"99128": {
+"map": 1429,
+"start": null,
+"end": [
+"Jason Mathers",
+47.4,
+62.2
+]
+},
+"95998": {
+"map": 1429,
+"start": [
+"Sam Sarsaparilla",
+45.0,
+63.3
+],
+"end": [
+"Sam Sarsaparilla",
+45.0,
+63.3
+]
+},
+"96626": {
+"map": 1429,
+"start": null,
+"end": [
+"Tomas",
+44.3,
+66.0
+]
+},
+"60": {
+"map": 1429,
+"start": [
+"William Pestle",
+43.3,
+65.7
+],
+"end": [
+"William Pestle",
+43.3,
+65.7
+]
+},
+"62": {
+"map": 1429,
+"start": [
+"Marshal Dughan",
+42.1,
+65.9
+],
+"end": [
+"Marshal Dughan",
+42.1,
+65.9
+]
+},
+"76": {
+"map": 1429,
+"start": [
+"Marshal Dughan",
+42.1,
+65.9
+],
+"end": [
+"Marshal Dughan",
+42.1,
+65.9
+]
+},
+"239": {
+"map": 1429,
+"start": null,
+"end": [
+"Deputy Rainer",
+24.2,
+74.4
+]
+},
+"47": {
+"map": 1429,
+"start": [
+"Remy \"Two Times\"",
+42.1,
+67.3
+],
+"end": [
+"Remy \"Two Times\"",
+42.1,
+67.3
+]
+},
+"40": {
+"map": 1429,
+"start": null,
+"end": [
+"Marshal Dughan",
+42.1,
+65.9
+]
+},
+"35": {
+"map": 1429,
+"start": null,
+"end": [
+"Guard Thomas",
+74.0,
+72.2
+]
+},
+"85": {
+"map": 1429,
+"start": null,
+"end": [
+"Billy Maclure",
+43.1,
+85.7
+]
+},
+"88": {
+"map": 1429,
+"start": [
+"Ma Stonefield",
+34.7,
+84.5
+],
+"end": [
+"Ma Stonefield",
+34.7,
+84.5
+]
+},
+"86": {
+"map": 1429,
+"start": null,
+"end": [
+"\"Auntie\" Bernice Stonefield",
+34.5,
+84.3
+]
+},
+"106": {
+"map": 1429,
+"start": null,
+"end": [
+"Tommy Joe Stonefield",
+29.8,
+86.0
+]
+},
+"111": {
+"map": 1429,
+"start": null,
+"end": [
+"Gramma Stonefield",
+34.9,
+83.9
+]
+},
+"107": {
+"map": 1429,
+"start": null,
+"end": [
+"William Pestle",
+43.3,
+65.7
+]
+},
+"11": {
+"map": 1429,
+"start": [
+"Deputy Rainer",
+24.2,
+74.4
+],
+"end": [
+"Deputy Rainer",
+24.2,
+74.4
+]
+},
+"91738": {
+"map": 1429,
+"start": [
+"Sergeant De Vries",
+24.0,
+73.0
+],
+"end": [
+"Sergeant De Vries",
+24.0,
+73.0
+]
+},
+"176": {
+"map": 1429,
+"start": null,
+"end": [
+"Marshal Dughan",
+42.1,
+65.9
+]
+},
+"112": {
+"map": 1429,
+"start": [
+"William Pestle",
+43.3,
+65.7
+],
+"end": [
+"William Pestle",
+43.3,
+65.7
+]
+},
+"91725": {
+"map": 1429,
+"start": null,
+"end": [
+"Blixie Fitzwink",
+63.2,
+72.6
+]
+},
+"91723": {
+"map": 1429,
+"start": [
+"Hamish Bergwort",
+65.0,
+69.8
+],
+"end": [
+"Hamish Bergwort",
+65.0,
+69.8
+]
+},
+"37": {
+"map": 1429,
+"start": null,
+"end": [
+"A half-eaten body",
+72.7,
+60.3
+]
+},
+"52": {
+"map": 1429,
+"start": [
+"Guard Thomas",
+74.0,
+72.2
+],
+"end": [
+"Guard Thomas",
+74.0,
+72.2
+]
+},
+"91733": {
+"map": 1429,
+"start": null,
+"end": [
+"Ormin Pelford",
+76.4,
+72.0
+]
+},
+"83": {
+"map": 1429,
+"start": [
+"Sara Timberlain",
+79.5,
+68.8
+],
+"end": [
+"Sara Timberlain",
+79.5,
+68.8
+]
+},
+"5545": {
+"map": 1429,
+"start": [
+"Supervisor Raelen",
+81.4,
+66.1
+],
+"end": [
+"Supervisor Raelen",
+81.4,
+66.1
+]
+},
+"91732": {
+"map": 1429,
+"start": null,
+"end": [
+"Hagar Lowe",
+82.4,
+63.8
+]
+},
+"45": {
+"map": 1429,
+"start": null,
+"end": [
+"Rolf's corpse",
+79.8,
+55.5
+]
+},
+"71": {
+"map": 1429,
+"start": null,
+"end": [
+"Guard Thomas",
+74.0,
+72.2
+]
+},
+"61": {
+"map": 1429,
+"start": null,
+"end": null
+},
+"332": {
+"map": 1453,
+"start": null,
+"end": [
+"Suzetta Gallina",
+60.3,
+76.8
+]
+},
+"97220": {
+"map": 1453,
+"start": null,
+"end": [
+"Elaine Trias",
+66.6,
+73.5
+]
+},
+"39": {
+"map": 1429,
+"start": null,
+"end": [
+"Marshal Dughan",
+42.1,
+65.9
+]
+},
+"91724": {
+"map": 1429,
+"start": [
+"Hamish Bergwort",
+65.0,
+69.8
+],
+"end": [
+"Hamish Bergwort",
+65.0,
+69.8
+]
+},
+"99129": {
+"map": 1429,
+"start": null,
+"end": [
+"Remy \"Two Times\"",
+42.1,
+67.1
+]
+},
+"114": {
+"map": 1429,
+"start": null,
+"end": [
+"Maybell Maclure",
+43.2,
+89.6
+]
+},
+"59": {
+"map": 1429,
+"start": null,
+"end": [
+"Sara Timberlain",
+79.5,
+68.8
+]
+},
+"99130": {
+"map": 1429,
+"start": [
+"Remy \"Two Times\"",
+42.1,
+67.1
+],
+"end": [
+"Remy \"Two Times\"",
+42.1,
+67.1
+]
+},
+"84": {
+"map": 1429,
+"start": null,
+"end": [
+"Billy Maclure",
+43.1,
+85.7
+]
+},
+"87": {
+"map": 1429,
+"start": null,
+"end": [
+"\"Auntie\" Bernice Stonefield",
+34.5,
+84.3
+]
+},
+"99131": {
+"map": 1429,
+"start": null,
+"end": [
+"Jason Mathers",
+47.4,
+62.2
+]
+},
+"97222": {
+"map": 1453,
+"start": [
+"Elaine Trias",
+66.6,
+73.5
+],
+"end": [
+"Elaine Trias",
+66.6,
+73.5
+]
+},
+"333": {
+"map": 1453,
+"start": null,
+"end": [
+"Rema Schneider",
+58.1,
+67.5
+]
+},
+"334": {
+"map": 1453,
+"start": null,
+"end": [
+"Thurman Schneider",
+52.6,
+83.4
+]
+},
+"97234": {
+"map": 1453,
+"start": null,
+"end": [
+"Donyal Tovald",
+75.2,
+30.3
+]
+},
+"95065": {
+"map": 1453,
+"start": [
+"Gilbert Gray",
+26.3,
+47.1
+],
+"end": [
+"Gilbert Gray",
+26.3,
+47.1
+]
+},
+"97237": {
+"map": 1453,
+"start": null,
+"end": [
+"Roy Lewells",
+38.7,
+62.2
+]
+},
+"46": {
+"map": 1429,
+"start": [
+"Guard Thomas",
+74.0,
+72.2
+],
+"end": [
+"Guard Thomas",
+74.0,
+72.2
+]
+},
+"4495": {
+"map": 1438,
+"start": null,
+"end": [
+"Iverron",
+54.6,
+33.0
+]
+},
+"458": {
+"map": 1438,
+"start": null,
+"end": [
+"Tarindrella",
+57.8,
+45.2
+]
+},
+"459": {
+"map": 1438,
+"start": [
+"Tarindrella",
+57.8,
+45.2
+],
+"end": [
+"Tarindrella",
+57.8,
+45.2
+]
+},
+"97977": {
+"map": 1438,
+"start": [
+"Tarindrella",
+57.7,
+45.1
+],
+"end": [
+"Tarindrella",
+57.7,
+45.1
+]
+},
+"456": {
+"map": 1438,
+"start": [
+"Conservator Ilthalaine",
+58.7,
+44.3
+],
+"end": [
+"Conservator Ilthalaine",
+58.7,
+44.3
+]
+},
+"457": {
+"map": 1438,
+"start": [
+"Conservator Ilthalaine",
+58.7,
+44.3
+],
+"end": [
+"Conservator Ilthalaine",
+58.7,
+44.3
+]
+},
+"97979": {
+"map": 1438,
+"start": [
+"Shanda",
+59.2,
+40.5
+],
+"end": [
+"Shanda",
+59.2,
+40.5
+]
+},
+"916": {
+"map": 1438,
+"start": [
+"Gilshalan Windwalker",
+57.8,
+41.7
+],
+"end": [
+"Gilshalan Windwalker",
+57.8,
+41.7
+]
+},
+"2159": {
+"map": 1438,
+"start": null,
+"end": [
+"Innkeeper Keldamyr",
+55.6,
+59.8
+]
+},
+"488": {
+"map": 1438,
+"start": [
+"Zenn Foulhoof",
+60.5,
+56.3
+],
+"end": [
+"Zenn Foulhoof",
+60.5,
+56.3
+]
+},
+"96606": {
+"map": 1438,
+"start": [
+"Lyreena Duskblade",
+57.6,
+56.7
+],
+"end": [
+"Lyreena Duskblade",
+57.6,
+56.7
+]
+},
+"96634": {
+"map": 1438,
+"start": null,
+"end": [
+"Zarrin",
+57.1,
+61.3
+]
+},
+"475": {
+"map": 1438,
+"start": null,
+"end": [
+"Gaerolas Talvethren",
+66.3,
+58.5
+]
+},
+"87288": {
+"map": 1438,
+"start": [
+"Aldia",
+55.5,
+57.2
+],
+"end": [
+"Aldia",
+55.5,
+57.2
+]
+},
+"997": {
+"map": 1438,
+"start": null,
+"end": [
+"Denalan",
+60.9,
+68.5
+]
+},
+"99046": {
+"map": 1438,
+"start": null,
+"end": [
+"Sentinel Eralya Leafshadow",
+37.6,
+36.9
+]
+},
+"487": {
+"map": 1438,
+"start": [
+"Moon Priestess Amara",
+54.6,
+58.5
+],
+"end": [
+"Moon Priestess Amara",
+54.6,
+58.5
+]
+},
+"2438": {
+"map": 1438,
+"start": [
+"Tallonkai Swiftroot",
+55.6,
+56.9
+],
+"end": [
+"Tallonkai Swiftroot",
+55.6,
+56.9
+]
+},
+"932": {
+"map": 1438,
+"start": [
+"Tallonkai Swiftroot",
+55.6,
+56.9
+],
+"end": [
+"Tallonkai Swiftroot",
+55.6,
+56.9
+]
+},
+"490": {
+"map": 1438,
+"start": null,
+"end": [
+"Sentinel Shayla Nightbreeze",
+38.4,
+54.0
+]
+},
+"2541": {
+"map": 1438,
+"start": [
+"Oben Rageclaw",
+44.9,
+61.6
+],
+"end": [
+"Oben Rageclaw",
+44.9,
+61.6
+]
+},
+"2561": {
+"map": 1438,
+"start": [
+"Oben Rageclaw",
+44.9,
+61.6
+],
+"end": [
+"Oben Rageclaw",
+44.9,
+61.6
+]
+},
+"99053": {
+"map": 1438,
+"start": null,
+"end": [
+"Sentinel Kyra Starsong",
+56.0,
+59.4
+]
+},
+"98391": {
+"map": 1438,
+"start": null,
+"end": null
+},
+"2519": {
+"map": 1457,
+"start": null,
+"end": [
+"Priestess A'moora",
+36.7,
+85.9
+]
+},
+"98067": {
+"map": 1457,
+"start": null,
+"end": [
+"Sentinel Dalia Sunblade",
+39.8,
+89.1
+]
+},
+"2518": {
+"map": 1457,
+"start": [
+"Priestess A'moora",
+36.7,
+85.9
+],
+"end": [
+"Priestess A'moora",
+36.7,
+85.9
+]
+},
+"6344": {
+"map": 1457,
+"start": null,
+"end": null
+},
+"99047": {
+"map": 1438,
+"start": null,
+"end": [
+"Byancie",
+55.3,
+56.8
+]
+},
+"937": {
+"map": 1438,
+"start": [
+"Sentinel Arynia Cloudsbreak",
+38.3,
+34.4
+],
+"end": [
+"Sentinel Arynia Cloudsbreak",
+38.3,
+34.4
+]
+},
+"938": {
+"map": 1438,
+"start": null,
+"end": [
+"Sentinel Arynia Cloudsbreak",
+38.3,
+34.4
+]
+},
+"98392": {
+"map": 1438,
+"start": [
+"Sentinel Arynia Cloudsbreak",
+38.3,
+34.4
+],
+"end": [
+"Sentinel Arynia Cloudsbreak",
+38.3,
+34.4
+]
+},
+"98398": {
+"map": 1438,
+"start": null,
+"end": [
+"Oracle Tree Bark",
+37.0,
+34.1
+]
+},
+"3519": {
+"map": 1438,
+"start": null,
+"end": [
+"Dirania Silvershine",
+60.9,
+42.0
+]
+},
+"917": {
+"map": 1438,
+"start": [
+"Gilshalan Windwalker",
+57.8,
+41.7
+],
+"end": [
+"Gilshalan Windwalker",
+57.8,
+41.7
+]
+},
+"3521": {
+"map": 1438,
+"start": [
+"Dirania Silvershine",
+60.9,
+42.0
+],
+"end": [
+"Dirania Silvershine",
+60.9,
+42.0
+]
+},
+"3522": {
+"map": 1438,
+"start": null,
+"end": [
+"Iverron",
+54.6,
+33.0
+]
+},
+"920": {
+"map": 1438,
+"start": null,
+"end": [
+"Tenaron Stormgrip",
+59.1,
+39.4
+]
+},
+"921": {
+"map": 1438,
+"start": [
+"Tenaron Stormgrip",
+59.1,
+39.4
+],
+"end": [
+"Tenaron Stormgrip",
+59.1,
+39.4
+]
+},
+"928": {
+"map": 1438,
+"start": null,
+"end": [
+"Corithras Moonrage",
+56.1,
+61.7
+]
+},
+"98403": {
+"map": 1438,
+"start": null,
+"end": [
+"Tallonkai Swiftroot",
+55.4,
+56.8
+]
+},
+"99050": {
+"map": 1438,
+"start": null,
+"end": [
+"Byancie",
+55.2,
+56.8
+]
+},
+"929": {
+"map": 1438,
+"start": [
+"Corithras Moonrage",
+56.1,
+61.7
+],
+"end": [
+"Corithras Moonrage",
+56.1,
+61.7
+]
+},
+"476": {
+"map": 1438,
+"start": null,
+"end": [
+"Athridas Bearmantle",
+56.0,
+57.3
+]
+},
+"918": {
+"map": 1438,
+"start": [
+"Denalan",
+60.9,
+68.5
+],
+"end": [
+"Denalan",
+60.9,
+68.5
+]
+},
+"919": {
+"map": 1438,
+"start": [
+"Denalan",
+60.9,
+68.5
+],
+"end": [
+"Denalan",
+60.9,
+68.5
+]
+},
+"933": {
+"map": 1438,
+"start": [
+"Corithras Moonrage",
+56.1,
+61.7
+],
+"end": [
+"Corithras Moonrage",
+56.1,
+61.7
+]
+},
+"489": {
+"map": 1438,
+"start": null,
+"end": [
+"Zenn Foulhoof",
+60.5,
+56.3
+]
+},
+"483": {
+"map": 1438,
+"start": [
+"Athridas Bearmantle",
+56.0,
+57.3
+],
+"end": [
+"Athridas Bearmantle",
+56.0,
+57.3
+]
+},
+"2459": {
+"map": 1438,
+"start": [
+"Tallonkai Swiftroot",
+55.6,
+56.9
+],
+"end": [
+"Tallonkai Swiftroot",
+55.6,
+56.9
+]
+},
+"99073": {
+"map": 1438,
+"start": null,
+"end": [
+"Sentinel Eralya Leafshadow",
+37.6,
+36.9
+]
+},
+"7383": {
+"map": 1438,
+"start": [
+"Corithras Moonrage",
+56.1,
+61.7
+],
+"end": [
+"Corithras Moonrage",
+56.1,
+61.7
+]
+},
+"486": {
+"map": 1438,
+"start": [
+"Athridas Bearmantle",
+56.0,
+57.3
+],
+"end": [
+"Athridas Bearmantle",
+56.0,
+57.3
+]
+},
+"6341": {
+"map": 1438,
+"start": null,
+"end": [
+"Vesprystus",
+58.4,
+94.0
+]
+},
+"930": {
+"map": 1438,
+"start": null,
+"end": [
+"Denalan",
+60.9,
+68.5
+]
+},
+"940": {
+"map": 1438,
+"start": null,
+"end": null
+},
+"922": {
+"map": 1438,
+"start": null,
+"end": null
+},
+"2520": {
+"map": 1457,
+"start": [
+"Priestess A'moora",
+36.7,
+85.9
+],
+"end": [
+"Priestess A'moora",
+36.7,
+85.9
+]
+},
+"923": {
+"map": 1457,
+"start": [
+"Rellian Greenspyre",
+38.2,
+21.6
+],
+"end": [
+"Rellian Greenspyre",
+38.2,
+21.6
+]
+},
+"931": {
+"map": 1438,
+"start": null,
+"end": [
+"Denalan",
+60.9,
+68.5
+]
+},
+"2399": {
+"map": 1438,
+"start": [
+"Sprouted Frond",
+60.7,
+68.6
+],
+"end": [
+"Sprouted Frond",
+60.7,
+68.6
+]
+},
+"935": {
+"map": 1438,
+"start": null,
+"end": null
+},
+"98046": {
+"map": 1457,
+"start": null,
+"end": [
+"Lariia",
+40.2,
+88.7
+]
+},
+"98065": {
+"map": 1457,
+"start": null,
+"end": [
+"Tyrande Whisperwind",
+39.1,
+81.4
+]
+},
+"2498": {
+"map": 1457,
+"start": null,
+"end": null
+},
+"2499": {
+"map": 1438,
+"start": [
+"Denalan",
+60.9,
+68.5
+],
+"end": [
+"Denalan",
+60.9,
+68.5
+]
+},
+"179": {
+"map": 1426,
+"start": [
+"Sten Stoutarm",
+29.9,
+71.2
+],
+"end": [
+"Sten Stoutarm",
+29.9,
+71.2
+]
+},
+"403": {
+"map": 1426,
+"start": [
+"Guarded Thunder Ale Barrel",
+47.7,
+52.7
+],
+"end": [
+"Guarded Thunder Ale Barrel",
+47.7,
+52.7
+]
+},
+"3106": {
+"map": 1426,
+"start": null,
+"end": [
+"Thran Khorman",
+28.8,
+67.2
+]
+},
+"3107": {
+"map": 1426,
+"start": null,
+"end": [
+"Bromos Grummner",
+28.8,
+68.3
+]
+},
+"3108": {
+"map": 1426,
+"start": null,
+"end": [
+"Thorgas Grimson",
+29.2,
+67.5
+]
+},
+"3109": {
+"map": 1426,
+"start": null,
+"end": [
+"Solm Hargrin",
+28.4,
+67.5
+]
+},
+"3110": {
+"map": 1426,
+"start": null,
+"end": [
+"Branstock Khalder",
+28.6,
+66.4
+]
+},
+"3112": {
+"map": 1426,
+"start": null,
+"end": [
+"Thran Khorman",
+28.8,
+67.2
+]
+},
+"3113": {
+"map": 1426,
+"start": null,
+"end": [
+"Solm Hargrin",
+28.4,
+67.5
+]
+},
+"3114": {
+"map": 1426,
+"start": null,
+"end": [
+"Marryk Nurribit",
+28.7,
+66.4
+]
+},
+"3115": {
+"map": 1426,
+"start": null,
+"end": [
+"Alamar Grimm",
+28.6,
+66.1
+]
+},
+"3861": {
+"map": 1436,
+"start": [
+"Chicken",
+38.2,
+57.1
+],
+"end": [
+"Chicken",
+38.2,
+57.1
+]
+},
+"98574": {
+"map": 1426,
+"start": null,
+"end": [
+"Branstock Khalder",
+28.6,
+66.4
+]
+},
+"98581": {
+"map": 1426,
+"start": null,
+"end": [
+"Teo Hammerstorm",
+28.8,
+66.2
+]
+},
+"170": {
+"map": 1426,
+"start": [
+"Balir Frosthammer",
+29.7,
+71.3
+],
+"end": [
+"Balir Frosthammer",
+29.7,
+71.3
+]
+},
+"183": {
+"map": 1426,
+"start": [
+"Talin Keeneye",
+22.6,
+71.4
+],
+"end": [
+"Talin Keeneye",
+22.6,
+71.4
+]
+},
+"233": {
+"map": 1426,
+"start": null,
+"end": [
+"Talin Keeneye",
+22.6,
+71.4
+]
+},
+"3361": {
+"map": 1426,
+"start": [
+"Felix Whindlebolt",
+28.5,
+67.6
+],
+"end": [
+"Felix Whindlebolt",
+28.5,
+67.6
+]
+},
+"182": {
+"map": 1426,
+"start": [
+"Grelin Whitebeard",
+25.1,
+75.7
+],
+"end": [
+"Grelin Whitebeard",
+25.1,
+75.7
+]
+},
+"234": {
+"map": 1426,
+"start": null,
+"end": [
+"Grelin Whitebeard",
+25.1,
+75.7
+]
+},
+"5625": {
+"map": 1426,
+"start": [
+"Maxan Anvol",
+47.3,
+52.2
+],
+"end": [
+"Maxan Anvol",
+47.3,
+52.2
+]
+},
+"5626": {
+"map": 1426,
+"start": null,
+"end": [
+"Maxan Anvol",
+47.3,
+52.2
+]
+},
+"94373": {
+"map": 1426,
+"start": [
+"Teo Hammerstorm",
+28.8,
+66.2
+],
+"end": [
+"Teo Hammerstorm",
+28.8,
+66.2
+]
+},
+"94374": {
+"map": 1426,
+"start": null,
+"end": [
+"Minor Manifestation of Earth",
+25.0,
+61.9
+]
+},
+"94375": {
+"map": 1426,
+"start": null,
+"end": [
+"Teo Hammerstorm",
+28.8,
+66.2
+]
+},
+"94472": {
+"map": 1426,
+"start": null,
+"end": [
+"Teo Hammerstorm",
+28.8,
+66.2
+]
+},
+"218": {
+"map": 1426,
+"start": [
+"Grelin Whitebeard",
+25.1,
+75.7
+],
+"end": [
+"Grelin Whitebeard",
+25.1,
+75.7
+]
+},
+"282": {
+"map": 1426,
+"start": null,
+"end": [
+"Mountaineer Thalos",
+33.5,
+71.8
+]
+},
+"400": {
+"map": 1426,
+"start": null,
+"end": [
+"Beldin Steelgrill",
+50.4,
+49.1
+]
+},
+"420": {
+"map": 1426,
+"start": null,
+"end": [
+"Senir Whitebeard",
+46.7,
+53.8
+]
+},
+"2160": {
+"map": 1426,
+"start": null,
+"end": [
+"Tannok Frosthammer",
+47.2,
+52.2
+]
+},
+"3364": {
+"map": 1426,
+"start": null,
+"end": [
+"Durnan Furcutter",
+28.8,
+66.4
+]
+},
+"3365": {
+"map": 1426,
+"start": null,
+"end": [
+"Nori Pridedrift",
+25.0,
+76.0
+]
+},
+"310": {
+"map": 1426,
+"start": null,
+"end": [
+"Unguarded Thunder Ale Barrel",
+47.7,
+52.7
+]
+},
+"317": {
+"map": 1426,
+"start": [
+"Pilot Bellowfiz",
+49.4,
+48.4
+],
+"end": [
+"Pilot Bellowfiz",
+49.4,
+48.4
+]
+},
+"5541": {
+"map": 1426,
+"start": null,
+"end": [
+"Hegnar Rumbleshot",
+40.7,
+65.1
+]
+},
+"96608": {
+"map": 1426,
+"start": [
+"Eric Brighthammer",
+46.7,
+53.8
+],
+"end": [
+"Eric Brighthammer",
+46.7,
+53.8
+]
+},
+"96628": {
+"map": 1426,
+"start": null,
+"end": [
+"Eric Brighthammer",
+46.7,
+53.8
+]
+},
+"96629": {
+"map": 1426,
+"start": null,
+"end": [
+"Gremlock Pilsnor",
+47.7,
+52.3
+]
+},
+"97277": {
+"map": 1426,
+"start": [
+"Grund Drokda",
+28.6,
+67.5
+],
+"end": [
+"Grund Drokda",
+28.6,
+67.5
+]
+},
+"308": {
+"map": 1426,
+"start": [
+"Jarven Thunderbrew",
+47.6,
+52.7
+],
+"end": [
+"Jarven Thunderbrew",
+47.6,
+52.7
+]
+},
+"311": {
+"map": 1426,
+"start": null,
+"end": [
+"Marleth Barleybrew",
+30.2,
+45.5
+]
+},
+"313": {
+"map": 1426,
+"start": [
+"Pilot Stonegear",
+49.6,
+48.6
+],
+"end": [
+"Pilot Stonegear",
+49.6,
+48.6
+]
+},
+"318": {
+"map": 1426,
+"start": null,
+"end": [
+"Rejold Barleybrew",
+30.2,
+45.7
+]
+},
+"384": {
+"map": 1426,
+"start": [
+"Ragnar Thunderbrew",
+46.8,
+52.4
+],
+"end": [
+"Ragnar Thunderbrew",
+46.8,
+52.4
+]
+},
+"98321": {
+"map": 1426,
+"start": null,
+"end": [
+"Tognus Flintfire",
+45.3,
+52.0
+]
+},
+"319": {
+"map": 1426,
+"start": [
+"Rejold Barleybrew",
+30.2,
+45.7
+],
+"end": [
+"Rejold Barleybrew",
+30.2,
+45.7
+]
+},
+"320": {
+"map": 1426,
+"start": null,
+"end": [
+"Pilot Bellowfiz",
+49.4,
+48.4
+]
+},
+"98319": {
+"map": 1426,
+"start": [
+"Mountaineer Gretchen",
+44.1,
+57.0
+],
+"end": [
+"Mountaineer Gretchen",
+44.1,
+57.0
+]
+},
+"98322": {
+"map": 1426,
+"start": null,
+"end": [
+"Mountaineer Gretchen",
+44.1,
+57.0
+]
+},
+"98323": {
+"map": 1426,
+"start": null,
+"end": [
+"Senir Whitebeard",
+46.7,
+53.8
+]
+},
+"99158": {
+"map": 1426,
+"start": null,
+"end": [
+"Father Gavin",
+57.7,
+44.8
+]
+},
+"99159": {
+"map": 1426,
+"start": [
+"Father Gavin",
+57.7,
+44.8
+],
+"end": [
+"Father Gavin",
+57.7,
+44.8
+]
+},
+"99160": {
+"map": 1426,
+"start": [
+"Father Gavin",
+57.7,
+44.8
+],
+"end": [
+"Father Gavin",
+57.7,
+44.8
+]
+},
+"99161": {
+"map": 1426,
+"start": [
+"Father Gavin",
+57.7,
+44.8
+],
+"end": [
+"Father Gavin",
+57.7,
+44.8
+]
+},
+"99162": {
+"map": 1426,
+"start": [
+"Father Gavin",
+57.7,
+44.8
+],
+"end": [
+"Father Gavin",
+57.7,
+44.8
+]
+},
+"287": {
+"map": 1426,
+"start": [
+"Senir Whitebeard",
+46.7,
+53.8
+],
+"end": [
+"Senir Whitebeard",
+46.7,
+53.8
+]
+},
+"315": {
+"map": 1426,
+"start": [
+"Rejold Barleybrew",
+30.2,
+45.7
+],
+"end": [
+"Rejold Barleybrew",
+30.2,
+45.7
+]
+},
+"432": {
+"map": 1426,
+"start": [
+"Foreman Stonebrow",
+69.1,
+56.3
+],
+"end": [
+"Foreman Stonebrow",
+69.1,
+56.3
+]
+},
+"98326": {
+"map": 1426,
+"start": null,
+"end": [
+"Gretta Ganter",
+31.4,
+44.6
+]
+},
+"291": {
+"map": 1426,
+"start": null,
+"end": [
+"Senator Barin Redstone",
+57.4,
+30.3
+]
+},
+"412": {
+"map": 1426,
+"start": [
+"Razzle Sprysprocket",
+45.8,
+49.4
+],
+"end": [
+"Razzle Sprysprocket",
+45.8,
+49.4
+]
+},
+"413": {
+"map": 1426,
+"start": null,
+"end": [
+"Mountaineer Barleybrew",
+86.3,
+48.8
+]
+},
+"414": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"415": {
+"map": 1426,
+"start": null,
+"end": [
+"Rejold Barleybrew",
+30.2,
+45.7
+]
+},
+"419": {
+"map": 1426,
+"start": null,
+"end": [
+"A Dwarven Corpse",
+79.7,
+36.2
+]
+},
+"1679": {
+"map": 1426,
+"start": null,
+"end": [
+"Muren Stormpike",
+62.4,
+35.6
+]
+},
+"1879": {
+"map": 1426,
+"start": null,
+"end": [
+"Bink",
+55.5,
+22.4
+]
+},
+"2218": {
+"map": 1426,
+"start": null,
+"end": [
+"Hulfdan Blackbeard",
+59.4,
+23.5
+]
+},
+"2239": {
+"map": 1426,
+"start": null,
+"end": [
+"Hulfdan Blackbeard",
+59.4,
+23.5
+]
+},
+"5630": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"5637": {
+"map": 1429,
+"start": null,
+"end": null
+},
+"6064": {
+"map": 1426,
+"start": [
+"Grif Wildheart",
+45.8,
+53.0
+],
+"end": [
+"Grif Wildheart",
+45.8,
+53.0
+]
+},
+"6075": {
+"map": 1426,
+"start": null,
+"end": [
+"Grif Wildheart",
+45.8,
+53.0
+]
+},
+"6084": {
+"map": 1426,
+"start": [
+"Grif Wildheart",
+45.8,
+53.0
+],
+"end": [
+"Grif Wildheart",
+45.8,
+53.0
+]
+},
+"6085": {
+"map": 1426,
+"start": [
+"Grif Wildheart",
+45.8,
+53.0
+],
+"end": [
+"Grif Wildheart",
+45.8,
+53.0
+]
+},
+"6086": {
+"map": 1426,
+"start": null,
+"end": [
+"Belia Thundergranite",
+62.5,
+34.9
+]
+},
+"6722": {
+"map": 1453,
+"start": null,
+"end": null
+},
+"94776": {
+"map": null,
+"start": null,
+"end": null
+},
+"94817": {
+"map": 1455,
+"start": [
+"High Priestess Mims",
+24.8,
+10.0
+],
+"end": [
+"High Priestess Mims",
+24.8,
+10.0
+]
+},
+"94824": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"95212": {
+"map": 1426,
+"start": null,
+"end": [
+"Rudra Amberstill",
+63.0,
+49.8
+]
+},
+"95214": {
+"map": 1426,
+"start": [
+"Quarrymaster Thesten",
+69.1,
+54.9
+],
+"end": [
+"Quarrymaster Thesten",
+69.1,
+54.9
+]
+},
+"417": {
+"map": 1426,
+"start": null,
+"end": [
+"Pilot Hammerfoot",
+83.9,
+39.2
+]
+},
+"433": {
+"map": 1426,
+"start": [
+"Senator Mehr Stonehallow",
+68.7,
+56.0
+],
+"end": [
+"Senator Mehr Stonehallow",
+68.7,
+56.0
+]
+},
+"94465": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"312": {
+"map": 1426,
+"start": [
+"Tundra MacGrann",
+34.6,
+51.7
+],
+"end": [
+"Tundra MacGrann",
+34.6,
+51.7
+]
+},
+"314": {
+"map": 1426,
+"start": [
+"Rudra Amberstill",
+63.1,
+49.8
+],
+"end": [
+"Rudra Amberstill",
+63.1,
+49.8
+]
+},
+"2997": {
+"map": 1426,
+"start": null,
+"end": [
+"Tiza Battleforge",
+55.5,
+23.0
+]
+},
+"1784": {
+"map": 1426,
+"start": null,
+"end": [
+"Muiredon Battleforge",
+54.9,
+22.4
+]
+},
+"96390": {
+"map": 1426,
+"start": [
+"Earthseer Farsen",
+64.9,
+58.4
+],
+"end": [
+"Earthseer Farsen",
+64.9,
+58.4
+]
+},
+"96392": {
+"map": 1426,
+"start": [
+"Earthseer Farsen",
+64.9,
+58.4
+],
+"end": [
+"Earthseer Farsen",
+64.9,
+58.4
+]
+},
+"96408": {
+"map": 1426,
+"start": null,
+"end": [
+"Earthseer Farsen",
+64.8,
+58.4
+]
+},
+"1783": {
+"map": 1426,
+"start": null,
+"end": [
+"Narm Faulk",
+78.3,
+58.1
+]
+},
+"2238": {
+"map": 1426,
+"start": null,
+"end": [
+"Onin MacHammar",
+25.2,
+44.5
+]
+},
+"6074": {
+"map": 1426,
+"start": null,
+"end": [
+"Grif Wildheart",
+45.8,
+53.0
+]
+},
+"6076": {
+"map": 1453,
+"start": null,
+"end": null
+},
+"94449": {
+"map": 1426,
+"start": null,
+"end": [
+"Bruegs Kindleborn",
+87.6,
+43.7
+]
+},
+"94468": {
+"map": 1432,
+"start": null,
+"end": null
+},
+"94821": {
+"map": 1453,
+"start": null,
+"end": null
+},
+"96101": {
+"map": 2521,
+"start": [
+"Raan Wildwind",
+41.7,
+44.8
+],
+"end": [
+"Raan Wildwind",
+41.7,
+44.8
+]
+},
+"96243": {
+"map": 1426,
+"start": null,
+"end": [
+"Teo Hammerstorm",
+28.7,
+66.1
+]
+},
+"93791": {
+"map": 2521,
+"start": null,
+"end": [
+"Belann Windwood",
+62.9,
+77.4
+]
+},
+"94896": {
+"map": 2521,
+"start": null,
+"end": [
+"Ealaane Nimbuswalker",
+65.8,
+74.4
+]
+},
+"94897": {
+"map": 2521,
+"start": null,
+"end": [
+"Ealaane Nimbuswalker",
+65.8,
+74.4
+]
+},
+"94484": {
+"map": 2521,
+"start": null,
+"end": [
+"Elegael Thornpaw",
+61.6,
+39.2
+]
+},
+"93317": {
+"map": 2521,
+"start": null,
+"end": [
+"Nyalah Brightfire",
+60.6,
+72.6
+]
+},
+"98512": {
+"map": 2521,
+"start": [
+"Fendaal Windstone",
+56.8,
+61.1
+],
+"end": [
+"Fendaal Windstone",
+56.8,
+61.1
+]
+},
+"93159": {
+"map": 2521,
+"start": [
+"Strange Hermit",
+54.0,
+39.0
+],
+"end": [
+"Strange Hermit",
+54.0,
+39.0
+]
+},
+"93172": {
+"map": 2521,
+"start": [
+"Strange Hermit",
+54.0,
+39.0
+],
+"end": [
+"Strange Hermit",
+54.0,
+39.0
+]
+},
+"94493": {
+"map": 2521,
+"start": [
+"Elegael Thornpaw",
+61.6,
+39.2
+],
+"end": [
+"Elegael Thornpaw",
+61.6,
+39.2
+]
+},
+"94486": {
+"map": 2521,
+"start": [
+"Elegael Thornpaw",
+61.8,
+39.1
+],
+"end": [
+"Elegael Thornpaw",
+61.8,
+39.1
+]
+},
+"94487": {
+"map": 2521,
+"start": [
+"Elegael Thornpaw",
+61.8,
+39.1
+],
+"end": [
+"Elegael Thornpaw",
+61.8,
+39.1
+]
+},
+"94485": {
+"map": 2521,
+"start": [
+"Elegael Thornpaw",
+61.8,
+39.1
+],
+"end": [
+"Elegael Thornpaw",
+61.8,
+39.1
+]
+},
+"94489": {
+"map": 2521,
+"start": [
+"Elegael Thornpaw",
+61.8,
+39.1
+],
+"end": [
+"Elegael Thornpaw",
+61.8,
+39.1
+]
+},
+"94488": {
+"map": 2521,
+"start": [
+"Elegael Thornpaw",
+61.8,
+39.1
+],
+"end": [
+"Elegael Thornpaw",
+61.8,
+39.1
+]
+},
+"96395": {
+"map": null,
+"start": null,
+"end": null
+},
+"96403": {
+"map": 1455,
+"start": null,
+"end": [
+"Thom Filch",
+32.4,
+44.9
+]
+},
+"96394": {
+"map": 1455,
+"start": null,
+"end": [
+"Afadra Dunwall",
+33.3,
+47.7
+]
+},
+"96393": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"98423": {
+"map": 1455,
+"start": null,
+"end": [
+"King Magni Bronzebeard",
+39.4,
+55.9
+]
+},
+"36": {
+"map": 1436,
+"start": null,
+"end": [
+"Salma Saldean",
+56.4,
+30.5
+]
+},
+"151": {
+"map": 1436,
+"start": [
+"Verna Furlbrow",
+59.9,
+19.4
+],
+"end": [
+"Verna Furlbrow",
+59.9,
+19.4
+]
+},
+"22": {
+"map": 1436,
+"start": [
+"Salma Saldean",
+56.4,
+30.5
+],
+"end": [
+"Salma Saldean",
+56.4,
+30.5
+]
+},
+"38": {
+"map": 1436,
+"start": [
+"Salma Saldean",
+56.4,
+30.5
+],
+"end": [
+"Salma Saldean",
+56.4,
+30.5
+]
+},
+"109": {
+"map": 1436,
+"start": null,
+"end": [
+"Gryan Stoutmantle",
+56.3,
+47.5
+]
+},
+"9": {
+"map": 1436,
+"start": [
+"Farmer Saldean",
+56.0,
+31.2
+],
+"end": [
+"Farmer Saldean",
+56.0,
+31.2
+]
+},
+"92909": {
+"map": 1436,
+"start": [
+"Ozwin Ironsprocket",
+51.6,
+32.2
+],
+"end": [
+"Ozwin Ironsprocket",
+51.6,
+32.2
+]
+},
+"12": {
+"map": 1436,
+"start": [
+"Gryan Stoutmantle",
+56.3,
+47.5
+],
+"end": [
+"Gryan Stoutmantle",
+56.3,
+47.5
+]
+},
+"102": {
+"map": 1436,
+"start": [
+"Captain Danuvin",
+56.4,
+47.6
+],
+"end": [
+"Captain Danuvin",
+56.4,
+47.6
+]
+},
+"153": {
+"map": 1436,
+"start": [
+"Scout Galiaan",
+54.0,
+53.0
+],
+"end": [
+"Scout Galiaan",
+54.0,
+53.0
+]
+},
+"92744": {
+"map": 1436,
+"start": [
+"Alba Fairmoon",
+52.5,
+53.1
+],
+"end": [
+"Alba Fairmoon",
+52.5,
+53.1
+]
+},
+"13": {
+"map": 1436,
+"start": [
+"Gryan Stoutmantle",
+56.3,
+47.5
+],
+"end": [
+"Gryan Stoutmantle",
+56.3,
+47.5
+]
+},
+"152": {
+"map": 1436,
+"start": [
+"Captain Grayson",
+30.0,
+86.0
+],
+"end": [
+"Captain Grayson",
+30.0,
+86.0
+]
+},
+"104": {
+"map": 1436,
+"start": [
+"Captain Grayson",
+30.0,
+86.0
+],
+"end": [
+"Captain Grayson",
+30.0,
+86.0
+]
+},
+"14": {
+"map": 1436,
+"start": [
+"Gryan Stoutmantle",
+56.3,
+47.5
+],
+"end": [
+"Gryan Stoutmantle",
+56.3,
+47.5
+]
+},
+"65": {
+"map": 1436,
+"start": null,
+"end": null
+},
+"1486": {
+"map": 1413,
+"start": [
+"Nalpak",
+46.0,
+35.7
+],
+"end": [
+"Nalpak",
+46.0,
+35.7
+]
+},
+"959": {
+"map": 1413,
+"start": [
+"Crane Operator Bigglefuzz",
+63.1,
+37.6
+],
+"end": [
+"Crane Operator Bigglefuzz",
+63.1,
+37.6
+]
+},
+"1491": {
+"map": 1413,
+"start": [
+"Mebok Mizzyrix",
+62.4,
+37.6
+],
+"end": [
+"Mebok Mizzyrix",
+62.4,
+37.6
+]
+},
+"1487": {
+"map": 1413,
+"start": [
+"Ebru",
+46.0,
+35.7
+],
+"end": [
+"Ebru",
+46.0,
+35.7
+]
+},
+"6981": {
+"map": 1413,
+"start": null,
+"end": [
+"Falla Sagewind",
+48.2,
+32.8
+]
+},
+"416": {
+"map": 1432,
+"start": [
+"Mountaineer Kadrell",
+34.2,
+47.8
+],
+"end": [
+"Mountaineer Kadrell",
+34.2,
+47.8
+]
+},
+"418": {
+"map": 1432,
+"start": [
+"Vidra Hearthstove",
+34.8,
+49.3
+],
+"end": [
+"Vidra Hearthstove",
+34.8,
+49.3
+]
+},
+"250": {
+"map": 1432,
+"start": null,
+"end": [
+"Suspicious Barrel",
+56.1,
+13.2
+]
+},
+"199": {
+"map": 1432,
+"start": null,
+"end": [
+"Chief Engineer Hinderweir VII",
+46.0,
+13.6
+]
+},
+"255": {
+"map": 1432,
+"start": [
+"Magistrate Bluntnose",
+34.6,
+44.5
+],
+"end": [
+"Magistrate Bluntnose",
+34.6,
+44.5
+]
+},
+"224": {
+"map": 1432,
+"start": [
+"Mountaineer Cobbleflint",
+22.1,
+73.1
+],
+"end": [
+"Mountaineer Cobbleflint",
+22.1,
+73.1
+]
+},
+"267": {
+"map": 1432,
+"start": [
+"Captain Rugelfuss",
+23.2,
+73.7
+],
+"end": [
+"Captain Rugelfuss",
+23.2,
+73.7
+]
+},
+"86585": {
+"map": 1432,
+"start": null,
+"end": [
+"Captain Rugelfuss",
+23.1,
+73.8
+]
+},
+"436": {
+"map": 1432,
+"start": null,
+"end": [
+"Magmar Fellhew",
+64.9,
+66.7
+]
+},
+"256": {
+"map": 1432,
+"start": null,
+"end": [
+"Magistrate Bluntnose",
+34.6,
+44.5
+]
+},
+"297": {
+"map": 1432,
+"start": [
+"Magmar Fellhew",
+64.9,
+66.7
+],
+"end": [
+"Magmar Fellhew",
+64.9,
+66.7
+]
+},
+"298": {
+"map": 1432,
+"start": null,
+"end": [
+"Jern Hornhelm",
+37.2,
+47.4
+]
+},
+"385": {
+"map": 1432,
+"start": [
+"Marek Ironheart",
+81.8,
+61.7
+],
+"end": [
+"Marek Ironheart",
+81.8,
+61.7
+]
+},
+"86758": {
+"map": 1432,
+"start": [
+"Marek Ironheart",
+81.8,
+61.6
+],
+"end": [
+"Marek Ironheart",
+81.8,
+61.6
+]
+},
+"257": {
+"map": 1432,
+"start": [
+"Daryl the Youngling",
+83.5,
+65.5
+],
+"end": [
+"Daryl the Youngling",
+83.5,
+65.5
+]
+},
+"258": {
+"map": 1432,
+"start": [
+"Daryl the Youngling",
+83.5,
+65.5
+],
+"end": [
+"Daryl the Youngling",
+83.5,
+65.5
+]
+},
+"86614": {
+"map": 1432,
+"start": null,
+"end": [
+"Khara Deepwater",
+40.4,
+39.4
+]
+},
+"95250": {
+"map": null,
+"start": null,
+"end": null
+},
+"95195": {
+"map": 1453,
+"start": null,
+"end": [
+"General Marcus Jonathan",
+69.0,
+82.8
+]
+},
+"95189": {
+"map": 1453,
+"start": null,
+"end": [
+"Lady Dena Kennedy",
+69.8,
+28.5
+]
+},
+"92415": {
+"map": 1453,
+"start": null,
+"end": [
+"Orphan Matron Nightingale",
+56.3,
+54.2
+]
+},
+"168": {
+"map": 1453,
+"start": [
+"Wilder Thistlenettle",
+70.3,
+40.8
+],
+"end": [
+"Wilder Thistlenettle",
+70.3,
+40.8
+]
+},
+"167": {
+"map": 1453,
+"start": [
+"Wilder Thistlenettle",
+70.3,
+40.8
+],
+"end": [
+"Wilder Thistlenettle",
+70.3,
+40.8
+]
+},
+"2040": {
+"map": 1453,
+"start": [
+"Shoni the Shilent",
+62.6,
+34.1
+],
+"end": [
+"Shoni the Shilent",
+62.6,
+34.1
+]
+},
+"373": {
+"map": 1453,
+"start": null,
+"end": [
+"Baros Alexston",
+57.7,
+47.9
+]
+},
+"214": {
+"map": 1436,
+"start": [
+"Scout Riell",
+56.7,
+47.3
+],
+"end": [
+"Scout Riell",
+56.7,
+47.3
+]
+},
+"92753": {
+"map": 1436,
+"start": null,
+"end": [
+"Alba Fairmoon",
+38.7,
+83.8
+]
+},
+"166": {
+"map": 1436,
+"start": [
+"Gryan Stoutmantle",
+56.3,
+47.5
+],
+"end": [
+"Gryan Stoutmantle",
+56.3,
+47.5
+]
+},
+"1806": {
+"map": 1426,
+"start": [
+"Jordan Stilwell",
+52.5,
+36.9
+],
+"end": [
+"Jordan Stilwell",
+52.5,
+36.9
+]
+},
+"101": {
+"map": 1431,
+"start": [
+"Madame Eva",
+75.8,
+45.3
+],
+"end": [
+"Madame Eva",
+75.8,
+45.3
+]
+},
+"163": {
+"map": 1431,
+"start": null,
+"end": [
+"Jitters",
+18.4,
+56.4
+]
+},
+"164": {
+"map": 1431,
+"start": null,
+"end": [
+"Sven Yorgen",
+7.8,
+34.1
+]
+},
+"165": {
+"map": 1431,
+"start": null,
+"end": [
+"Abercrombie",
+28.1,
+31.5
+]
+},
+"245": {
+"map": 1431,
+"start": [
+"Watcher Dodds",
+45.1,
+67.0
+],
+"end": [
+"Watcher Dodds",
+45.1,
+67.0
+]
+},
+"5": {
+"map": 1431,
+"start": null,
+"end": [
+"Chef Grual",
+73.8,
+43.5
+]
+},
+"95": {
+"map": 1431,
+"start": null,
+"end": [
+"Mound of loose dirt",
+49.9,
+77.7
+]
+},
+"148": {
+"map": 1431,
+"start": null,
+"end": [
+"Madame Eva",
+75.8,
+45.3
+]
+},
+"230": {
+"map": 1431,
+"start": null,
+"end": [
+"Sven Yorgen",
+7.8,
+34.1
+]
+},
+"96139": {
+"map": 1431,
+"start": [
+"Sirra Von'Indi",
+72.6,
+47.5
+],
+"end": [
+"Sirra Von'Indi",
+72.6,
+47.5
+]
+},
+"149": {
+"map": 1431,
+"start": null,
+"end": [
+"Blind Mary",
+82.0,
+59.1
+]
+},
+"154": {
+"map": 1431,
+"start": null,
+"end": [
+"Madame Eva",
+75.8,
+45.3
+]
+},
+"157": {
+"map": 1431,
+"start": null,
+"end": [
+"Abercrombie",
+28.1,
+31.5
+]
+},
+"93": {
+"map": 1431,
+"start": [
+"Chef Grual",
+73.8,
+43.5
+],
+"end": [
+"Chef Grual",
+73.8,
+43.5
+]
+},
+"158": {
+"map": 1431,
+"start": null,
+"end": [
+"Tavernkeep Smitts",
+73.8,
+44.5
+]
+},
+"262": {
+"map": 1431,
+"start": null,
+"end": [
+"Madame Eva",
+75.8,
+45.3
+]
+},
+"265": {
+"map": 1431,
+"start": null,
+"end": [
+"Clerk Daltry",
+72.5,
+46.9
+]
+},
+"156": {
+"map": 1431,
+"start": [
+"Tavernkeep Smitts",
+73.8,
+44.5
+],
+"end": [
+"Tavernkeep Smitts",
+73.8,
+44.5
+]
+},
+"266": {
+"map": 1431,
+"start": null,
+"end": [
+"Tavernkeep Smitts",
+73.8,
+44.5
+]
+},
+"453": {
+"map": 1431,
+"start": null,
+"end": [
+"Jitters",
+18.4,
+56.4
+]
+},
+"128": {
+"map": 1433,
+"start": [
+"Guard Howe",
+26.5,
+57.9
+],
+"end": [
+"Guard Howe",
+26.5,
+57.9
+]
+},
+"150": {
+"map": 1433,
+"start": [
+"Dockmaster Baren",
+22.6,
+47.4
+],
+"end": [
+"Dockmaster Baren",
+22.6,
+47.4
+]
+},
+"127": {
+"map": 1433,
+"start": [
+"Dockmaster Baren",
+22.6,
+47.4
+],
+"end": [
+"Dockmaster Baren",
+22.6,
+47.4
+]
+},
+"116": {
+"map": 1433,
+"start": [
+"Barkeep Daniels",
+21.4,
+44.0
+],
+"end": [
+"Barkeep Daniels",
+21.4,
+44.0
+]
+},
+"34": {
+"map": 1433,
+"start": [
+"Martie Jainrose",
+16.8,
+46.3
+],
+"end": [
+"Martie Jainrose",
+16.8,
+46.3
+]
+},
+"180": {
+"map": 1433,
+"start": null,
+"end": [
+"Magistrate Solomon",
+24.9,
+44.5
+]
+},
+"219": {
+"map": 1433,
+"start": null,
+"end": [
+"Marshal Marris",
+28.4,
+49.0
+]
+},
+"91": {
+"map": 1433,
+"start": [
+"Bailiff Conacher",
+24.6,
+44.3
+],
+"end": [
+"Bailiff Conacher",
+24.6,
+44.3
+]
+},
+"95999": {
+"map": 1433,
+"start": null,
+"end": [
+"Magistrate Solomon",
+24.9,
+44.3
+]
+},
+"169": {
+"map": 1433,
+"start": null,
+"end": [
+"Magistrate Solomon",
+24.9,
+44.5
+]
+},
+"98387": {
+"map": 1433,
+"start": [
+"Marshal Marris",
+28.3,
+48.8
+],
+"end": [
+"Marshal Marris",
+28.3,
+48.8
+]
+},
+"20": {
+"map": 1433,
+"start": [
+"Marshal Marris",
+28.4,
+49.0
+],
+"end": [
+"Marshal Marris",
+28.4,
+49.0
+]
+},
+"115": {
+"map": 1433,
+"start": [
+"Marshal Marris",
+28.4,
+49.0
+],
+"end": [
+"Marshal Marris",
+28.4,
+49.0
+]
+},
+"19": {
+"map": 1433,
+"start": [
+"Marshal Marris",
+28.4,
+49.0
+],
+"end": [
+"Marshal Marris",
+28.4,
+49.0
+]
+},
+"729": {
+"map": 1439,
+"start": null,
+"end": [
+"Prospector Remtravel",
+35.7,
+83.7
+]
+},
+"4740": {
+"map": 1439,
+"start": null,
+"end": [
+"Sentinel Glynda Nal'Shea",
+37.7,
+43.4
+]
+},
+"731": {
+"map": 1439,
+"start": null,
+"end": [
+"Archaeologist Hollee",
+37.4,
+41.8
+]
+},
+"4581": {
+"map": 1440,
+"start": null,
+"end": [
+"Kayneth Stillwind",
+85.2,
+44.7
+]
+},
+"1054": {
+"map": 1440,
+"start": [
+"Raene Wolfrunner",
+36.6,
+49.6
+],
+"end": [
+"Raene Wolfrunner",
+36.6,
+49.6
+]
+},
+"1016": {
+"map": 1440,
+"start": [
+"Sentinel Velene Starstrike",
+49.8,
+67.2
+],
+"end": [
+"Sentinel Velene Starstrike",
+49.8,
+67.2
+]
+},
+"98027": {
+"map": 1440,
+"start": null,
+"end": [
+"Maliynn",
+36.6,
+49.9
+]
+},
+"98417": {
+"map": 1440,
+"start": null,
+"end": [
+"Maseara Autumnmoon",
+86.3,
+45.8
+]
+},
+"98418": {
+"map": 1440,
+"start": null,
+"end": [
+"Maseara Autumnmoon",
+81.0,
+50.2
+]
+},
+"386": {
+"map": 1433,
+"start": [
+"Guard Berton",
+21.2,
+46.6
+],
+"end": [
+"Guard Berton",
+21.2,
+46.6
+]
+},
+"377": {
+"map": 1431,
+"start": [
+"Councilman Millstipe",
+71.9,
+47.8
+],
+"end": [
+"Councilman Millstipe",
+71.9,
+47.8
+]
+},
+"387": {
+"map": 1453,
+"start": [
+"Warden Thelwater",
+51.5,
+69.4
+],
+"end": [
+"Warden Thelwater",
+51.5,
+69.4
+]
+},
+"388": {
+"map": 1453,
+"start": [
+"Nikova Raskol",
+76.5,
+63.7
+],
+"end": [
+"Nikova Raskol",
+76.5,
+63.7
+]
+},
+"378": {
+"map": 1437,
+"start": [
+"Motley Garmason",
+49.7,
+18.2
+],
+"end": [
+"Motley Garmason",
+49.7,
+18.2
+]
+},
+"391": {
+"map": 1453,
+"start": [
+"Warden Thelwater",
+51.5,
+69.4
+],
+"end": [
+"Warden Thelwater",
+51.5,
+69.4
+]
+},
+"971": {
+"map": 1426,
+"start": [
+"Gerrig Bonegrip",
+59.2,
+22.0
+],
+"end": [
+"Gerrig Bonegrip",
+59.2,
+22.0
+]
+},
+"3765": {
+"map": 1453,
+"start": null,
+"end": null
+},
+"1275": {
+"map": 1439,
+"start": [
+"Gershala Nightwhisper",
+38.3,
+43.0
+],
+"end": [
+"Gershala Nightwhisper",
+38.3,
+43.0
+]
+},
+"1198": {
+"map": 1457,
+"start": null,
+"end": null
+},
+"1199": {
+"map": 1457,
+"start": [
+"Argent Guard Manados",
+55.2,
+24.0
+],
+"end": [
+"Argent Guard Manados",
+55.2,
+24.0
+]
+},
+"1200": {
+"map": 1457,
+"start": null,
+"end": [
+"Dawnwatcher Selgorm",
+56.2,
+24.4
+]
+},
+"1740": {
+"map": 1413,
+"start": [
+"Doan Karhan",
+49.3,
+57.2
+],
+"end": [
+"Doan Karhan",
+49.3,
+57.2
+]
+},
+"98208": {
+"map": 1437,
+"start": [
+"Sylessa Duskwhisper",
+8.0,
+55.9
+],
+"end": [
+"Sylessa Duskwhisper",
+8.0,
+55.9
+]
+},
+"279": {
+"map": 1437,
+"start": [
+"Karl Boran",
+8.3,
+58.6
+],
+"end": [
+"Karl Boran",
+8.3,
+58.6
+]
+},
+"463": {
+"map": 1437,
+"start": null,
+"end": [
+"Rethiel the Greenwarden",
+56.4,
+40.4
+]
+},
+"288": {
+"map": 1437,
+"start": [
+"First Mate Fitzsimmons",
+10.9,
+59.6
+],
+"end": [
+"First Mate Fitzsimmons",
+10.9,
+59.6
+]
+},
+"289": {
+"map": 1437,
+"start": [
+"First Mate Fitzsimmons",
+10.9,
+59.6
+],
+"end": [
+"First Mate Fitzsimmons",
+10.9,
+59.6
+]
+},
+"470": {
+"map": 1437,
+"start": [
+"Sida",
+11.8,
+58.0
+],
+"end": [
+"Sida",
+11.8,
+58.0
+]
+},
+"281": {
+"map": 1437,
+"start": null,
+"end": [
+"Damaged Crate",
+13.5,
+41.4
+]
+},
+"290": {
+"map": 1437,
+"start": null,
+"end": [
+"Intrepid's Locked Strongbox",
+14.4,
+24.0
+]
+},
+"98221": {
+"map": 1437,
+"start": [
+"Captain Stoutfist",
+9.9,
+57.4
+],
+"end": [
+"Captain Stoutfist",
+9.9,
+57.4
+]
+},
+"464": {
+"map": 1437,
+"start": [
+"Captain Stoutfist",
+9.9,
+57.5
+],
+"end": [
+"Captain Stoutfist",
+9.9,
+57.5
+]
+},
+"472": {
+"map": 1437,
+"start": null,
+"end": [
+"Longbraid the Grim",
+49.8,
+18.3
+]
+},
+"305": {
+"map": 1437,
+"start": null,
+"end": [
+"Merrin Rockweaver",
+38.9,
+52.3
+]
+},
+"284": {
+"map": 1437,
+"start": null,
+"end": [
+"Sealed Barrel",
+13.6,
+38.2
+]
+},
+"285": {
+"map": 1437,
+"start": null,
+"end": [
+"Half-buried Barrel",
+13.9,
+34.8
+]
+},
+"286": {
+"map": 1437,
+"start": null,
+"end": [
+"Karl Boran",
+8.3,
+58.6
+]
+},
+"292": {
+"map": 1437,
+"start": null,
+"end": [
+"Glorin Steelbrow",
+10.6,
+60.6
+]
+},
+"484": {
+"map": 1437,
+"start": [
+"James Halloran",
+8.5,
+55.7
+],
+"end": [
+"James Halloran",
+8.5,
+55.7
+]
+},
+"299": {
+"map": 1437,
+"start": [
+"Prospector Whelgar",
+38.8,
+52.4
+],
+"end": [
+"Prospector Whelgar",
+38.8,
+52.4
+]
+},
+"306": {
+"map": 1437,
+"start": null,
+"end": [
+"Tarrel Rockweaver",
+11.5,
+52.2
+]
+},
+"294": {
+"map": 1437,
+"start": [
+"Ormer Ironbraid",
+38.2,
+50.9
+],
+"end": [
+"Ormer Ironbraid",
+38.2,
+50.9
+]
+},
+"98216": {
+"map": 1437,
+"start": [
+"Prospector Whelgar",
+38.8,
+52.3
+],
+"end": [
+"Prospector Whelgar",
+38.8,
+52.3
+]
+},
+"98310": {
+"map": 1437,
+"start": [
+"Prospector Whelgar",
+38.8,
+52.3
+],
+"end": [
+"Prospector Whelgar",
+38.8,
+52.3
+]
+},
+"98245": {
+"map": 1437,
+"start": [
+"Howin Kindfeather",
+49.4,
+42.1
+],
+"end": [
+"Howin Kindfeather",
+49.4,
+42.1
+]
+},
+"98246": {
+"map": 1437,
+"start": [
+"Howin Kindfeather",
+49.4,
+42.1
+],
+"end": [
+"Howin Kindfeather",
+49.4,
+42.1
+]
+},
+"276": {
+"map": 1437,
+"start": [
+"Rethiel the Greenwarden",
+56.4,
+40.4
+],
+"end": [
+"Rethiel the Greenwarden",
+56.4,
+40.4
+]
+},
+"98223": {
+"map": 1437,
+"start": null,
+"end": [
+"Captain Stoutfist",
+9.9,
+57.4
+]
+},
+"277": {
+"map": 1437,
+"start": [
+"Rethiel the Greenwarden",
+56.4,
+40.4
+],
+"end": [
+"Rethiel the Greenwarden",
+56.4,
+40.4
+]
+},
+"88756": {
+"map": 1437,
+"start": [
+"Ashlan Stonesmirk",
+50.1,
+18.2
+],
+"end": [
+"Ashlan Stonesmirk",
+50.1,
+18.2
+]
+},
+"631": {
+"map": 1437,
+"start": null,
+"end": [
+"Ebenezer Rustlocke's Corpse",
+51.3,
+8.0
+]
+},
+"303": {
+"map": 1437,
+"start": [
+"Motley Garmason",
+49.7,
+18.2
+],
+"end": [
+"Motley Garmason",
+49.7,
+18.2
+]
+},
+"87491": {
+"map": 1437,
+"start": null,
+"end": [
+"Roggo Harlbarrow",
+49.8,
+18.0
+]
+},
+"87318": {
+"map": 1437,
+"start": null,
+"end": [
+"Essene Villard",
+51.4,
+9.0
+]
+},
+"88757": {
+"map": 1437,
+"start": [
+"Essene Villard",
+51.4,
+9.0
+],
+"end": [
+"Essene Villard",
+51.4,
+9.0
+]
+},
+"632": {
+"map": 1437,
+"start": null,
+"end": [
+"Rhag Garmason",
+49.9,
+18.2
+]
+},
+"295": {
+"map": 1437,
+"start": [
+"Ormer Ironbraid",
+38.2,
+50.9
+],
+"end": [
+"Ormer Ironbraid",
+38.2,
+50.9
+]
+},
+"296": {
+"map": 1437,
+"start": [
+"Ormer Ironbraid",
+38.2,
+50.9
+],
+"end": [
+"Ormer Ironbraid",
+38.2,
+50.9
+]
+},
+"275": {
+"map": 1437,
+"start": [
+"Rethiel the Greenwarden",
+56.4,
+40.4
+],
+"end": [
+"Rethiel the Greenwarden",
+56.4,
+40.4
+]
+},
+"98291": {
+"map": 1437,
+"start": [
+"Howin Kindfeather",
+49.4,
+42.1
+],
+"end": [
+"Howin Kindfeather",
+49.4,
+42.1
+]
+},
+"98293": {
+"map": 1437,
+"start": null,
+"end": [
+"Captain Stoutfist",
+9.9,
+57.4
+]
+},
+"98297": {
+"map": 1437,
+"start": [
+"Howin Kindfeather",
+49.4,
+42.1
+],
+"end": [
+"Howin Kindfeather",
+49.4,
+42.1
+]
+},
+"471": {
+"map": 1437,
+"start": [
+"James Halloran",
+8.5,
+55.7
+],
+"end": [
+"James Halloran",
+8.5,
+55.7
+]
+},
+"465": {
+"map": 1437,
+"start": null,
+"end": [
+"Dragonmaw Catapult",
+47.5,
+47.0
+]
+},
+"98072": {
+"map": 1437,
+"start": [
+"James Halloran",
+8.5,
+55.8
+],
+"end": [
+"James Halloran",
+8.5,
+55.8
+]
+},
+"474": {
+"map": 1437,
+"start": null,
+"end": [
+"Captain Stoutfist",
+9.9,
+57.5
+]
+},
+"98283": {
+"map": 1437,
+"start": [
+"Rethiel the Greenwarden",
+56.3,
+40.6
+],
+"end": [
+"Rethiel the Greenwarden",
+56.3,
+40.6
+]
+},
+"98230": {
+"map": 1437,
+"start": null,
+"end": [
+"Howin Kindfeather",
+49.4,
+42.1
+]
+},
+"98240": {
+"map": 1437,
+"start": null,
+"end": [
+"Howin Kindfeather",
+49.4,
+42.1
+]
+},
+"98300": {
+"map": 1437,
+"start": null,
+"end": null
+},
+"78307": {
+"map": 1421,
+"start": null,
+"end": [
+"Dead Drop",
+47.2,
+71.1
+]
+},
+"98815": {
+"map": 1437,
+"start": [
+"James Halloran",
+8.5,
+55.8
+],
+"end": [
+"James Halloran",
+8.5,
+55.8
+]
+},
+"95772": {
+"map": 1433,
+"start": null,
+"end": null
+},
+"95646": {
+"map": 1437,
+"start": [
+"Rethiel the Greenwarden",
+56.3,
+40.6
+],
+"end": [
+"Rethiel the Greenwarden",
+56.3,
+40.6
+]
+},
+"95809": {
+"map": 1437,
+"start": null,
+"end": [
+"Caitlin Grassman",
+11.9,
+58.8
+]
+},
+"98824": {
+"map": 1437,
+"start": null,
+"end": null
+},
+"95795": {
+"map": 1433,
+"start": null,
+"end": [
+"Dorin Songblade",
+25.7,
+46.7
+]
+},
+"1221": {
+"map": 1413,
+"start": [
+"Mebok Mizzyrix",
+62.4,
+37.6
+],
+"end": [
+"Mebok Mizzyrix",
+62.4,
+37.6
+]
+},
+"1144": {
+"map": null,
+"start": null,
+"end": null
+},
+"1142": {
+"map": 1457,
+"start": null,
+"end": [
+"Treshala Fallowbrook",
+69.5,
+67.8
+]
+},
+"1101": {
+"map": 1444,
+"start": [
+"Falfindel Waywarder",
+89.6,
+46.6
+],
+"end": [
+"Falfindel Waywarder",
+89.6,
+46.6
+]
+},
+"1453": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"1179": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"1110": {
+"map": 1441,
+"start": [
+"Kravel Koalbeard",
+77.8,
+77.3
+],
+"end": [
+"Kravel Koalbeard",
+77.8,
+77.3
+]
+},
+"1104": {
+"map": 1441,
+"start": [
+"Fizzle Brassbolts",
+78.1,
+77.1
+],
+"end": [
+"Fizzle Brassbolts",
+78.1,
+77.1
+]
+},
+"1105": {
+"map": 1441,
+"start": [
+"Wizzle Brassbolts",
+78.1,
+77.1
+],
+"end": [
+"Wizzle Brassbolts",
+78.1,
+77.1
+]
+},
+"1176": {
+"map": 1441,
+"start": [
+"Pozzik",
+80.2,
+75.9
+],
+"end": [
+"Pozzik",
+80.2,
+75.9
+]
+},
+"1175": {
+"map": 1441,
+"start": [
+"Trackmaster Zherin",
+81.6,
+78.0
+],
+"end": [
+"Trackmaster Zherin",
+81.6,
+78.0
+]
+},
+"5762": {
+"map": 1441,
+"start": null,
+"end": null
+},
+"1106": {
+"map": 1441,
+"start": null,
+"end": null
+},
+"173": {
+"map": 1431,
+"start": [
+"Calor",
+75.8,
+47.6
+],
+"end": [
+"Calor",
+75.8,
+47.6
+]
+},
+"221": {
+"map": 1431,
+"start": [
+"Calor",
+75.8,
+47.6
+],
+"end": [
+"Calor",
+75.8,
+47.6
+]
+},
+"222": {
+"map": 1431,
+"start": [
+"Calor",
+75.8,
+47.6
+],
+"end": [
+"Calor",
+75.8,
+47.6
+]
+},
+"223": {
+"map": 1431,
+"start": null,
+"end": [
+"Jonathan Carevin",
+75.3,
+49.0
+]
+},
+"215": {
+"map": 1434,
+"start": null,
+"end": [
+"Lieutenant Doren",
+38.0,
+3.0
+]
+},
+"203": {
+"map": 1434,
+"start": [
+"Sergeant Yohwa",
+38.0,
+3.3
+],
+"end": [
+"Sergeant Yohwa",
+38.0,
+3.3
+]
+},
+"204": {
+"map": 1434,
+"start": [
+"Sergeant Yohwa",
+38.0,
+3.3
+],
+"end": [
+"Sergeant Yohwa",
+38.0,
+3.3
+]
+},
+"200": {
+"map": 1434,
+"start": null,
+"end": [
+"Bookie Herod's Records",
+43.7,
+9.4
+]
+},
+"583": {
+"map": 1434,
+"start": null,
+"end": [
+"Hemet Nesingwary",
+35.7,
+10.8
+]
+},
+"194": {
+"map": 1434,
+"start": [
+"Hemet Nesingwary",
+35.7,
+10.8
+],
+"end": [
+"Hemet Nesingwary",
+35.7,
+10.8
+]
+},
+"185": {
+"map": 1434,
+"start": [
+"Ajeck Rouack",
+35.6,
+10.6
+],
+"end": [
+"Ajeck Rouack",
+35.6,
+10.6
+]
+},
+"186": {
+"map": 1434,
+"start": [
+"Ajeck Rouack",
+35.6,
+10.6
+],
+"end": [
+"Ajeck Rouack",
+35.6,
+10.6
+]
+},
+"190": {
+"map": 1434,
+"start": [
+"Sir S. J. Erlgadin",
+35.6,
+10.5
+],
+"end": [
+"Sir S. J. Erlgadin",
+35.6,
+10.5
+]
+},
+"97328": {
+"map": 1434,
+"start": null,
+"end": [
+"Wharfmaster Lozgil",
+26.3,
+73.5
+]
+},
+"97329": {
+"map": 1434,
+"start": [
+"Zimmix Sputterspark",
+23.4,
+12.7
+],
+"end": [
+"Zimmix Sputterspark",
+23.4,
+12.7
+]
+},
+"97331": {
+"map": 1434,
+"start": null,
+"end": [
+"Wharfmaster Lozgil",
+26.3,
+73.5
+]
+},
+"328": {
+"map": 1434,
+"start": null,
+"end": [
+"Bookie Herod's Strongbox",
+49.6,
+7.6
+]
+},
+"329": {
+"map": 1434,
+"start": null,
+"end": [
+"Lieutenant Doren",
+38.0,
+3.0
+]
+},
+"187": {
+"map": 1434,
+"start": [
+"Ajeck Rouack",
+35.6,
+10.6
+],
+"end": [
+"Ajeck Rouack",
+35.6,
+10.6
+]
+},
+"195": {
+"map": 1434,
+"start": [
+"Hemet Nesingwary",
+35.7,
+10.8
+],
+"end": [
+"Hemet Nesingwary",
+35.7,
+10.8
+]
+},
+"330": {
+"map": 1434,
+"start": null,
+"end": [
+"Corporal Sethman",
+37.7,
+3.4
+]
+},
+"574": {
+"map": 1434,
+"start": null,
+"end": [
+"Lieutenant Doren",
+38.0,
+3.0
+]
+},
+"210": {
+"map": 1434,
+"start": null,
+"end": [
+"Krazek",
+26.9,
+77.2
+]
+},
+"331": {
+"map": 1434,
+"start": null,
+"end": [
+"Lieutenant Doren",
+38.0,
+3.0
+]
+},
+"188": {
+"map": 1434,
+"start": [
+"Ajeck Rouack",
+35.6,
+10.6
+],
+"end": [
+"Ajeck Rouack",
+35.6,
+10.6
+]
+},
+"189": {
+"map": 1434,
+"start": [
+"Kebok",
+27.0,
+77.1
+],
+"end": [
+"Kebok",
+27.0,
+77.1
+]
+},
+"213": {
+"map": 1434,
+"start": [
+"Kebok",
+27.0,
+77.1
+],
+"end": [
+"Kebok",
+27.0,
+77.1
+]
+},
+"198": {
+"map": 1434,
+"start": null,
+"end": [
+"Private Thorsen",
+38.0,
+3.4
+]
+},
+"201": {
+"map": 1434,
+"start": [
+"Krazek",
+26.9,
+77.2
+],
+"end": [
+"Krazek",
+26.9,
+77.2
+]
+},
+"616": {
+"map": 1434,
+"start": null,
+"end": [
+"Baron Revilgaz",
+27.2,
+76.9
+]
+},
+"605": {
+"map": 1434,
+"start": [
+"Crank Fizzlebub",
+27.1,
+77.2
+],
+"end": [
+"Crank Fizzlebub",
+27.1,
+77.2
+]
+},
+"578": {
+"map": 1434,
+"start": [
+"Baron Revilgaz",
+27.2,
+76.9
+],
+"end": [
+"Baron Revilgaz",
+27.2,
+76.9
+]
+},
+"601": {
+"map": 1434,
+"start": [
+"Baron Revilgaz",
+27.2,
+76.9
+],
+"end": [
+"Baron Revilgaz",
+27.2,
+76.9
+]
+},
+"575": {
+"map": 1434,
+"start": [
+"Drizzlik",
+28.3,
+77.6
+],
+"end": [
+"Drizzlik",
+28.3,
+77.6
+]
+},
+"97047": {
+"map": 1434,
+"start": null,
+"end": [
+"Wendel Mathers",
+44.2,
+8.0
+]
+},
+"97048": {
+"map": 1434,
+"start": null,
+"end": [
+"Captain Aransas",
+27.7,
+76.7
+]
+},
+"602": {
+"map": 1434,
+"start": null,
+"end": null
+},
+"92456": {
+"map": 1453,
+"start": null,
+"end": [
+"Shylamiir",
+31.5,
+63.0
+]
+},
+"92489": {
+"map": 1453,
+"start": null,
+"end": [
+"High Sorcerer Andromath",
+48.8,
+88.1
+]
+},
+"92457": {
+"map": 1421,
+"start": [
+"Image of Archmage Modera",
+68.6,
+45.1
+],
+"end": [
+"Image of Archmage Modera",
+68.6,
+45.1
+]
+},
+"92458": {
+"map": 1421,
+"start": [
+"Image of Archmage Modera",
+68.6,
+45.1
+],
+"end": [
+"Image of Archmage Modera",
+68.6,
+45.1
+]
+},
+"2922": {
+"map": 1426,
+"start": [
+"Tinkmaster Overspark",
+62.2,
+29.2
+],
+"end": [
+"Tinkmaster Overspark",
+62.2,
+29.2
+]
+},
+"2926": {
+"map": 1426,
+"start": [
+"Ozzie Togglevolt",
+45.9,
+49.4
+],
+"end": [
+"Ozzie Togglevolt",
+45.9,
+49.4
+]
+},
+"2962": {
+"map": 1426,
+"start": [
+"Ozzie Togglevolt",
+45.9,
+49.4
+],
+"end": [
+"Ozzie Togglevolt",
+45.9,
+49.4
+]
+},
+"2928": {
+"map": 1453,
+"start": [
+"Shoni the Shilent",
+62.6,
+34.1
+],
+"end": [
+"Shoni the Shilent",
+62.6,
+34.1
+]
+},
+"2924": {
+"map": 1426,
+"start": [
+"Klockmort Spannerspan",
+62.0,
+28.5
+],
+"end": [
+"Klockmort Spannerspan",
+62.0,
+28.5
+]
+},
+"2930": {
+"map": 1426,
+"start": [
+"Master Mechanic Castpipe",
+62.3,
+28.8
+],
+"end": [
+"Master Mechanic Castpipe",
+62.3,
+28.8
+]
+},
+"2929": {
+"map": 1426,
+"start": [
+"High Tinker Mekkatorque",
+62.1,
+29.0
+],
+"end": [
+"High Tinker Mekkatorque",
+62.1,
+29.0
+]
+},
+"2904": {
+"map": 1434,
+"start": null,
+"end": [
+"Scooty",
+27.6,
+77.5
+]
+},
+"2951": {
+"map": null,
+"start": null,
+"end": null
+},
+"2948": {
+"map": 1426,
+"start": [
+"Talvash del Kissel",
+56.9,
+21.7
+],
+"end": [
+"Talvash del Kissel",
+56.9,
+21.7
+]
+},
+"78699": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"1050": {
+"map": 1426,
+"start": [
+"Librarian Mae Paledust",
+63.1,
+23.1
+],
+"end": [
+"Librarian Mae Paledust",
+63.1,
+23.1
+]
+},
+"96800": {
+"map": 1416,
+"start": null,
+"end": [
+"Magus Olvek",
+10.1,
+63.8
+]
+},
+"6141": {
+"map": 1453,
+"start": null,
+"end": null
+},
+"1053": {
+"map": 1424,
+"start": [
+"Raleigh the Devout",
+51.5,
+58.4
+],
+"end": [
+"Raleigh the Devout",
+51.5,
+58.4
+]
+},
+"1951": {
+"map": 1441,
+"start": null,
+"end": null
+},
+"93585": {
+"map": 1435,
+"start": null,
+"end": [
+"Magtoor",
+26.1,
+31.7
+]
+},
+"93429": {
+"map": 1435,
+"start": null,
+"end": [
+"Karana",
+26.7,
+33.0
+]
+},
+"1389": {
+"map": 1435,
+"start": [
+"Magtoor",
+26.0,
+31.4
+],
+"end": [
+"Magtoor",
+26.0,
+31.4
+]
+},
+"93430": {
+"map": 1435,
+"start": null,
+"end": [
+"Pelluk",
+26.4,
+30.6
+]
+},
+"1393": {
+"map": 1435,
+"start": null,
+"end": [
+"Galen's Strongbox",
+47.8,
+39.8
+]
+},
+"93464": {
+"map": 1435,
+"start": null,
+"end": null
+},
+"691": {
+"map": 1417,
+"start": [
+"Apprentice Kryten",
+46.2,
+47.8
+],
+"end": [
+"Apprentice Kryten",
+46.2,
+47.8
+]
+},
+"684": {
+"map": 1417,
+"start": null,
+"end": [
+"Captain Nials",
+45.8,
+47.6
+]
+},
+"685": {
+"map": 1417,
+"start": null,
+"end": [
+"Captain Nials",
+45.8,
+47.6
+]
+},
+"681": {
+"map": 1417,
+"start": [
+"Captain Nials",
+45.8,
+47.6
+],
+"end": [
+"Captain Nials",
+45.8,
+47.6
+]
+},
+"92867": {
+"map": 1417,
+"start": null,
+"end": null
+},
+"92872": {
+"map": 1417,
+"start": [
+"Caretaker Alaric",
+29.0,
+59.6
+],
+"end": [
+"Caretaker Alaric",
+29.0,
+59.6
+]
+},
+"682": {
+"map": 1417,
+"start": [
+"Captain Nials",
+45.8,
+47.6
+],
+"end": [
+"Captain Nials",
+45.8,
+47.6
+]
+},
+"663": {
+"map": 1417,
+"start": null,
+"end": [
+"Shakes O'Breen",
+32.3,
+81.4
+]
+},
+"665": {
+"map": 1417,
+"start": null,
+"end": [
+"Doctor Draxlegauge",
+33.9,
+80.4
+]
+},
+"666": {
+"map": 1417,
+"start": [
+"Doctor Draxlegauge",
+33.9,
+80.4
+],
+"end": [
+"Doctor Draxlegauge",
+33.9,
+80.4
+]
+},
+"664": {
+"map": 1417,
+"start": [
+"Captain Steelgut",
+34.0,
+80.8
+],
+"end": [
+"Captain Steelgut",
+34.0,
+80.8
+]
+},
+"668": {
+"map": 1417,
+"start": null,
+"end": [
+"Shakes O'Breen",
+32.3,
+81.4
+]
+},
+"95315": {
+"map": 1417,
+"start": null,
+"end": null
+},
+"669": {
+"map": 1417,
+"start": null,
+"end": null
+},
+"95787": {
+"map": 1424,
+"start": [
+"Loremaster Dibbs",
+50.5,
+57.2
+],
+"end": [
+"Loremaster Dibbs",
+50.5,
+57.2
+]
+},
+"95788": {
+"map": 1424,
+"start": [
+"Loremaster Dibbs",
+50.5,
+57.2
+],
+"end": [
+"Loremaster Dibbs",
+50.5,
+57.2
+]
+},
+"95799": {
+"map": 1424,
+"start": null,
+"end": null
+},
+"95798": {
+"map": 1424,
+"start": null,
+"end": null
+},
+"97130": {
+"map": 1416,
+"start": null,
+"end": null
+},
+"95789": {
+"map": 1434,
+"start": null,
+"end": null
+},
+"95791": {
+"map": 1434,
+"start": [
+"Krazek",
+27.0,
+77.2
+],
+"end": [
+"Krazek",
+27.0,
+77.2
+]
+},
+"1437": {
+"map": 1443,
+"start": null,
+"end": [
+"Malem Chest",
+56.5,
+17.8
+]
+},
+"1387": {
+"map": 1443,
+"start": [
+"Corporal Melkins",
+66.7,
+10.9
+],
+"end": [
+"Corporal Melkins",
+66.7,
+10.9
+]
+},
+"1382": {
+"map": 1443,
+"start": null,
+"end": [
+"Uthek the Wise",
+36.2,
+79.2
+]
+},
+"1385": {
+"map": 1443,
+"start": null,
+"end": [
+"Warug",
+75.0,
+68.2
+]
+},
+"93224": {
+"map": 1443,
+"start": [
+"Captain Pentigast",
+66.6,
+11.0
+],
+"end": [
+"Captain Pentigast",
+66.6,
+11.0
+]
+},
+"261": {
+"map": 1443,
+"start": [
+"Brother Anton",
+66.5,
+7.9
+],
+"end": [
+"Brother Anton",
+66.5,
+7.9
+]
+},
+"1465": {
+"map": 1443,
+"start": null,
+"end": [
+"Vahlarriel Demonslayer",
+66.4,
+11.8
+]
+},
+"97284": {
+"map": 1443,
+"start": [
+"Vahlarriel Demonslayer",
+66.5,
+11.9
+],
+"end": [
+"Vahlarriel Demonslayer",
+66.5,
+11.9
+]
+},
+"1438": {
+"map": 1443,
+"start": null,
+"end": [
+"Dalinda Malem",
+54.9,
+26.1
+]
+},
+"1439": {
+"map": 1443,
+"start": [
+"Dalinda Malem",
+54.9,
+26.1
+],
+"end": [
+"Dalinda Malem",
+54.9,
+26.1
+]
+},
+"1440": {
+"map": 1443,
+"start": null,
+"end": [
+"Vahlarriel Demonslayer",
+66.4,
+11.8
+]
+},
+"5501": {
+"map": 1443,
+"start": [
+"Bibbly F'utzbuckle",
+62.3,
+39.0
+],
+"end": [
+"Bibbly F'utzbuckle",
+62.3,
+39.0
+]
+},
+"5821": {
+"map": 1443,
+"start": null,
+"end": [
+"Smeed Scrabblescrew",
+60.9,
+61.9
+]
+},
+"5561": {
+"map": 1443,
+"start": [
+"Smeed Scrabblescrew",
+60.9,
+61.9
+],
+"end": [
+"Smeed Scrabblescrew",
+60.9,
+61.9
+]
+},
+"6134": {
+"map": 1443,
+"start": [
+"Hornizz Brimbuzzle",
+47.8,
+61.8
+],
+"end": [
+"Hornizz Brimbuzzle",
+47.8,
+61.8
+]
+},
+"5943": {
+"map": 1443,
+"start": null,
+"end": [
+"Smeed Scrabblescrew",
+60.9,
+61.9
+]
+},
+"96222": {
+"map": 1443,
+"start": null,
+"end": null
+},
+"1384": {
+"map": 1443,
+"start": [
+"Uthek the Wise",
+36.2,
+79.2
+],
+"end": [
+"Uthek the Wise",
+36.2,
+79.2
+]
+},
+"6132": {
+"map": 1443,
+"start": null,
+"end": [
+"Hornizz Brimbuzzle",
+47.8,
+61.8
+]
+},
+"79229": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"1386": {
+"map": 1443,
+"start": [
+"Warug",
+75.0,
+68.2
+],
+"end": [
+"Warug",
+75.0,
+68.2
+]
+},
+"1369": {
+"map": 1443,
+"start": [
+"Warug",
+75.0,
+68.2
+],
+"end": [
+"Warug",
+75.0,
+68.2
+]
+},
+"1371": {
+"map": 1443,
+"start": [
+"Warug",
+75.0,
+68.2
+],
+"end": [
+"Warug",
+75.0,
+68.2
+]
+},
+"92743": {
+"map": 1443,
+"start": null,
+"end": null
+},
+"92841": {
+"map": 1443,
+"start": null,
+"end": null
+},
+"92818": {
+"map": 1443,
+"start": null,
+"end": null
+},
+"92846": {
+"map": 2652,
+"start": [
+"Orgrul",
+35.7,
+12.8
+],
+"end": [
+"Orgrul",
+35.7,
+12.8
+]
+},
+"92844": {
+"map": 2652,
+"start": [
+"Orgrul",
+35.7,
+12.8
+],
+"end": [
+"Orgrul",
+35.7,
+12.8
+]
+},
+"92847": {
+"map": 2652,
+"start": [
+"Orgrul",
+35.7,
+12.8
+],
+"end": [
+"Orgrul",
+35.7,
+12.8
+]
+},
+"1458": {
+"map": 1443,
+"start": [
+"Kreldig Ungor",
+66.2,
+9.6
+],
+"end": [
+"Kreldig Ungor",
+66.2,
+9.6
+]
+},
+"1454": {
+"map": 1443,
+"start": null,
+"end": [
+"Karnitol's Chest",
+36.1,
+30.5
+]
+},
+"1459": {
+"map": 1443,
+"start": [
+"Kreldig Ungor",
+66.2,
+9.6
+],
+"end": [
+"Kreldig Ungor",
+66.2,
+9.6
+]
+},
+"6161": {
+"map": 1443,
+"start": null,
+"end": [
+"Rackmore's Chest",
+30.0,
+8.7
+]
+},
+"1455": {
+"map": 1443,
+"start": null,
+"end": [
+"Kreldig Ungor",
+66.2,
+9.6
+]
+},
+"94841": {
+"map": 1443,
+"start": null,
+"end": null
+},
+"79235": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"6626": {
+"map": 1413,
+"start": [
+"Myriam Moonsinger",
+49.0,
+94.9
+],
+"end": [
+"Myriam Moonsinger",
+49.0,
+94.9
+]
+},
+"3525": {
+"map": null,
+"start": null,
+"end": null
+},
+"3636": {
+"map": 1453,
+"start": [
+"Archbishop Benedictus",
+50.3,
+45.5
+],
+"end": [
+"Archbishop Benedictus",
+50.3,
+45.5
+]
+},
+"1282": {
+"map": 1445,
+"start": null,
+"end": [
+"Captain Garran Vimes",
+68.2,
+48.6
+]
+},
+"1204": {
+"map": 1445,
+"start": [
+"Morgan Stern",
+66.3,
+45.5
+],
+"end": [
+"Morgan Stern",
+66.3,
+45.5
+]
+},
+"98233": {
+"map": 1445,
+"start": null,
+"end": null
+},
+"1218": {
+"map": 1445,
+"start": [
+"\"Swamp Eye\" Jarl",
+55.4,
+26.3
+],
+"end": [
+"\"Swamp Eye\" Jarl",
+55.4,
+26.3
+]
+},
+"1206": {
+"map": 1445,
+"start": [
+"\"Swamp Eye\" Jarl",
+55.4,
+26.3
+],
+"end": [
+"\"Swamp Eye\" Jarl",
+55.4,
+26.3
+]
+},
+"1219": {
+"map": 1445,
+"start": null,
+"end": [
+"Theramore Lieutenant",
+65.1,
+47.2
+]
+},
+"1177": {
+"map": 1445,
+"start": [
+"Mudcrush Durtfeet",
+35.2,
+38.3
+],
+"end": [
+"Mudcrush Durtfeet",
+35.2,
+38.3
+]
+},
+"1284": {
+"map": 1445,
+"start": null,
+"end": [
+"Captain Garran Vimes",
+68.2,
+48.6
+]
+},
+"1252": {
+"map": 1445,
+"start": null,
+"end": [
+"Captain Garran Vimes",
+68.2,
+48.6
+]
+},
+"1253": {
+"map": 1445,
+"start": null,
+"end": [
+"Captain Garran Vimes",
+68.2,
+48.6
+]
+},
+"98205": {
+"map": 1445,
+"start": null,
+"end": null
+},
+"98215": {
+"map": 1445,
+"start": null,
+"end": null
+},
+"98231": {
+"map": 1445,
+"start": [
+"Gizzix Grimegurgle",
+41.0,
+75.7
+],
+"end": [
+"Gizzix Grimegurgle",
+41.0,
+75.7
+]
+},
+"1220": {
+"map": 1445,
+"start": null,
+"end": [
+"Captain Garran Vimes",
+68.2,
+48.6
+]
+},
+"1259": {
+"map": 1445,
+"start": null,
+"end": [
+"Adjutant Tesoran",
+68.0,
+48.1
+]
+},
+"1319": {
+"map": 1445,
+"start": null,
+"end": [
+"Caz Twosprocket",
+64.8,
+50.4
+]
+},
+"1285": {
+"map": 1445,
+"start": null,
+"end": [
+"Captain Garran Vimes",
+68.2,
+48.6
+]
+},
+"1286": {
+"map": 1445,
+"start": null,
+"end": [
+"Balos Jacken",
+36.1,
+54.3
+]
+},
+"1320": {
+"map": 1445,
+"start": null,
+"end": [
+"Captain Garran Vimes",
+68.2,
+48.6
+]
+},
+"1203": {
+"map": 1445,
+"start": [
+"\"Swamp Eye\" Jarl",
+55.4,
+26.3
+],
+"end": [
+"\"Swamp Eye\" Jarl",
+55.4,
+26.3
+]
+},
+"1222": {
+"map": 1445,
+"start": null,
+"end": [
+"Morgan Stern",
+66.3,
+45.5
+]
+},
+"1287": {
+"map": 1445,
+"start": null,
+"end": [
+"Captain Garran Vimes",
+68.2,
+48.6
+]
+},
+"98895": {
+"map": 1457,
+"start": null,
+"end": [
+"Alliance Brigadier General",
+58.0,
+34.4
+]
+},
+"603": {
+"map": 1416,
+"start": null,
+"end": null
+},
+"720": {
+"map": 1418,
+"start": null,
+"end": [
+"Prospector Ryedol",
+53.4,
+43.4
+]
+},
+"719": {
+"map": 1418,
+"start": [
+"Prospector Ryedol",
+53.4,
+43.4
+],
+"end": [
+"Prospector Ryedol",
+53.4,
+43.4
+]
+},
+"718": {
+"map": 1418,
+"start": [
+"Sigrun Ironhew",
+53.8,
+43.3
+],
+"end": [
+"Sigrun Ironhew",
+53.8,
+43.3
+]
+},
+"733": {
+"map": 1418,
+"start": [
+"Sigrun Ironhew",
+53.8,
+43.3
+],
+"end": [
+"Sigrun Ironhew",
+53.8,
+43.3
+]
+},
+"710": {
+"map": 1418,
+"start": [
+"Lotwil Veriatus",
+25.9,
+44.9
+],
+"end": [
+"Lotwil Veriatus",
+25.9,
+44.9
+]
+},
+"713": {
+"map": 1418,
+"start": [
+"Lotwil Veriatus",
+25.9,
+44.9
+],
+"end": [
+"Lotwil Veriatus",
+25.9,
+44.9
+]
+},
+"714": {
+"map": 1418,
+"start": [
+"Lotwil Veriatus",
+25.9,
+44.9
+],
+"end": [
+"Lotwil Veriatus",
+25.9,
+44.9
+]
+},
+"711": {
+"map": 1418,
+"start": [
+"Lotwil Veriatus",
+25.9,
+44.9
+],
+"end": [
+"Lotwil Veriatus",
+25.9,
+44.9
+]
+},
+"732": {
+"map": 1418,
+"start": [
+"Garek",
+61.9,
+54.3
+],
+"end": [
+"Garek",
+61.9,
+54.3
+]
+},
+"703": {
+"map": 1418,
+"start": [
+"Rigglefuzz",
+42.4,
+52.9
+],
+"end": [
+"Rigglefuzz",
+42.4,
+52.9
+]
+},
+"1108": {
+"map": 1418,
+"start": [
+"Martek the Exiled",
+42.2,
+52.7
+],
+"end": [
+"Martek the Exiled",
+42.2,
+52.7
+]
+},
+"712": {
+"map": 1418,
+"start": [
+"Lotwil Veriatus",
+25.9,
+44.9
+],
+"end": [
+"Lotwil Veriatus",
+25.9,
+44.9
+]
+},
+"716": {
+"map": 1418,
+"start": [
+"Lucien Tosselwrench",
+25.8,
+44.2
+],
+"end": [
+"Lucien Tosselwrench",
+25.8,
+44.2
+]
+},
+"2398": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"2240": {
+"map": 1426,
+"start": null,
+"end": [
+"Prospector Stormpike",
+63.1,
+23.0
+]
+},
+"707": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"709": {
+"map": 1418,
+"start": [
+"Theldurin the Lost",
+51.4,
+76.9
+],
+"end": [
+"Theldurin the Lost",
+51.4,
+76.9
+]
+},
+"2418": {
+"map": 1418,
+"start": [
+"Rigglefuzz",
+42.4,
+52.9
+],
+"end": [
+"Rigglefuzz",
+42.4,
+52.9
+]
+},
+"1360": {
+"map": 1426,
+"start": [
+"Krom Stoutarm",
+63.0,
+22.6
+],
+"end": [
+"Krom Stoutarm",
+63.0,
+22.6
+]
+},
+"721": {
+"map": 1418,
+"start": null,
+"end": null
+},
+"722": {
+"map": 1432,
+"start": [
+"Hammertoe Grez",
+37.3,
+85.8
+],
+"end": [
+"Hammertoe Grez",
+37.3,
+85.8
+]
+},
+"704": {
+"map": 1432,
+"start": [
+"Prospector Ironband",
+65.9,
+65.6
+],
+"end": [
+"Prospector Ironband",
+65.9,
+65.6
+]
+},
+"17": {
+"map": 1432,
+"start": [
+"Ghak Healtouch",
+37.1,
+49.4
+],
+"end": [
+"Ghak Healtouch",
+37.1,
+49.4
+]
+},
+"1139": {
+"map": 1426,
+"start": [
+"Advisor Belgrum",
+63.5,
+22.6
+],
+"end": [
+"Advisor Belgrum",
+63.5,
+22.6
+]
+},
+"2200": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"2201": {
+"map": null,
+"start": null,
+"end": null
+},
+"2204": {
+"map": 1426,
+"start": null,
+"end": [
+"Talvash del Kissel",
+56.9,
+21.7
+]
+},
+"2278": {
+"map": null,
+"start": null,
+"end": null
+},
+"2279": {
+"map": 1426,
+"start": null,
+"end": [
+"High Explorer Magellas",
+62.3,
+24.1
+]
+},
+"1956": {
+"map": 1445,
+"start": [
+"Tabetha",
+46.1,
+57.1
+],
+"end": [
+"Tabetha",
+46.1,
+57.1
+]
+},
+"94829": {
+"map": 2548,
+"start": null,
+"end": [
+"Farmer Elbrim",
+52.7,
+42.3
+]
+},
+"95642": {
+"map": 2548,
+"start": [
+"Apprentice Claire",
+47.7,
+47.4
+],
+"end": [
+"Apprentice Claire",
+47.7,
+47.4
+]
+},
+"95643": {
+"map": 2548,
+"start": [
+"Apprentice Claire",
+47.7,
+47.4
+],
+"end": [
+"Apprentice Claire",
+47.7,
+47.4
+]
+},
+"94961": {
+"map": 2548,
+"start": [
+"Fuzzle",
+47.3,
+51.3
+],
+"end": [
+"Fuzzle",
+47.3,
+51.3
+]
+},
+"95562": {
+"map": 2548,
+"start": [
+"Apprentice Claire",
+47.7,
+47.4
+],
+"end": [
+"Apprentice Claire",
+47.7,
+47.4
+]
+},
+"94963": {
+"map": 2548,
+"start": null,
+"end": [
+"Fuzzle's Treasure",
+41.6,
+47.7
+]
+},
+"94884": {
+"map": 2548,
+"start": null,
+"end": [
+"Ashe Amberhall",
+66.7,
+81.0
+]
+},
+"94931": {
+"map": 2548,
+"start": [
+"Halligan Turner",
+41.1,
+62.9
+],
+"end": [
+"Halligan Turner",
+41.1,
+62.9
+]
+},
+"94857": {
+"map": 2548,
+"start": null,
+"end": [
+"Hurley",
+41.4,
+64.5
+]
+},
+"94861": {
+"map": 2548,
+"start": null,
+"end": [
+"Halligan Turner",
+41.1,
+62.9
+]
+},
+"94678": {
+"map": 2548,
+"start": [
+"Cedric Dalton",
+39.5,
+74.7
+],
+"end": [
+"Cedric Dalton",
+39.5,
+74.7
+]
+},
+"94679": {
+"map": 2548,
+"start": [
+"Cedric Dalton",
+39.5,
+74.7
+],
+"end": [
+"Cedric Dalton",
+39.5,
+74.7
+]
+},
+"94999": {
+"map": 2548,
+"start": null,
+"end": [
+"Watcher Fredericks",
+36.4,
+75.8
+]
+},
+"94923": {
+"map": 2548,
+"start": null,
+"end": [
+"Robbie Holmsby",
+43.4,
+82.7
+]
+},
+"95934": {
+"map": 2548,
+"start": [
+"Gelinda Coppergleam",
+30.2,
+69.2
+],
+"end": [
+"Gelinda Coppergleam",
+30.2,
+69.2
+]
+},
+"95792": {
+"map": 2548,
+"start": [
+"Gelinda Coppergleam",
+30.2,
+69.2
+],
+"end": [
+"Gelinda Coppergleam",
+30.2,
+69.2
+]
+},
+"95147": {
+"map": 2548,
+"start": null,
+"end": [
+"Cedric Dalton",
+39.5,
+74.7
+]
+},
+"94614": {
+"map": 2548,
+"start": [
+"Benjy Wheeler",
+54.9,
+73.1
+],
+"end": [
+"Benjy Wheeler",
+54.9,
+73.1
+]
+},
+"94925": {
+"map": 2548,
+"start": [
+"Watcher Cornelius",
+59.5,
+63.9
+],
+"end": [
+"Watcher Cornelius",
+59.5,
+63.9
+]
+},
+"94924": {
+"map": 2548,
+"start": [
+"Watcher Cornelius",
+59.5,
+63.9
+],
+"end": [
+"Watcher Cornelius",
+59.5,
+63.9
+]
+},
+"95983": {
+"map": 2548,
+"start": null,
+"end": [
+"Watcher Cornelius",
+59.5,
+63.9
+]
+},
+"94928": {
+"map": 2548,
+"start": null,
+"end": [
+"Friz Frazzlespark",
+77.1,
+52.9
+]
+},
+"95064": {
+"map": 2548,
+"start": null,
+"end": null
+},
+"95426": {
+"map": 2548,
+"start": null,
+"end": null
+},
+"95984": {
+"map": 2548,
+"start": [
+"Watcher Cornelius",
+59.5,
+63.9
+],
+"end": [
+"Watcher Cornelius",
+59.5,
+63.9
+]
+},
+"96125": {
+"map": 2548,
+"start": null,
+"end": [
+"Dunston Willis",
+68.6,
+12.7
+]
+},
+"95986": {
+"map": 2548,
+"start": [
+"Watcher Cornelius",
+59.5,
+63.9
+],
+"end": [
+"Watcher Cornelius",
+59.5,
+63.9
+]
+},
+"95943": {
+"map": 2548,
+"start": [
+"Bertrand Ironbrow",
+63.4,
+80.6
+],
+"end": [
+"Bertrand Ironbrow",
+63.4,
+80.6
+]
+},
+"96009": {
+"map": 2548,
+"start": null,
+"end": [
+"Bertrand Ironbrow",
+63.3,
+80.7
+]
+},
+"95991": {
+"map": 2548,
+"start": null,
+"end": [
+"Wheatley",
+63.5,
+85.0
+]
+},
+"95912": {
+"map": 2548,
+"start": null,
+"end": [
+"Ember Bladewhisper",
+66.1,
+79.6
+]
+},
+"94877": {
+"map": 2548,
+"start": [
+"Demar Brant",
+66.6,
+81.0
+],
+"end": [
+"Demar Brant",
+66.6,
+81.0
+]
+},
+"94613": {
+"map": 2548,
+"start": null,
+"end": [
+"Benjy Wheeler",
+54.9,
+73.1
+]
+},
+"94881": {
+"map": 2548,
+"start": [
+"Ashe Amberhall",
+66.7,
+81.0
+],
+"end": [
+"Ashe Amberhall",
+66.7,
+81.0
+]
+},
+"94879": {
+"map": 2548,
+"start": [
+"Ashe Amberhall",
+66.7,
+81.0
+],
+"end": [
+"Ashe Amberhall",
+66.7,
+81.0
+]
+},
+"95156": {
+"map": 2548,
+"start": [
+"Ember Bladewhisper",
+66.1,
+79.6
+],
+"end": [
+"Ember Bladewhisper",
+66.1,
+79.6
+]
+},
+"95184": {
+"map": 2548,
+"start": [
+"Ember Bladewhisper",
+66.1,
+79.6
+],
+"end": [
+"Ember Bladewhisper",
+66.1,
+79.6
+]
+},
+"95603": {
+"map": 2548,
+"start": [
+"Sister Rowland",
+61.8,
+83.3
+],
+"end": [
+"Sister Rowland",
+61.8,
+83.3
+]
+},
+"95613": {
+"map": 2548,
+"start": [
+"Sister Rowland",
+61.8,
+83.3
+],
+"end": [
+"Sister Rowland",
+61.8,
+83.3
+]
+},
+"95615": {
+"map": 2548,
+"start": [
+"Sister Rowland",
+61.8,
+83.3
+],
+"end": [
+"Sister Rowland",
+61.8,
+83.3
+]
+},
+"94615": {
+"map": 2548,
+"start": [
+"Benjy Wheeler",
+54.9,
+73.1
+],
+"end": [
+"Benjy Wheeler",
+54.9,
+73.1
+]
+},
+"94617": {
+"map": 2548,
+"start": [
+"Benjy Wheeler",
+54.9,
+73.1
+],
+"end": [
+"Benjy Wheeler",
+54.9,
+73.1
+]
+},
+"94618": {
+"map": 2548,
+"start": null,
+"end": [
+"Lost Horse",
+53.8,
+66.6
+]
+},
+"94992": {
+"map": 2548,
+"start": null,
+"end": [
+"Benjy Wheeler",
+54.9,
+73.1
+]
+},
+"95260": {
+"map": 2548,
+"start": null,
+"end": [
+"Argo Brinewhistle",
+79.9,
+52.5
+]
+},
+"95288": {
+"map": 2548,
+"start": [
+"Friz Frazzlespark",
+77.1,
+52.9
+],
+"end": [
+"Friz Frazzlespark",
+77.1,
+52.9
+]
+},
+"95120": {
+"map": 2548,
+"start": null,
+"end": null
+},
+"95254": {
+"map": 2548,
+"start": null,
+"end": [
+"Fimbo Greasemitz",
+78.8,
+54.2
+]
+},
+"95119": {
+"map": 2548,
+"start": null,
+"end": [
+"Wharfmaster Whizzbuzz",
+79.4,
+52.6
+]
+},
+"95118": {
+"map": 2548,
+"start": null,
+"end": null
+},
+"95261": {
+"map": 2548,
+"start": [
+"Argo Brinewhistle",
+79.9,
+52.5
+],
+"end": [
+"Argo Brinewhistle",
+79.9,
+52.5
+]
+},
+"95121": {
+"map": 2548,
+"start": null,
+"end": [
+"Fimbo Greasemitz",
+78.8,
+54.2
+]
+},
+"96063": {
+"map": 2548,
+"start": null,
+"end": [
+"Sleebo Fizzlespout",
+68.1,
+48.6
+]
+},
+"96067": {
+"map": 2548,
+"start": null,
+"end": [
+"Sleebo Fizzlespout",
+68.1,
+48.7
+]
+},
+"94858": {
+"map": 2548,
+"start": null,
+"end": [
+"Farmer Elbrim",
+52.7,
+42.4
+]
+},
+"95066": {
+"map": 2548,
+"start": null,
+"end": [
+"Demar Brant",
+66.6,
+81.0
+]
+},
+"95561": {
+"map": 2548,
+"start": null,
+"end": [
+"Tessa Dawnbright",
+63.8,
+82.3
+]
+},
+"95913": {
+"map": 2548,
+"start": null,
+"end": [
+"Tessa Dawnbright",
+63.8,
+82.4
+]
+},
+"95267": {
+"map": 2548,
+"start": null,
+"end": [
+"Argo Brinewhistle",
+79.9,
+52.4
+]
+},
+"95122": {
+"map": 2548,
+"start": [
+"Wharfmaster Whizzbuzz",
+79.4,
+52.7
+],
+"end": [
+"Wharfmaster Whizzbuzz",
+79.4,
+52.7
+]
+},
+"95123": {
+"map": 2548,
+"start": [
+"Wharfmaster Whizzbuzz",
+79.4,
+52.7
+],
+"end": [
+"Wharfmaster Whizzbuzz",
+79.4,
+52.7
+]
+},
+"95165": {
+"map": 2548,
+"start": [
+"Wharfmaster Whizzbuzz",
+79.4,
+52.7
+],
+"end": [
+"Wharfmaster Whizzbuzz",
+79.4,
+52.7
+]
+},
+"95124": {
+"map": 2548,
+"start": [
+"Wharfmaster Whizzbuzz",
+79.4,
+52.7
+],
+"end": [
+"Wharfmaster Whizzbuzz",
+79.4,
+52.7
+]
+},
+"95293": {
+"map": 2548,
+"start": null,
+"end": [
+"Captain Bentcoin",
+91.2,
+39.7
+]
+},
+"95294": {
+"map": 2548,
+"start": null,
+"end": [
+"Friz Frazzlespark",
+77.1,
+52.9
+]
+},
+"96126": {
+"map": 2548,
+"start": null,
+"end": [
+"Dunston Willis",
+68.7,
+12.6
+]
+},
+"94927": {
+"map": 2548,
+"start": null,
+"end": [
+"Watcher Cornelius",
+59.5,
+63.9
+]
+},
+"95219": {
+"map": 2548,
+"start": null,
+"end": null
+},
+"95295": {
+"map": 2548,
+"start": null,
+"end": null
+},
+"94982": {
+"map": 2548,
+"start": null,
+"end": [
+"Demar Brant",
+66.6,
+81.0
+]
+},
+"94983": {
+"map": 2548,
+"start": [
+"Sergeant Riftan",
+30.6,
+49.1
+],
+"end": [
+"Sergeant Riftan",
+30.6,
+49.1
+]
+},
+"94984": {
+"map": 2548,
+"start": [
+"Ashe Amberhall",
+66.7,
+81.0
+],
+"end": [
+"Ashe Amberhall",
+66.7,
+81.0
+]
+},
+"96771": {
+"map": null,
+"start": null,
+"end": null
+},
+"94981": {
+"map": 2548,
+"start": [
+"Alphonse Dumas",
+64.4,
+82.1
+],
+"end": [
+"Alphonse Dumas",
+64.4,
+82.1
+]
+},
+"94998": {
+"map": 2548,
+"start": null,
+"end": [
+"Melanie Sable",
+66.2,
+83.2
+]
+},
+"600": {
+"map": 1434,
+"start": [
+"Crank Fizzlebub",
+27.1,
+77.2
+],
+"end": [
+"Crank Fizzlebub",
+27.1,
+77.2
+]
+},
+"621": {
+"map": 1434,
+"start": [
+"Crank Fizzlebub",
+27.1,
+77.2
+],
+"end": [
+"Crank Fizzlebub",
+27.1,
+77.2
+]
+},
+"606": {
+"map": 1434,
+"start": null,
+"end": [
+"\"Shaky\" Phillipe",
+26.9,
+73.6
+]
+},
+"610": {
+"map": 1434,
+"start": [
+"Catelyn the Blade",
+27.3,
+77.5
+],
+"end": [
+"Catelyn the Blade",
+27.3,
+77.5
+]
+},
+"595": {
+"map": 1434,
+"start": null,
+"end": [
+"Bloodsail Correspondence",
+27.3,
+69.5
+]
+},
+"8551": {
+"map": 1434,
+"start": [
+"Captain Hecklebury Smotts",
+26.7,
+73.6
+],
+"end": [
+"Captain Hecklebury Smotts",
+26.7,
+73.6
+]
+},
+"597": {
+"map": 1434,
+"start": null,
+"end": [
+"First Mate Crazz",
+28.1,
+76.2
+]
+},
+"599": {
+"map": 1434,
+"start": null,
+"end": [
+"Fleet Master Seahorn",
+27.2,
+77.0
+]
+},
+"576": {
+"map": 1434,
+"start": [
+"Dizzy One-Eye",
+28.6,
+75.9
+],
+"end": [
+"Dizzy One-Eye",
+28.6,
+75.9
+]
+},
+"348": {
+"map": 1434,
+"start": [
+"Fin Fizracket",
+27.6,
+76.7
+],
+"end": [
+"Fin Fizracket",
+27.6,
+76.7
+]
+},
+"604": {
+"map": 1434,
+"start": [
+"Fleet Master Seahorn",
+27.2,
+77.0
+],
+"end": [
+"Fleet Master Seahorn",
+27.2,
+77.0
+]
+},
+"608": {
+"map": 1434,
+"start": [
+"Fleet Master Seahorn",
+27.2,
+77.0
+],
+"end": [
+"Fleet Master Seahorn",
+27.2,
+77.0
+]
+},
+"209": {
+"map": 1434,
+"start": [
+"Kebok",
+27.0,
+77.1
+],
+"end": [
+"Kebok",
+27.0,
+77.1
+]
+},
+"587": {
+"map": 1434,
+"start": [
+"Deeg",
+26.9,
+77.3
+],
+"end": [
+"Deeg",
+26.9,
+77.3
+]
+},
+"607": {
+"map": 1434,
+"start": null,
+"end": [
+"\"Sea Wolf\" MacKinley",
+27.8,
+77.1
+]
+},
+"609": {
+"map": 1434,
+"start": [
+"\"Sea Wolf\" MacKinley",
+27.8,
+77.1
+],
+"end": [
+"\"Sea Wolf\" MacKinley",
+27.8,
+77.1
+]
+},
+"97405": {
+"map": 1434,
+"start": null,
+"end": null
+},
+"79236": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"95322": {
+"map": 1434,
+"start": null,
+"end": [
+"Caravaneer Ruzzgot",
+27.3,
+74.1
+]
+},
+"2872": {
+"map": 1434,
+"start": null,
+"end": null
+},
+"93125": {
+"map": null,
+"start": null,
+"end": null
+},
+"92914": {
+"map": 2652,
+"start": null,
+"end": [
+"Mordent Evenshade",
+35.1,
+46.4
+]
+},
+"96010": {
+"map": 2652,
+"start": [
+"Mordent Evenshade",
+35.1,
+46.4
+],
+"end": [
+"Mordent Evenshade",
+35.1,
+46.4
+]
+},
+"96018": {
+"map": 2652,
+"start": [
+"Mordent Evenshade",
+35.1,
+46.4
+],
+"end": [
+"Mordent Evenshade",
+35.1,
+46.4
+]
+},
+"93016": {
+"map": 2652,
+"start": [
+"Mordent Evenshade",
+35.1,
+46.4
+],
+"end": [
+"Mordent Evenshade",
+35.1,
+46.4
+]
+},
+"93394": {
+"map": 2652,
+"start": null,
+"end": [
+"Magister Kirandis",
+47.4,
+76.2
+]
+},
+"99257": {
+"map": 2652,
+"start": null,
+"end": null
+},
+"93450": {
+"map": 2652,
+"start": null,
+"end": [
+"Vindael",
+42.1,
+78.9
+]
+},
+"93546": {
+"map": 2652,
+"start": [
+"Vindael",
+42.1,
+78.9
+],
+"end": [
+"Vindael",
+42.1,
+78.9
+]
+},
+"96060": {
+"map": 2652,
+"start": [
+"Vindael",
+42.1,
+78.9
+],
+"end": [
+"Vindael",
+42.1,
+78.9
+]
+},
+"93341": {
+"map": 2652,
+"start": [
+"Mithera",
+53.2,
+75.9
+],
+"end": [
+"Mithera",
+53.2,
+75.9
+]
+},
+"93362": {
+"map": 2652,
+"start": [
+"Mithera",
+53.2,
+75.9
+],
+"end": [
+"Mithera",
+53.2,
+75.9
+]
+},
+"99258": {
+"map": 2652,
+"start": [
+"Historian Biraxas",
+45.9,
+78.3
+],
+"end": [
+"Historian Biraxas",
+45.9,
+78.3
+]
+},
+"2969": {
+"map": 1444,
+"start": [
+"Kindal Moonweaver",
+65.9,
+45.7
+],
+"end": [
+"Kindal Moonweaver",
+65.9,
+45.7
+]
+},
+"2970": {
+"map": 1444,
+"start": [
+"Jer'kai Moonweaver",
+65.9,
+45.6
+],
+"end": [
+"Jer'kai Moonweaver",
+65.9,
+45.6
+]
+},
+"7003": {
+"map": 1444,
+"start": [
+"Zorbin Fandazzle",
+44.8,
+43.4
+],
+"end": [
+"Zorbin Fandazzle",
+44.8,
+43.4
+]
+},
+"7721": {
+"map": 1444,
+"start": [
+"Zorbin Fandazzle",
+44.8,
+43.4
+],
+"end": [
+"Zorbin Fandazzle",
+44.8,
+43.4
+]
+},
+"4124": {
+"map": 1444,
+"start": null,
+"end": [
+"Ginro Hearthkindle",
+31.9,
+45.1
+]
+},
+"2982": {
+"map": 1444,
+"start": [
+"Angelas Moonbreeze",
+31.8,
+45.6
+],
+"end": [
+"Angelas Moonbreeze",
+31.8,
+45.6
+]
+},
+"4125": {
+"map": 1444,
+"start": null,
+"end": [
+"Wrecked Row Boat",
+45.4,
+65.0
+]
+},
+"2866": {
+"map": 1444,
+"start": null,
+"end": [
+"Solarsal Gazebo",
+26.3,
+52.3
+]
+},
+"2867": {
+"map": 1444,
+"start": null,
+"end": [
+"Shandris Feathermoon",
+30.3,
+46.2
+]
+},
+"3130": {
+"map": 1444,
+"start": null,
+"end": [
+"Latronicus Moonspear",
+30.4,
+46.2
+]
+},
+"2869": {
+"map": 1444,
+"start": [
+"Latronicus Moonspear",
+30.4,
+46.2
+],
+"end": [
+"Latronicus Moonspear",
+30.4,
+46.2
+]
+},
+"2870": {
+"map": 1444,
+"start": [
+"Latronicus Moonspear",
+30.4,
+46.2
+],
+"end": [
+"Latronicus Moonspear",
+30.4,
+46.2
+]
+},
+"2871": {
+"map": 1444,
+"start": null,
+"end": [
+"Vestia Moonspear",
+30.1,
+45.1
+]
+},
+"92858": {
+"map": 1444,
+"start": null,
+"end": null
+},
+"2821": {
+"map": 1444,
+"start": [
+"Pratt McGrubben",
+30.6,
+42.7
+],
+"end": [
+"Pratt McGrubben",
+30.6,
+42.7
+]
+},
+"2844": {
+"map": 1444,
+"start": null,
+"end": [
+"Shay Leafrunner",
+38.2,
+10.3
+]
+},
+"2845": {
+"map": 1444,
+"start": null,
+"end": [
+"Rockbiter",
+42.4,
+22.0
+]
+},
+"4127": {
+"map": 1444,
+"start": null,
+"end": [
+"Ginro Hearthkindle",
+31.9,
+45.1
+]
+},
+"4129": {
+"map": 1444,
+"start": null,
+"end": [
+"Quintis Jonespyre",
+32.4,
+43.8
+]
+},
+"4130": {
+"map": 1444,
+"start": null,
+"end": [
+"Ginro Hearthkindle",
+31.9,
+45.1
+]
+},
+"4131": {
+"map": 1444,
+"start": null,
+"end": [
+"Large Leather Backpacks",
+73.3,
+56.3
+]
+},
+"4135": {
+"map": 1444,
+"start": null,
+"end": [
+"Zukk'ash Pod",
+72.1,
+63.7
+]
+},
+"4265": {
+"map": 1444,
+"start": null,
+"end": [
+"Ginro Hearthkindle",
+31.9,
+45.1
+]
+},
+"4266": {
+"map": 1444,
+"start": null,
+"end": [
+"Shandris Feathermoon",
+30.3,
+46.2
+]
+},
+"2972": {
+"map": 1444,
+"start": null,
+"end": null
+},
+"4267": {
+"map": 1444,
+"start": null,
+"end": null
+},
+"2605": {
+"map": 1446,
+"start": [
+"Marin Noggenfogger",
+51.8,
+28.7
+],
+"end": [
+"Marin Noggenfogger",
+51.8,
+28.7
+]
+},
+"1690": {
+"map": 1446,
+"start": [
+"Chief Engineer Bilgewhizzle",
+52.5,
+28.5
+],
+"end": [
+"Chief Engineer Bilgewhizzle",
+52.5,
+28.5
+]
+},
+"1707": {
+"map": 1446,
+"start": [
+"Spigot Operator Luglunket",
+52.5,
+28.4
+],
+"end": [
+"Spigot Operator Luglunket",
+52.5,
+28.4
+]
+},
+"97536": {
+"map": 1446,
+"start": null,
+"end": null
+},
+"3362": {
+"map": 1446,
+"start": [
+"Tran'rek",
+51.6,
+26.8
+],
+"end": [
+"Tran'rek",
+51.6,
+26.8
+]
+},
+"992": {
+"map": 1446,
+"start": [
+"Senior Surveyor Fizzledowser",
+50.2,
+27.5
+],
+"end": [
+"Senior Surveyor Fizzledowser",
+50.2,
+27.5
+]
+},
+"82": {
+"map": 1446,
+"start": null,
+"end": [
+"Alchemist Pestlezugg",
+50.9,
+27.0
+]
+},
+"5863": {
+"map": 1446,
+"start": [
+"Andi Lynn",
+52.8,
+27.4
+],
+"end": [
+"Andi Lynn",
+52.8,
+27.4
+]
+},
+"8366": {
+"map": 1446,
+"start": [
+"Security Chief Bilgewhizzle",
+67.1,
+23.9
+],
+"end": [
+"Security Chief Bilgewhizzle",
+67.1,
+23.9
+]
+},
+"97530": {
+"map": 1446,
+"start": [
+"Security Chief Bilgewhizzle",
+67.0,
+23.9
+],
+"end": [
+"Security Chief Bilgewhizzle",
+67.0,
+23.9
+]
+},
+"2875": {
+"map": 1446,
+"start": null,
+"end": [
+"Security Chief Bilgewhizzle",
+67.1,
+23.9
+]
+},
+"2781": {
+"map": 1446,
+"start": null,
+"end": [
+"Chief Engineer Bilgewhizzle",
+52.5,
+28.5
+]
+},
+"8365": {
+"map": 1446,
+"start": [
+"Haughty Modiste",
+66.6,
+22.3
+],
+"end": [
+"Haughty Modiste",
+66.6,
+22.3
+]
+},
+"1691": {
+"map": 1446,
+"start": [
+"Chief Engineer Bilgewhizzle",
+52.5,
+28.5
+],
+"end": [
+"Chief Engineer Bilgewhizzle",
+52.5,
+28.5
+]
+},
+"3161": {
+"map": 1446,
+"start": [
+"Marvon Rivetseeker",
+52.7,
+45.9
+],
+"end": [
+"Marvon Rivetseeker",
+52.7,
+45.9
+]
+},
+"1560": {
+"map": 1446,
+"start": null,
+"end": [
+"Torta",
+66.6,
+25.7
+]
+},
+"97540": {
+"map": 1446,
+"start": [
+"Tooga",
+66.5,
+25.7
+],
+"end": [
+"Tooga",
+66.5,
+25.7
+]
+},
+"10": {
+"map": 1446,
+"start": [
+"Senior Surveyor Fizzledowser",
+50.2,
+27.5
+],
+"end": [
+"Senior Surveyor Fizzledowser",
+50.2,
+27.5
+]
+},
+"2606": {
+"map": 1446,
+"start": null,
+"end": [
+"Sprinkle",
+51.1,
+26.9
+]
+},
+"110": {
+"map": 1446,
+"start": null,
+"end": [
+"Alchemist Pestlezugg",
+50.9,
+27.0
+]
+},
+"113": {
+"map": 1446,
+"start": null,
+"end": [
+"Senior Surveyor Fizzledowser",
+50.2,
+27.5
+]
+},
+"162": {
+"map": 1446,
+"start": null,
+"end": null
+},
+"7067": {
+"map": 1443,
+"start": [
+"Centaur Pariah",
+50.4,
+86.7
+],
+"end": [
+"Centaur Pariah",
+50.4,
+86.7
+]
+},
+"7070": {
+"map": 1445,
+"start": [
+"Archmage Tervosh",
+66.4,
+49.3
+],
+"end": [
+"Archmage Tervosh",
+66.4,
+49.3
+]
+},
+"7041": {
+"map": 1443,
+"start": [
+"Talendria",
+68.5,
+8.9
+],
+"end": [
+"Talendria",
+68.5,
+8.9
+]
+},
+"7028": {
+"map": 1443,
+"start": [
+"Willow",
+62.2,
+39.6
+],
+"end": [
+"Willow",
+62.2,
+39.6
+]
+},
+"7044": {
+"map": 1443,
+"start": null,
+"end": null
+},
+"7046": {
+"map": 1443,
+"start": null,
+"end": null
+},
+"7065": {
+"map": 1443,
+"start": [
+"Keeper Marandis",
+63.8,
+10.7
+],
+"end": [
+"Keeper Marandis",
+63.8,
+10.7
+]
+},
+"93404": {
+"map": 2652,
+"start": null,
+"end": null
+},
+"7066": {
+"map": 1450,
+"start": null,
+"end": [
+"Keeper Remulos",
+36.2,
+41.8
+]
+},
+"2988": {
+"map": 1425,
+"start": [
+"Gryphon Master Talonaxe",
+9.8,
+44.5
+],
+"end": [
+"Gryphon Master Talonaxe",
+9.8,
+44.5
+]
+},
+"86620": {
+"map": 1425,
+"start": [
+"Gryphon Master Talonaxe",
+9.8,
+44.5
+],
+"end": [
+"Gryphon Master Talonaxe",
+9.8,
+44.5
+]
+},
+"2880": {
+"map": 1425,
+"start": [
+"Fraggar Thundermantle",
+14.8,
+44.6
+],
+"end": [
+"Fraggar Thundermantle",
+14.8,
+44.6
+]
+},
+"2877": {
+"map": 1425,
+"start": [
+"Fraggar Thundermantle",
+14.8,
+44.6
+],
+"end": [
+"Fraggar Thundermantle",
+14.8,
+44.6
+]
+},
+"2989": {
+"map": 1425,
+"start": [
+"Gryphon Master Talonaxe",
+9.8,
+44.5
+],
+"end": [
+"Gryphon Master Talonaxe",
+9.8,
+44.5
+]
+},
+"86616": {
+"map": 1425,
+"start": [
+"Farseer Maret Firetend",
+14.4,
+42.7
+],
+"end": [
+"Farseer Maret Firetend",
+14.4,
+42.7
+]
+},
+"2990": {
+"map": 1425,
+"start": null,
+"end": null
+},
+"7723": {
+"map": 1427,
+"start": [
+"Hansel Heavyhands",
+38.6,
+27.8
+],
+"end": [
+"Hansel Heavyhands",
+38.6,
+27.8
+]
+},
+"7724": {
+"map": 1427,
+"start": [
+"Hansel Heavyhands",
+38.6,
+27.8
+],
+"end": [
+"Hansel Heavyhands",
+38.6,
+27.8
+]
+},
+"7727": {
+"map": 1427,
+"start": [
+"Hansel Heavyhands",
+38.6,
+27.8
+],
+"end": [
+"Hansel Heavyhands",
+38.6,
+27.8
+]
+},
+"7728": {
+"map": 1427,
+"start": null,
+"end": [
+"Taskmaster Scrange",
+39.0,
+27.5
+]
+},
+"7729": {
+"map": 1427,
+"start": null,
+"end": [
+"Taskmaster Scrange",
+39.0,
+27.5
+]
+},
+"7701": {
+"map": 1427,
+"start": null,
+"end": [
+"Lookout Captain Lolo Longstriker",
+37.7,
+26.6
+]
+},
+"7722": {
+"map": 1427,
+"start": [
+"Master Smith Burninate",
+38.8,
+28.5
+],
+"end": [
+"Master Smith Burninate",
+38.8,
+28.5
+]
+},
+"3441": {
+"map": 1427,
+"start": [
+"Kalaran Windblade",
+39.1,
+39.0
+],
+"end": [
+"Kalaran Windblade",
+39.1,
+39.0
+]
+},
+"3442": {
+"map": 1427,
+"start": [
+"Kalaran Windblade",
+39.1,
+39.0
+],
+"end": [
+"Kalaran Windblade",
+39.1,
+39.0
+]
+},
+"3367": {
+"map": 1427,
+"start": null,
+"end": [
+"Singed Letter",
+74.4,
+19.3
+]
+},
+"4449": {
+"map": 1427,
+"start": [
+"Wooden Outhouse",
+65.6,
+62.2
+],
+"end": [
+"Wooden Outhouse",
+65.6,
+62.2
+]
+},
+"3443": {
+"map": 1427,
+"start": [
+"Kalaran Windblade",
+39.1,
+39.0
+],
+"end": [
+"Kalaran Windblade",
+39.1,
+39.0
+]
+},
+"3452": {
+"map": 1427,
+"start": [
+"Kalaran Windblade",
+39.1,
+39.0
+],
+"end": [
+"Kalaran Windblade",
+39.1,
+39.0
+]
+},
+"3453": {
+"map": 1427,
+"start": [
+"Kalaran Windblade",
+39.1,
+39.0
+],
+"end": [
+"Kalaran Windblade",
+39.1,
+39.0
+]
+},
+"3454": {
+"map": 1427,
+"start": null,
+"end": [
+"Torch of Retribution",
+39.1,
+39.1
+]
+},
+"3462": {
+"map": 1427,
+"start": null,
+"end": [
+"Squire Maltrake",
+39.2,
+39.0
+]
+},
+"3463": {
+"map": 1427,
+"start": [
+"Squire Maltrake",
+39.2,
+39.0
+],
+"end": [
+"Squire Maltrake",
+39.2,
+39.0
+]
+},
+"3481": {
+"map": 1427,
+"start": [
+"Hoard of the Black Dragonflight",
+38.8,
+39.0
+],
+"end": [
+"Hoard of the Black Dragonflight",
+38.8,
+39.0
+]
+},
+"3368": {
+"map": 1427,
+"start": null,
+"end": null
+},
+"81900": {
+"map": null,
+"start": null,
+"end": null,
+"error": "HTTP Error 404: Not Found"
+},
+"2769": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"2770": {
+"map": 1441,
+"start": [
+"Wizzle Brassbolts",
+78.1,
+77.1
+],
+"end": [
+"Wizzle Brassbolts",
+78.1,
+77.1
+]
+},
+"2846": {
+"map": 1445,
+"start": [
+"Tabetha",
+46.1,
+57.1
+],
+"end": [
+"Tabetha",
+46.1,
+57.1
+]
+},
+"2768": {
+"map": 1446,
+"start": [
+"Chief Engineer Bilgewhizzle",
+52.5,
+28.5
+],
+"end": [
+"Chief Engineer Bilgewhizzle",
+52.5,
+28.5
+]
+},
+"2864": {
+"map": 1434,
+"start": null,
+"end": null
+},
+"2865": {
+"map": 1446,
+"start": [
+"Tran'rek",
+51.6,
+26.8
+],
+"end": [
+"Tran'rek",
+51.6,
+26.8
+]
+},
+"3042": {
+"map": 1446,
+"start": [
+"Trenton Lighthammer",
+51.4,
+28.8
+],
+"end": [
+"Trenton Lighthammer",
+51.4,
+28.8
+]
+},
+"3527": {
+"map": 1446,
+"start": [
+"Yeh'kinya",
+67.0,
+22.4
+],
+"end": [
+"Yeh'kinya",
+67.0,
+22.4
+]
+},
+"2991": {
+"map": 1419,
+"start": [
+"Thadius Grimshade",
+66.9,
+19.5
+],
+"end": [
+"Thadius Grimshade",
+66.9,
+19.5
+]
+},
+"96772": {
+"map": 1416,
+"start": null,
+"end": null
+},
+"1446": {
+"map": 1425,
+"start": [
+"Atal'ai Exile",
+33.8,
+75.2
+],
+"end": [
+"Atal'ai Exile",
+33.8,
+75.2
+]
+},
+"1475": {
+"map": 1453,
+"start": [
+"Brohann Caskbelly",
+69.5,
+40.4
+],
+"end": [
+"Brohann Caskbelly",
+69.5,
+40.4
+]
+},
+"3446": {
+"map": 1446,
+"start": null,
+"end": null
+},
+"3447": {
+"map": 1446,
+"start": null,
+"end": null
+},
+"3528": {
+"map": 1446,
+"start": [
+"Yeh'kinya",
+67.0,
+22.4
+],
+"end": [
+"Yeh'kinya",
+67.0,
+22.4
+]
+},
+"3373": {
+"map": null,
+"start": null,
+"end": null
+},
+"4143": {
+"map": 1444,
+"start": null,
+"end": null
+},
+"9053": {
+"map": 1449,
+"start": [
+"Torwa Pathfinder",
+71.6,
+76.0
+],
+"end": [
+"Torwa Pathfinder",
+71.6,
+76.0
+]
+},
+"8232": {
+"map": 1447,
+"start": [
+"Ogtinc",
+42.4,
+42.6
+],
+"end": [
+"Ogtinc",
+42.4,
+42.6
+]
+},
+"8250": {
+"map": 1456,
+"start": null,
+"end": null
+},
+"8253": {
+"map": 1447,
+"start": [
+"Archmage Xylem",
+29.2,
+40.2
+],
+"end": [
+"Archmage Xylem",
+29.2,
+40.2
+]
+},
+"8415": {
+"map": 1453,
+"start": null,
+"end": null
+},
+"8418": {
+"map": 1422,
+"start": [
+"Commander Ashlam Valorfist",
+42.7,
+84.0
+],
+"end": [
+"Commander Ashlam Valorfist",
+42.7,
+84.0
+]
+},
+"8257": {
+"map": 1447,
+"start": null,
+"end": null
+},
+"8233": {
+"map": 1454,
+"start": null,
+"end": null
+},
+"8236": {
+"map": 1447,
+"start": null,
+"end": null
+},
+"8422": {
+"map": 1448,
+"start": [
+"Impsy",
+41.5,
+45.0
+],
+"end": [
+"Impsy",
+41.5,
+45.0
+]
+},
+"8425": {
+"map": 1435,
+"start": [
+"Fallen Hero of the Horde",
+34.3,
+66.1
+],
+"end": [
+"Fallen Hero of the Horde",
+34.3,
+66.1
+]
+},
+"3823": {
+"map": 1428,
+"start": [
+"Oralius",
+84.6,
+68.7
+],
+"end": [
+"Oralius",
+84.6,
+68.7
+]
+},
+"4262": {
+"map": 1428,
+"start": [
+"Jalinda Sprig",
+85.4,
+70.1
+],
+"end": [
+"Jalinda Sprig",
+85.4,
+70.1
+]
+},
+"4182": {
+"map": 1428,
+"start": [
+"Helendis Riverhorn",
+85.8,
+68.9
+],
+"end": [
+"Helendis Riverhorn",
+85.8,
+68.9
+]
+},
+"4726": {
+"map": 1428,
+"start": [
+"Tinkee Steamboil",
+65.2,
+24.0
+],
+"end": [
+"Tinkee Steamboil",
+65.2,
+24.0
+]
+},
+"4296": {
+"map": 1428,
+"start": [
+"Maxwort Uberglint",
+65.2,
+23.9
+],
+"end": [
+"Maxwort Uberglint",
+65.2,
+23.9
+]
+},
+"3824": {
+"map": 1428,
+"start": [
+"Oralius",
+84.6,
+68.7
+],
+"end": [
+"Oralius",
+84.6,
+68.7
+]
+},
+"3825": {
+"map": 1428,
+"start": [
+"Oralius",
+84.6,
+68.7
+],
+"end": [
+"Oralius",
+84.6,
+68.7
+]
+},
+"4808": {
+"map": 1428,
+"start": null,
+"end": null
+},
+"4183": {
+"map": 1428,
+"start": null,
+"end": null
+},
+"4184": {
+"map": 1433,
+"start": null,
+"end": null
+},
+"87295": {
+"map": 1419,
+"start": null,
+"end": null
+},
+"2601": {
+"map": 1419,
+"start": [
+"Bloodmage Lynnore",
+50.6,
+14.3
+],
+"end": [
+"Bloodmage Lynnore",
+50.6,
+14.3
+]
+},
+"2603": {
+"map": 1419,
+"start": [
+"Bloodmage Lynnore",
+50.6,
+14.3
+],
+"end": [
+"Bloodmage Lynnore",
+50.6,
+14.3
+]
+},
+"2581": {
+"map": 1419,
+"start": [
+"Bloodmage Drazial",
+50.6,
+14.2
+],
+"end": [
+"Bloodmage Drazial",
+50.6,
+14.2
+]
+},
+"2583": {
+"map": 1419,
+"start": [
+"Bloodmage Drazial",
+50.6,
+14.2
+],
+"end": [
+"Bloodmage Drazial",
+50.6,
+14.2
+]
+},
+"2585": {
+"map": 1419,
+"start": [
+"Bloodmage Drazial",
+50.6,
+14.2
+],
+"end": [
+"Bloodmage Drazial",
+50.6,
+14.2
+]
+},
+"2521": {
+"map": 1419,
+"start": [
+"Kum'isha the Collector",
+52.0,
+35.6
+],
+"end": [
+"Kum'isha the Collector",
+52.0,
+35.6
+]
+},
+"3501": {
+"map": 1419,
+"start": [
+"Kum'isha the Collector",
+52.0,
+35.6
+],
+"end": [
+"Kum'isha the Collector",
+52.0,
+35.6
+]
+},
+"1448": {
+"map": 1453,
+"start": [
+"Brohann Caskbelly",
+69.5,
+40.4
+],
+"end": [
+"Brohann Caskbelly",
+69.5,
+40.4
+]
+},
+"4284": {
+"map": 1449,
+"start": [
+"J.D. Collie",
+41.9,
+2.7
+],
+"end": [
+"J.D. Collie",
+41.9,
+2.7
+]
+},
+"3883": {
+"map": 1449,
+"start": [
+"Hol'anyee Marshal",
+43.9,
+7.2
+],
+"end": [
+"Hol'anyee Marshal",
+43.9,
+7.2
+]
+},
+"3882": {
+"map": 1449,
+"start": [
+"Spark Nilminer",
+43.5,
+7.4
+],
+"end": [
+"Spark Nilminer",
+43.5,
+7.4
+]
+},
+"4501": {
+"map": 1449,
+"start": null,
+"end": [
+"Spraggle Frock",
+43.6,
+8.5
+]
+},
+"4492": {
+"map": 1449,
+"start": null,
+"end": [
+"Ringo",
+51.9,
+49.8
+]
+},
+"4141": {
+"map": 1449,
+"start": [
+"Muigin",
+42.9,
+9.6
+],
+"end": [
+"Muigin",
+42.9,
+9.6
+]
+},
+"4503": {
+"map": 1449,
+"start": [
+"Shizzle",
+44.2,
+11.6
+],
+"end": [
+"Shizzle",
+44.2,
+11.6
+]
+},
+"4243": {
+"map": 1449,
+"start": null,
+"end": [
+"A-Me 01",
+67.7,
+16.8
+]
+},
+"4290": {
+"map": 1449,
+"start": [
+"Torwa Pathfinder",
+71.6,
+76.0
+],
+"end": [
+"Torwa Pathfinder",
+71.6,
+76.0
+]
+},
+"4289": {
+"map": 1449,
+"start": [
+"Torwa Pathfinder",
+71.6,
+76.0
+],
+"end": [
+"Torwa Pathfinder",
+71.6,
+76.0
+]
+},
+"87492": {
+"map": 1449,
+"start": [
+"Torwa Pathfinder",
+71.6,
+76.1
+],
+"end": [
+"Torwa Pathfinder",
+71.6,
+76.1
+]
+},
+"3844": {
+"map": 1449,
+"start": null,
+"end": [
+"A Small Pack",
+63.1,
+69.1
+]
+},
+"3845": {
+"map": 1449,
+"start": null,
+"end": [
+"Linken",
+44.7,
+8.1
+]
+},
+"4291": {
+"map": 1449,
+"start": [
+"Torwa Pathfinder",
+71.6,
+76.0
+],
+"end": [
+"Torwa Pathfinder",
+71.6,
+76.0
+]
+},
+"4292": {
+"map": 1449,
+"start": [
+"Torwa Pathfinder",
+71.6,
+76.0
+],
+"end": [
+"Torwa Pathfinder",
+71.6,
+76.0
+]
+},
+"974": {
+"map": 1449,
+"start": [
+"Krakle",
+30.9,
+50.4
+],
+"end": [
+"Krakle",
+30.9,
+50.4
+]
+},
+"4491": {
+"map": 1449,
+"start": null,
+"end": [
+"Spraggle Frock",
+43.6,
+8.5
+]
+},
+"4285": {
+"map": 1449,
+"start": [
+"J.D. Collie",
+41.9,
+2.7
+],
+"end": [
+"J.D. Collie",
+41.9,
+2.7
+]
+},
+"4287": {
+"map": 1449,
+"start": [
+"J.D. Collie",
+41.9,
+2.7
+],
+"end": [
+"J.D. Collie",
+41.9,
+2.7
+]
+},
+"3881": {
+"map": 1449,
+"start": [
+"Williden Marshal",
+43.9,
+7.1
+],
+"end": [
+"Williden Marshal",
+43.9,
+7.1
+]
+},
+"4301": {
+"map": 1449,
+"start": [
+"Torwa Pathfinder",
+71.6,
+76.0
+],
+"end": [
+"Torwa Pathfinder",
+71.6,
+76.0
+]
+},
+"980": {
+"map": 1449,
+"start": null,
+"end": null
+},
+"3908": {
+"map": 1449,
+"start": null,
+"end": null
+},
+"4123": {
+"map": 1428,
+"start": [
+"Maxwort Uberglint",
+65.2,
+23.9
+],
+"end": [
+"Maxwort Uberglint",
+65.2,
+23.9
+]
+},
+"4324": {
+"map": 1446,
+"start": null,
+"end": null
+},
+"4136": {
+"map": 1428,
+"start": [
+"Yuka Screwspigot",
+66.1,
+22.0
+],
+"end": [
+"Yuka Screwspigot",
+66.1,
+22.0
+]
+},
+"4201": {
+"map": 1447,
+"start": null,
+"end": null
+},
+"4128": {
+"map": 1419,
+"start": null,
+"end": null
+},
+"4126": {
+"map": 1426,
+"start": [
+"Ragnar Thunderbrew",
+46.8,
+52.4
+],
+"end": [
+"Ragnar Thunderbrew",
+46.8,
+52.4
+]
+},
+"3802": {
+"map": 1428,
+"start": null,
+"end": null
+},
+"4263": {
+"map": 1428,
+"start": [
+"Jalinda Sprig",
+85.4,
+70.1
+],
+"end": [
+"Jalinda Sprig",
+85.4,
+70.1
+]
+},
+"4322": {
+"map": 1428,
+"start": null,
+"end": [
+"Marshal Maxwell",
+84.7,
+69.0
+]
+},
+"4024": {
+"map": 1428,
+"start": [
+"Cyrus Therepentous",
+95.1,
+31.6
+],
+"end": [
+"Cyrus Therepentous",
+95.1,
+31.6
+]
+},
+"4362": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"4286": {
+"map": 1428,
+"start": [
+"Oralius",
+84.6,
+68.7
+],
+"end": [
+"Oralius",
+84.6,
+68.7
+]
+},
+"7604": {
+"map": null,
+"start": null,
+"end": null
+},
+"5535": {
+"map": 1447,
+"start": [
+"Loh'atu",
+11.4,
+78.2
+],
+"end": [
+"Loh'atu",
+11.4,
+78.2
+]
+},
+"5536": {
+"map": 1447,
+"start": [
+"Loh'atu",
+11.4,
+78.2
+],
+"end": [
+"Loh'atu",
+11.4,
+78.2
+]
+},
+"88807": {
+"map": 1447,
+"start": [
+"Commander Truesong",
+11.8,
+78.3
+],
+"end": [
+"Commander Truesong",
+11.8,
+78.3
+]
+},
+"89001": {
+"map": 1447,
+"start": [
+"Berdun Cliffbrew",
+12.5,
+77.3
+],
+"end": [
+"Berdun Cliffbrew",
+12.5,
+77.3
+]
+},
+"88857": {
+"map": 1447,
+"start": null,
+"end": [
+"Commander Truesong",
+11.8,
+78.3
+]
+},
+"8251": {
+"map": 1447,
+"start": [
+"Archmage Xylem",
+29.2,
+40.2
+],
+"end": [
+"Archmage Xylem",
+29.2,
+40.2
+]
+},
+"86746": {
+"map": 1447,
+"start": [
+"Ekkal",
+42.0,
+38.9
+],
+"end": [
+"Ekkal",
+42.0,
+38.9
+]
+},
+"3601": {
+"map": 1447,
+"start": [
+"Kim'jael",
+53.5,
+21.8
+],
+"end": [
+"Kim'jael",
+53.5,
+21.8
+]
+},
+"5534": {
+"map": 1447,
+"start": [
+"Kim'jael",
+53.5,
+21.8
+],
+"end": [
+"Kim'jael",
+53.5,
+21.8
+]
+},
+"89013": {
+"map": 1447,
+"start": [
+"Berdun Cliffbrew",
+12.5,
+77.3
+],
+"end": [
+"Berdun Cliffbrew",
+12.5,
+77.3
+]
+},
+"88821": {
+"map": 1447,
+"start": null,
+"end": [
+"Saria Fairmoon",
+50.5,
+42.7
+]
+},
+"88809": {
+"map": 1447,
+"start": [
+"Commander Truesong",
+11.8,
+78.3
+],
+"end": [
+"Commander Truesong",
+11.8,
+78.3
+]
+},
+"88917": {
+"map": 1447,
+"start": [
+"Saria Fairmoon",
+50.5,
+42.7
+],
+"end": [
+"Saria Fairmoon",
+50.5,
+42.7
+]
+},
+"8252": {
+"map": 1447,
+"start": [
+"Archmage Xylem",
+29.2,
+40.2
+],
+"end": [
+"Archmage Xylem",
+29.2,
+40.2
+]
+},
+"4809": {
+"map": 1452,
+"start": [
+"Felnok Steelspring",
+61.6,
+38.6
+],
+"end": [
+"Felnok Steelspring",
+61.6,
+38.6
+]
+},
+"3783": {
+"map": 1452,
+"start": [
+"Umi Rumplesnicker",
+60.9,
+37.6
+],
+"end": [
+"Umi Rumplesnicker",
+60.9,
+37.6
+]
+},
+"5601": {
+"map": 1452,
+"start": null,
+"end": null
+},
+"6028": {
+"map": 1452,
+"start": null,
+"end": null
+},
+"6030": {
+"map": 1452,
+"start": null,
+"end": null
+},
+"6031": {
+"map": 1448,
+"start": [
+"Meilosh",
+65.7,
+2.8
+],
+"end": [
+"Meilosh",
+65.7,
+2.8
+]
+},
+"8461": {
+"map": 1448,
+"start": [
+"Nafien",
+64.8,
+8.1
+],
+"end": [
+"Nafien",
+64.8,
+8.1
+]
+},
+"4842": {
+"map": 1452,
+"start": [
+"Donova Snowden",
+31.3,
+45.2
+],
+"end": [
+"Donova Snowden",
+31.3,
+45.2
+]
+},
+"4421": {
+"map": 1448,
+"start": [
+"Eridan Bluewind",
+51.3,
+81.5
+],
+"end": [
+"Eridan Bluewind",
+51.3,
+81.5
+]
+},
+"5156": {
+"map": 1448,
+"start": [
+"Taronn Redfeather",
+50.9,
+81.6
+],
+"end": [
+"Taronn Redfeather",
+50.9,
+81.6
+]
+},
+"86577": {
+"map": 1448,
+"start": null,
+"end": null
+},
+"5155": {
+"map": 1448,
+"start": [
+"Greta Mosshoof",
+51.2,
+82.1
+],
+"end": [
+"Greta Mosshoof",
+51.2,
+82.1
+]
+},
+"8460": {
+"map": 1448,
+"start": [
+"Grazle",
+50.9,
+85.0
+],
+"end": [
+"Grazle",
+50.9,
+85.0
+]
+},
+"4101": {
+"map": 1448,
+"start": [
+"Arathandris Silversky",
+54.1,
+86.8
+],
+"end": [
+"Arathandris Silversky",
+54.1,
+86.8
+]
+},
+"8462": {
+"map": 1448,
+"start": null,
+"end": [
+"Nafien",
+64.8,
+8.1
+]
+},
+"86611": {
+"map": null,
+"start": null,
+"end": null
+},
+"4906": {
+"map": 1448,
+"start": [
+"Eridan Bluewind",
+51.3,
+81.5
+],
+"end": [
+"Eridan Bluewind",
+51.3,
+81.5
+]
+},
+"5157": {
+"map": 1448,
+"start": [
+"Greta Mosshoof",
+51.2,
+82.1
+],
+"end": [
+"Greta Mosshoof",
+51.2,
+82.1
+]
+},
+"5882": {
+"map": 1448,
+"start": [
+"Arathandris Silversky",
+54.1,
+86.8
+],
+"end": [
+"Arathandris Silversky",
+54.1,
+86.8
+]
+},
+"5092": {
+"map": 1422,
+"start": [
+"Commander Ashlam Valorfist",
+42.7,
+84.0
+],
+"end": [
+"Commander Ashlam Valorfist",
+42.7,
+84.0
+]
+},
+"5215": {
+"map": 1422,
+"start": null,
+"end": [
+"High Priestess MacDonnell",
+43.0,
+84.5
+]
+},
+"5097": {
+"map": 1422,
+"start": [
+"Commander Ashlam Valorfist",
+42.7,
+84.0
+],
+"end": [
+"Commander Ashlam Valorfist",
+42.7,
+84.0
+]
+},
+"5216": {
+"map": 1422,
+"start": null,
+"end": [
+"Scourge Cauldron",
+37.2,
+56.8
+]
+},
+"5401": {
+"map": 1422,
+"start": [
+"Argent Officer Pureheart",
+43.0,
+83.5
+],
+"end": [
+"Argent Officer Pureheart",
+43.0,
+83.5
+]
+},
+"4971": {
+"map": 1422,
+"start": [
+"Chromie",
+39.5,
+66.8
+],
+"end": [
+"Chromie",
+39.5,
+66.8
+]
+},
+"5217": {
+"map": 1422,
+"start": null,
+"end": [
+"High Priestess MacDonnell",
+43.0,
+84.5
+]
+},
+"5021": {
+"map": 1422,
+"start": null,
+"end": [
+"Janice's Parcel",
+38.7,
+55.2
+]
+},
+"5060": {
+"map": 1422,
+"start": [
+"Locked Cabinet",
+47.4,
+49.6
+],
+"end": [
+"Locked Cabinet",
+47.4,
+49.6
+]
+},
+"4972": {
+"map": 1422,
+"start": [
+"Chromie",
+39.5,
+66.8
+],
+"end": [
+"Chromie",
+39.5,
+66.8
+]
+},
+"5533": {
+"map": 1422,
+"start": null,
+"end": [
+"Alchemist Arbington",
+42.7,
+83.8
+]
+},
+"5537": {
+"map": 1422,
+"start": [
+"Alchemist Arbington",
+42.7,
+83.8
+],
+"end": [
+"Alchemist Arbington",
+42.7,
+83.8
+]
+},
+"5219": {
+"map": 1422,
+"start": null,
+"end": [
+"Scourge Cauldron",
+46.2,
+51.9
+]
+},
+"4984": {
+"map": 1422,
+"start": [
+"Mulgris Deepriver",
+53.7,
+64.7
+],
+"end": [
+"Mulgris Deepriver",
+53.7,
+64.7
+]
+},
+"5220": {
+"map": 1422,
+"start": null,
+"end": [
+"High Priestess MacDonnell",
+43.0,
+84.5
+]
+},
+"6004": {
+"map": 1422,
+"start": [
+"Kirsta Deepshadow",
+51.9,
+28.1
+],
+"end": [
+"Kirsta Deepshadow",
+51.9,
+28.1
+]
+},
+"6023": {
+"map": 1422,
+"start": [
+"Kirsta Deepshadow",
+51.9,
+28.1
+],
+"end": [
+"Kirsta Deepshadow",
+51.9,
+28.1
+]
+},
+"6025": {
+"map": 1422,
+"start": [
+"Kirsta Deepshadow",
+51.9,
+28.1
+],
+"end": [
+"Kirsta Deepshadow",
+51.9,
+28.1
+]
+},
+"4985": {
+"map": 1422,
+"start": [
+"Mulgris Deepriver",
+53.7,
+64.7
+],
+"end": [
+"Mulgris Deepriver",
+53.7,
+64.7
+]
+},
+"5222": {
+"map": 1422,
+"start": null,
+"end": [
+"Scourge Cauldron",
+53.0,
+65.6
+]
+},
+"5223": {
+"map": 1422,
+"start": null,
+"end": [
+"High Priestess MacDonnell",
+43.0,
+84.5
+]
+},
+"5225": {
+"map": 1422,
+"start": null,
+"end": [
+"Scourge Cauldron",
+62.5,
+58.5
+]
+},
+"5226": {
+"map": 1422,
+"start": null,
+"end": [
+"High Priestess MacDonnell",
+43.0,
+84.5
+]
+},
+"5903": {
+"map": 1422,
+"start": [
+"Nathaniel Dumah",
+43.4,
+84.8
+],
+"end": [
+"Nathaniel Dumah",
+43.4,
+84.8
+]
+},
+"5142": {
+"map": 1422,
+"start": null,
+"end": null
+},
+"5542": {
+"map": 1423,
+"start": [
+"Tirion Fordring",
+5.2,
+35.6
+],
+"end": [
+"Tirion Fordring",
+5.2,
+35.6
+]
+},
+"5543": {
+"map": 1423,
+"start": [
+"Tirion Fordring",
+5.2,
+35.6
+],
+"end": [
+"Tirion Fordring",
+5.2,
+35.6
+]
+},
+"5544": {
+"map": 1423,
+"start": [
+"Tirion Fordring",
+5.2,
+35.6
+],
+"end": [
+"Tirion Fordring",
+5.2,
+35.6
+]
+},
+"5149": {
+"map": 1423,
+"start": [
+"Pamela Redpath",
+31.2,
+78.0
+],
+"end": [
+"Pamela Redpath",
+31.2,
+78.0
+]
+},
+"5241": {
+"map": 1423,
+"start": null,
+"end": [
+"Carlin Redpath",
+71.7,
+50.0
+]
+},
+"5211": {
+"map": 1423,
+"start": [
+"Carlin Redpath",
+71.7,
+50.0
+],
+"end": [
+"Carlin Redpath",
+71.7,
+50.0
+]
+},
+"6021": {
+"map": 1423,
+"start": [
+"Caretaker Alen",
+69.9,
+53.7
+],
+"end": [
+"Caretaker Alen",
+69.9,
+53.7
+]
+},
+"6026": {
+"map": 1423,
+"start": [
+"Smokey LaRue",
+70.9,
+48.4
+],
+"end": [
+"Smokey LaRue",
+70.9,
+48.4
+]
+},
+"6041": {
+"map": 1423,
+"start": [
+"Smokey LaRue",
+70.9,
+48.4
+],
+"end": [
+"Smokey LaRue",
+70.9,
+48.4
+]
+},
+"5742": {
+"map": 1423,
+"start": [
+"Tirion Fordring",
+5.2,
+35.6
+],
+"end": [
+"Tirion Fordring",
+5.2,
+35.6
+]
+},
+"5781": {
+"map": 1423,
+"start": [
+"Tirion Fordring",
+5.2,
+35.6
+],
+"end": [
+"Tirion Fordring",
+5.2,
+35.6
+]
+},
+"5152": {
+"map": 1423,
+"start": null,
+"end": null
+},
+"4742": {
+"map": null,
+"start": null,
+"end": null
+},
+"5001": {
+"map": null,
+"start": null,
+"end": null
+},
+"5081": {
+"map": 1428,
+"start": [
+"Marshal Maxwell",
+84.7,
+69.0
+],
+"end": [
+"Marshal Maxwell",
+84.7,
+69.0
+]
+},
+"4701": {
+"map": 1428,
+"start": [
+"Helendis Riverhorn",
+85.8,
+68.9
+],
+"end": [
+"Helendis Riverhorn",
+85.8,
+68.9
+]
+},
+"4729": {
+"map": 1428,
+"start": [
+"Kibler",
+65.9,
+21.9
+],
+"end": [
+"Kibler",
+65.9,
+21.9
+]
+},
+"4862": {
+"map": 1428,
+"start": [
+"Kibler",
+65.9,
+21.9
+],
+"end": [
+"Kibler",
+65.9,
+21.9
+]
+},
+"4866": {
+"map": 1428,
+"start": [
+"Ragged John",
+65.0,
+23.8
+],
+"end": [
+"Ragged John",
+65.0,
+23.8
+]
+},
+"4867": {
+"map": null,
+"start": null,
+"end": null
+},
+"5089": {
+"map": 1428,
+"start": null,
+"end": [
+"Marshal Maxwell",
+84.7,
+69.0
+]
+},
+"4788": {
+"map": 1446,
+"start": [
+"Prospector Ironboot",
+66.9,
+24.0
+],
+"end": [
+"Prospector Ironboot",
+66.9,
+24.0
+]
+},
+"5153": {
+"map": 1422,
+"start": null,
+"end": [
+"Chromie",
+39.5,
+66.8
+]
+},
+"5154": {
+"map": 1422,
+"start": [
+"Chromie",
+39.5,
+66.8
+],
+"end": [
+"Chromie",
+39.5,
+66.8
+]
+},
+"5237": {
+"map": 1422,
+"start": [
+"Commander Ashlam Valorfist",
+42.7,
+84.0
+],
+"end": [
+"Commander Ashlam Valorfist",
+42.7,
+84.0
+]
+},
+"8275": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"3371": {
+"map": 1426,
+"start": null,
+"end": null
+},
+"3372": {
+"map": 1427,
+"start": null,
+"end": [
+"Altar of Suntara",
+41.3,
+25.4
+]
+},
+"3566": {
+"map": 1427,
+"start": null,
+"end": null
+},
+"8280": {
+"map": 1451,
+"start": [
+"Windcaller Proudhorn",
+51.2,
+38.3
+],
+"end": [
+"Windcaller Proudhorn",
+51.2,
+38.3
+]
+},
+"8277": {
+"map": 1451,
+"start": [
+"Beetix Ficklespragg",
+51.6,
+38.6
+],
+"end": [
+"Beetix Ficklespragg",
+51.6,
+38.6
+]
+},
+"8304": {
+"map": 1451,
+"start": [
+"Commander Mar'alith",
+49.2,
+34.2
+],
+"end": [
+"Commander Mar'alith",
+49.2,
+34.2
+]
+},
+"8281": {
+"map": 1451,
+"start": [
+"Windcaller Proudhorn",
+51.2,
+38.3
+],
+"end": [
+"Windcaller Proudhorn",
+51.2,
+38.3
+]
+},
+"8284": {
+"map": 1451,
+"start": [
+"Geologist Larksbane",
+49.7,
+37.5
+],
+"end": [
+"Geologist Larksbane",
+49.7,
+37.5
+]
+},
+"8318": {
+"map": 1451,
+"start": [
+"Bor Wildmane",
+48.6,
+37.8
+],
+"end": [
+"Bor Wildmane",
+48.6,
+37.8
+]
+},
+"9419": {
+"map": 1451,
+"start": [
+"Marshal Bluewall",
+33.3,
+51.1
+],
+"end": [
+"Marshal Bluewall",
+33.3,
+51.1
+]
+},
+"8285": {
+"map": 1451,
+"start": null,
+"end": [
+"Hermit Ortell",
+67.2,
+69.8
+]
+},
+"8279": {
+"map": 1451,
+"start": [
+"Hermit Ortell",
+67.2,
+69.8
+],
+"end": [
+"Hermit Ortell",
+67.2,
+69.8
+]
+},
+"8306": {
+"map": 1451,
+"start": [
+"Commander Mar'alith",
+49.2,
+34.2
+],
+"end": [
+"Commander Mar'alith",
+49.2,
+34.2
+]
+},
+"8283": {
+"map": 1451,
+"start": null,
+"end": [
+"Vish Kozus",
+50.8,
+33.7
+]
+},
+"8278": {
+"map": 1451,
+"start": [
+"Beetix Ficklespragg",
+51.6,
+38.6
+],
+"end": [
+"Beetix Ficklespragg",
+51.6,
+38.6
+]
+},
+"8323": {
+"map": 1451,
+"start": [
+"Hermit Ortell",
+67.2,
+69.8
+],
+"end": [
+"Hermit Ortell",
+67.2,
+69.8
+]
+},
+"8287": {
+"map": 1451,
+"start": null,
+"end": [
+"Commander Mar'alith",
+49.2,
+34.2
+]
+},
+"8309": {
+"map": 1451,
+"start": [
+"Rutgar Glyphshaper",
+41.3,
+88.5
+],
+"end": [
+"Rutgar Glyphshaper",
+41.3,
+88.5
+]
+},
+"8310": {
+"map": 1451,
+"start": [
+"Frankal Stonebridge",
+40.8,
+88.9
+],
+"end": [
+"Frankal Stonebridge",
+40.8,
+88.9
+]
+},
+"8282": {
+"map": 1451,
+"start": [
+"Noggle Ficklespragg",
+51.6,
+38.5
+],
+"end": [
+"Noggle Ficklespragg",
+51.6,
+38.5
+]
+},
+"8314": {
+"map": 1451,
+"start": null,
+"end": [
+"Geologist Larksbane",
+49.7,
+37.5
+]
+},
+"8315": {
+"map": 1451,
+"start": [
+"Geologist Larksbane",
+49.7,
+37.5
+],
+"end": [
+"Geologist Larksbane",
+49.7,
+37.5
+]
+},
+"8381": {
+"map": 1451,
+"start": [
+"Geologist Larksbane",
+49.7,
+37.5
+],
+"end": [
+"Geologist Larksbane",
+49.7,
+37.5
+]
+},
+"7441": {
+"map": 1444,
+"start": [
+"Azj'Tordin",
+76.9,
+37.4
+],
+"end": [
+"Azj'Tordin",
+76.9,
+37.4
+]
+},
+"7494": {
+"map": 1453,
+"start": null,
+"end": null
+},
+"7488": {
+"map": 1444,
+"start": [
+"Latronicus Moonspear",
+30.4,
+46.2
+],
+"end": [
+"Latronicus Moonspear",
+30.4,
+46.2
+]
+},
+"5526": {
+"map": 1450,
+"start": [
+"Rabine Saturna",
+51.7,
+45.1
+],
+"end": [
+"Rabine Saturna",
+51.7,
+45.1
+]
+},
+"7463": {
+"map": 1416,
+"start": null,
+"end": null
+},
+"92344": {
+"map": null,
+"start": null,
+"end": null
+},
+"97173": {
+"map": 1416,
+"start": null,
+"end": null
+},
+"92069": {
+"map": 1447,
+"start": null,
+"end": null
+},
+"7461": {
+"map": 1421,
+"start": null,
+"end": null
+},
+"7482": {
+"map": 1444,
+"start": [
+"Scholar Runethorn",
+31.2,
+43.9
+],
+"end": [
+"Scholar Runethorn",
+31.2,
+43.9
+]
+},
+"5250": {
+"map": 1438,
+"start": null,
+"end": null
+},
+"7703": {
+"map": 1421,
+"start": null,
+"end": null
+},
+"5247": {
+"map": 1423,
+"start": [
+"Aurora Skycaller",
+46.5,
+16.0
+],
+"end": [
+"Aurora Skycaller",
+46.5,
+16.0
+]
+},
+"7643": {
+"map": 1453,
+"start": null,
+"end": null
+},
+"7631": {
+"map": 1428,
+"start": null,
+"end": null
+},
+"5525": {
+"map": null,
+"start": null,
+"end": null
+},
+"5518": {
+"map": null,
+"start": null,
+"end": null
+},
+"7506": {
+"map": null,
+"start": null,
+"end": null
+},
+"7503": {
+"map": null,
+"start": null,
+"end": null
+},
+"7500": {
+"map": null,
+"start": null,
+"end": null
+},
+"7501": {
+"map": null,
+"start": null,
+"end": null
+},
+"7504": {
+"map": null,
+"start": null,
+"end": null
+},
+"7498": {
+"map": null,
+"start": null,
+"end": null
+},
+"7502": {
+"map": null,
+"start": null,
+"end": null
+},
+"7499": {
+"map": null,
+"start": null,
+"end": null
+},
+"7483": {
+"map": null,
+"start": null,
+"end": null
+},
+"7484": {
+"map": null,
+"start": null,
+"end": null
+},
+"7485": {
+"map": null,
+"start": null,
+"end": null
+},
+"5251": {
+"map": 1423,
+"start": [
+"Duke Nicholas Zverenhoff",
+71.6,
+50.1
+],
+"end": [
+"Duke Nicholas Zverenhoff",
+71.6,
+50.1
+]
+},
+"5262": {
+"map": 1423,
+"start": null,
+"end": [
+"Duke Nicholas Zverenhoff",
+71.6,
+50.1
+]
+},
+"5212": {
+"map": 1423,
+"start": [
+"Betina Bigglezink",
+71.7,
+49.9
+],
+"end": [
+"Betina Bigglezink",
+71.7,
+49.9
+]
+},
+"5243": {
+"map": 1423,
+"start": [
+"Leonid Barthalomew the Revered",
+71.9,
+48.3
+],
+"end": [
+"Leonid Barthalomew the Revered",
+71.9,
+48.3
+]
+},
+"5214": {
+"map": 1423,
+"start": [
+"Smokey LaRue",
+70.9,
+48.4
+],
+"end": [
+"Smokey LaRue",
+70.9,
+48.4
+]
+},
+"5281": {
+"map": 1423,
+"start": null,
+"end": [
+"Egan",
+11.4,
+26.6
+]
+},
+"5282": {
+"map": 1423,
+"start": [
+"Egan",
+11.4,
+26.6
+],
+"end": [
+"Egan",
+11.4,
+26.6
+]
+},
+"5848": {
+"map": 1422,
+"start": null,
+"end": null
+},
+"5122": {
+"map": null,
+"start": null,
+"end": null
+},
+"5382": {
+"map": 1422,
+"start": [
+"Eva Sarkhoff",
+70.2,
+73.7
+],
+"end": [
+"Eva Sarkhoff",
+70.2,
+73.7
+]
+},
+"5343": {
+"map": 1422,
+"start": [
+"Weldon Barov",
+43.5,
+83.7
+],
+"end": [
+"Weldon Barov",
+43.5,
+83.7
+]
+},
+"5529": {
+"map": 1423,
+"start": [
+"Betina Bigglezink",
+71.7,
+49.9
+],
+"end": [
+"Betina Bigglezink",
+71.7,
+49.9
+]
+},
+"5384": {
+"map": 1422,
+"start": [
+"Eva Sarkhoff",
+70.2,
+73.7
+],
+"end": [
+"Eva Sarkhoff",
+70.2,
+73.7
+]
+},
+"5515": {
+"map": 1422,
+"start": [
+"Eva Sarkhoff",
+70.2,
+73.7
+],
+"end": [
+"Eva Sarkhoff",
+70.2,
+73.7
+]
+},
+"5466": {
+"map": 1422,
+"start": [
+"Magistrate Marduke",
+70.6,
+74.1
+],
+"end": [
+"Magistrate Marduke",
+70.6,
+74.1
+]
+},
+"4771": {
+"map": 1423,
+"start": [
+"Betina Bigglezink",
+71.7,
+49.9
+],
+"end": [
+"Betina Bigglezink",
+71.7,
+49.9
+]
+},
+"7629": {
+"map": 1428,
+"start": [
+"Gorzeeki Wildeyes",
+12.4,
+31.6
+],
+"end": [
+"Gorzeeki Wildeyes",
+12.4,
+31.6
+]
+},
+"7647": {
+"map": 1453,
+"start": null,
+"end": null
+},
+"5263": {
+"map": 1423,
+"start": [
+"Duke Nicholas Zverenhoff",
+71.6,
+50.1
+],
+"end": [
+"Duke Nicholas Zverenhoff",
+71.6,
+50.1
+]
+},
+"5213": {
+"map": 1423,
+"start": [
+"Betina Bigglezink",
+71.7,
+49.9
+],
+"end": [
+"Betina Bigglezink",
+71.7,
+49.9
+]
+},
+"5125": {
+"map": null,
+"start": null,
+"end": null
+},
+"8945": {
+"map": 1423,
+"start": null,
+"end": null
+},
+"5463": {
+"map": 1423,
+"start": null,
+"end": null
+}
+}
