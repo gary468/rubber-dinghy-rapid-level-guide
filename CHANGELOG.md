@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.45
+- **Mount Hyjal:** the Veteran of the Third War quests are off the route. He's a spirit who only
+  appears when you use an Embroidered Scabbard at the Elderwild overlook, nobody knows where that
+  item comes from, and players report the chain won't complete. Mirt's Ewe Wandered Off is off too
+  (he offers nothing).
+
 ## v1.0.44
 - **The whole route re-checked against ForeverChanges.** Quest givers and hand-ins in the wrong place
   are corrected: Tooga (Oasis, Tanaris) was about 3,000 yards off, the Alliance Brigadier General is
