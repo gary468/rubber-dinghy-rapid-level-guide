@@ -77,6 +77,7 @@ Map.KindColor = KindColor
 
 local overlay, mapPins, mapLines, mapAreas = nil, {}, {}, {}
 local hlStop -- the stop clicked in the tracker, highlighted until the map closes
+local WorldLayer, WorldDisc
 local route = ns.route
 
 local function Canvas()
@@ -109,6 +110,31 @@ local blobFrame, blobOK
 -- you're on stands out (Gary 14 Nov: "only show the kill zone of the current part with the rest
 -- faintly showing until you choose the next stop or get to it").
 local FAINT = 0.3
+-- Map and minimap draw a kill area the same way (Gary 15 Nov: "i want the kill areas and/or spawns
+-- from map and minimap to be in sync"): a gold disc of AREA_YD around every spawn, merged into one
+-- shape on a layer drawn at one opacity (the current stop bright, the rest faint), plus gold dots on
+-- the current stop's spawns near its pin. Blizzard's own area shapes aren't used: the minimap can't
+-- draw them, so the two never matched.
+local AREA_YD = 30
+--- The current stop's spawns worth a gold dot: within 12% of the map of its pin, at least the nearest 8.
+function Map.NearSpawns(st)
+  local pts, near, out = st and st.pts, {}, {}
+  if not (pts and #pts >= 2) then return out end
+  for k = 1, #pts - 1, 2 do
+    near[#near + 1] = { x = pts[k], y = pts[k + 1], d = (pts[k] - st.x) ^ 2 + (pts[k + 1] - st.y) ^ 2 }
+  end
+  table.sort(near, function(p1, p2) return p1.d < p2.d end)
+  for i, q in ipairs(near) do
+    if i > 8 and q.d > 144 then break end
+    out[#out + 1] = q
+  end
+  return out
+end
+--- The kill area you're on: the stop you clicked, else the first stop with an area.
+function Map.CurrentArea(stops)
+  if hlStop and hlStop.area then return hlStop end
+  for _, st in ipairs(stops or {}) do if st.area and not st.away then return st end end
+end
 local fadedFrame
 local function Blob(faint)
   if blobOK == false then return nil end
@@ -238,6 +264,41 @@ end
 local otherPins = {}
 local HideIcons   -- set below, with the quest icon layer
 local aheadLabels, aheadLines = {}, {}
+local worldLayers, worldDiscs, worldDiscN = {}, {}, 0
+-- One layer per brightness, drawn at a single opacity so overlapping discs read as one shape.
+WorldLayer = function(canvas, faint)
+  local k = faint and 2 or 1
+  local l = worldLayers[k]
+  if not l then
+    l = CreateFrame("Frame", nil, canvas)
+    l:SetAllPoints(canvas)
+    if l.SetFlattensRenderLayers then pcall(l.SetFlattensRenderLayers, l, true) end
+    l.discs = {}
+    worldLayers[k] = l
+  end
+  l:SetFrameLevel(OVERLAY_LEVEL - (faint and 2 or 1))
+  l:SetAlpha(math.min(0.6, (ns.db.areaAlpha or 0.2) * 1.2) * (faint and FAINT or 1))
+  l:Show()
+  return l
+end
+WorldDisc = function(layer)
+  layer.n = (layer.n or 0) + 1
+  local d = layer.discs[layer.n]
+  if not d then
+    d = layer:CreateTexture(nil, "ARTWORK")
+    d:SetTexture(CIRCLE)
+    d:SetVertexColor(1, 0.78, 0.16, 1)
+    layer.discs[layer.n] = d
+  end
+  return d
+end
+local function HideWorldDiscs()
+  for _, l in pairs(worldLayers) do
+    for _, d in ipairs(l.discs) do d:Hide() end
+    l.n = 0
+  end
+end
+
 local function HideMap()
   for _, p in ipairs(otherPins) do p:Hide() end
   for _, l in ipairs(aheadLabels) do l:Hide() end
@@ -248,6 +309,7 @@ local function HideMap()
   for _, a in ipairs(mapAreas) do a:Hide() end
   if blobFrame then pcall(blobFrame.DrawNone, blobFrame) end
   if fadedFrame then pcall(fadedFrame.DrawNone, fadedFrame) end
+  HideWorldDiscs()
   if chosenBlob then pcall(chosenBlob.DrawNone, chosenBlob) end
 end
 
@@ -540,15 +602,8 @@ local function DrawOthers(canvas, cur)
       local qid = current.actions and current.actions[1] and current.actions[1].row.id
       local pts = current.pts
       if pts and #pts >= 2 then
-        -- Only the spawns around where the stop sends you (its pin): a mob found all over the zone
-        -- lit up half the map in gold ("ehh not great"). Within 12% of the map, else the nearest 8.
-        local near = {}
-        for k = 1, #pts - 1, 2 do
-          near[#near + 1] = { x = pts[k], y = pts[k + 1], d = (pts[k] - current.x) ^ 2 + (pts[k + 1] - current.y) ^ 2 }
-        end
-        table.sort(near, function(a, b) return a.d < b.d end)
-        for i, p in ipairs(near) do
-          if i > 8 and p.d > 144 then break end
+        -- Only the spawns around where the stop sends you (its pin) - the same ones as the minimap
+        for _, p in ipairs(Map.NearSpawns(current)) do
           Place(qid, "spawn", p.x, p.y, 10, 1, 0.82, 0, 1, true)
           Icon(n, canvas):SetFrameLevel(PIN_LEVEL - 6)
         end
@@ -792,16 +847,21 @@ local function Draw()
       if s.area and (areasLeft > 0 or s == hlStop) then
         if s ~= hlStop then areasLeft = areasLeft - 1 end
         local faint = (s ~= current)
-        local f = Blob(faint)
-        if f and f.SetMapID then pcall(f.SetMapID, f, cur) end
-        if f then f:Show() end
         local blobbed = false
-        if f and s.map == cur then   -- Blizzard's shapes only on the stop's own zone map
-          for _, a in ipairs(s.actions) do
-            if a.kind == "do" and hasArea[a.row.id] then
-              if pcall(f.DrawBlob, f, a.row.id, true) then blobbed = true end
-            end
+        if s.map == cur and s.pts and #s.pts >= 2 then
+          -- a disc around every spawn, merged: the same shape the minimap draws
+          local zw = HBD and HBD.GetZoneSize and select(1, HBD:GetZoneSize(s.map))
+          local rpct = (zw and zw > 0) and (AREA_YD / zw * 100) or 2
+          local layer = WorldLayer(canvas, faint)
+          for k = 1, #s.pts - 1, 2 do
+            local d = WorldDisc(layer)
+            d:SetSize(rpct * 2 / 100 * w, rpct * 2 / 100 * w)
+            d:ClearAllPoints()
+            local dx, dy = P(s.pts[k], s.pts[k + 1])
+            d:SetPoint("CENTER", canvas, "TOPLEFT", dx, dy)
+            d:Show()
           end
+          blobbed = true
         end
         -- the area as a circle (on a continent view, its radius scaled to that map)
         local acx, acy = ToCur(s.map, s.cx or s.x, s.cy or s.y, cur)
@@ -995,6 +1055,7 @@ local function MiniIcon(i)
 end
 
 local miniStops, MiniStops, MiniHide = {}   -- minimap route line/areas (defined below)
+local miniDots = {}   -- the current stop's gold dots on the minimap
 local function UpdateMinimap()
   if not HBDP then return end
   HBDP:RemoveAllMinimapIcons(Map)
@@ -1131,6 +1192,7 @@ end
 MiniHide = function()
   for _, l in ipairs(miniLines) do l:Hide() end
   for _, a in ipairs(miniAreas) do a:Hide() end
+  for _, t in ipairs(miniDots) do t:Hide() end
 end
 
 -- Where the next stops are in world yards, worked out once per route update.
@@ -1139,11 +1201,19 @@ MiniStops = function()
   if not HBD then return end
   local mode = ns.db.areaMode or "next"
   local areasLeft = (mode == "all") and 99 or (mode == "off" and 0) or 1
+  local current = Map.CurrentArea(route.stops)
   for i, s in ipairs(route.stops or {}) do
     if i > MINI_MAX then break end
     local wx, wy, inst = HBD:GetWorldCoordinatesFromZone(s.x / 100, s.y / 100, s.map)
     if wx then
-      local st = { wx = wx, wy = wy, inst = inst, map = s.map }
+      local st = { wx = wx, wy = wy, inst = inst, map = s.map, faint = (s ~= current) }
+      if s == current then   -- the same gold dots as the world map
+        st.dots = {}
+        for _, q in ipairs(Map.NearSpawns(s)) do
+          local qx, qy = HBD:GetWorldCoordinatesFromZone(q.x / 100, q.y / 100, s.map)
+          if qx then st.dots[#st.dots + 1] = qx; st.dots[#st.dots + 1] = qy end
+        end
+      end
       -- The area: a disc around every spawn of the stop's mobs, merged into one shape (the game's
       -- own area shapes can't be drawn on the minimap). No spawn data: a circle around the area.
       if s.area and areasLeft > 0 then
@@ -1168,15 +1238,19 @@ end
 
 -- The areas go on one layer drawn at a single opacity, so overlapping discs read as one shape
 -- (flattened when the client supports it; otherwise each disc is faint on its own).
-local SPAWN_YD = 30
-local miniLayer, miniFlat
-local function MiniLayer(box)
-  if not miniLayer then
-    miniLayer = CreateFrame("Frame", nil, box)
-    miniLayer:SetAllPoints(box)
-    if miniLayer.SetFlattensRenderLayers then miniFlat = pcall(miniLayer.SetFlattensRenderLayers, miniLayer, true) end
+local SPAWN_YD = AREA_YD
+local miniLayers, miniFlat = {}, nil
+local miniLayer
+local function MiniLayer(box, faint)
+  local k = faint and 2 or 1
+  if not miniLayers[k] then
+    local l = CreateFrame("Frame", nil, box)
+    l:SetAllPoints(box)
+    if l.SetFlattensRenderLayers then miniFlat = pcall(l.SetFlattensRenderLayers, l, true) end
+    miniLayers[k] = l
   end
-  miniLayer:SetFrameLevel(math.max(0, box:GetFrameLevel() - 1))   -- under the route line
+  miniLayer = miniLayers[k]
+  miniLayer:SetFrameLevel(math.max(0, box:GetFrameLevel() - (faint and 2 or 1)))   -- under the route line
   return miniLayer
 end
 
@@ -1204,7 +1278,7 @@ local function MiniDraw()
     return dx / R * hw, -dy / R * hh
   end
   local alphaArea = (ns.db.areaAlpha or 0.2) * 1.2
-  local nl, na = 0, 0
+  local nl, na, nd = 0, 0, 0
   local lx, ly = 0, 0   -- the line starts at you (the minimap centre)
   for _, st in ipairs(miniStops) do
     if st.inst ~= pinst then break end
@@ -1220,16 +1294,16 @@ local function MiniDraw()
       l:Show()
     end
     local layer
-    local alpha = math.min(0.6, alphaArea)
+    local alpha = math.min(0.6, alphaArea) * (st.faint and FAINT or 1)
     local function Disc(cx, cy, rp)
       na = na + 1
       local a = miniAreas[na]
       if not a then
-        layer = layer or MiniLayer(box)
-        a = Masked(miniLayer:CreateTexture(nil, "ARTWORK"))
+        a = Masked((layer or MiniLayer(box, st.faint)):CreateTexture(nil, "ARTWORK"))
         a:SetTexture(CIRCLE)
         miniAreas[na] = a
       end
+      if a:GetParent() ~= (layer or miniLayer) and a.SetParent then a:SetParent(layer or miniLayer) end
       a:SetSize(rp * 2, rp * 2)
       a:ClearAllPoints()
       a:SetPoint("CENTER", box, "CENTER", cx, cy)
@@ -1237,7 +1311,7 @@ local function MiniDraw()
       a:Show()
     end
     if st.spawns or st.ryd then
-      layer = MiniLayer(box)
+      layer = MiniLayer(box, st.faint)
       layer:SetAlpha(miniFlat and alpha or 1)
     end
     if st.spawns then
@@ -1251,9 +1325,28 @@ local function MiniDraw()
       local axp, ayp = XY(st.cwx or st.wx, st.cwy or st.wy)
       Disc(axp, ayp, st.ryd / R * hw)
     end
+    -- the current stop's gold dots, as on the world map
+    for kk = 1, #(st.dots or {}) - 1, 2 do
+      local dx, dy = XY(st.dots[kk], st.dots[kk + 1])
+      if math.abs(dx) < hw and math.abs(dy) < hh then
+        nd = nd + 1
+        local t = miniDots[nd]
+        if not t then
+          t = Masked(box:CreateTexture(nil, "OVERLAY"))
+          t:SetTexture(CIRCLE)
+          t:SetVertexColor(1, 0.82, 0, 1)
+          t:SetSize(6, 6)
+          miniDots[nd] = t
+        end
+        t:ClearAllPoints()
+        t:SetPoint("CENTER", box, "CENTER", dx, dy)
+        t:Show()
+      end
+    end
     lx, ly = x, y
   end
   Map.miniAreasShown = na
+  Map.miniDotsShown = nd
 end
 Map.MiniDraw = MiniDraw
 
