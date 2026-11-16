@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.43
+- **Map and minimap show kill areas the same way:** gold circles round every spawn (the stop you're
+  on bright, later ones faint) and the same gold dots on the nearby mobs.
+- **Blizzard's own quest areas** (the green shape with a glowing blue rim on the minimap) are switched
+  off while the route draws its own, using the game's quest-area setting. Your setting comes back if
+  you turn the route's map display off.
+
 ## v1.0.42
 - **Fixed: after updating, the route could jump to a dungeon** (Dire Maul: East at level 56). The
   route remembered your place by step number, and the new route has different numbers. It now
