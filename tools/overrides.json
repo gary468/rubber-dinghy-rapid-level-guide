@@ -53,12 +53,10 @@
       "note": "Deadliest Catch: Berdun Cliffbrew doesn't offer it (Gary, 14 Nov 2026) and ForeverChanges has no page for it - probably not in the game."
     },
     "92100": {
-      "drop": true,
-      "note": "Anywhere But Here: the Veteran of the Third War is a spirit ('A spirit materializes before you') at Mount Hyjal 20.8,59.7 per ForeverChanges, but Gary (level 56) found nobody there, 16 Nov 2026. A Wowhead comment (16 Nov 2026): he only spawns when you use the Embroidered Scabbard quest item at ~8,46; replies say it won't complete or he can't be talked to, and there's one chain per faction. Nothing says where the scabbard comes from. Off the route with the rest of his chain until that's known and it works."
+      "note": "Anywhere But Here: the Veteran of the Third War isn't at 20.4,59.4 (Questie/ForeverChanges). He stands at Mourning's Rest, Mount Hyjal ~24.1,55.0, among the Forgotten Soldiers (Blight No More); Gary got the quest from him there, 16 Nov 2026. Giver moved (npcs). A Wowhead comment says the later chain is summoned with the Embroidered Scabbard at ~8,46 and can bug out."
     },
     "96550": {
-      "drop": true,
-      "note": "Battle Recall: follows Anywhere But Here (92100), which is off the route."
+      "note": "Battle Recall: follows Anywhere But Here (92100); the scabbard at 8.8,46.5 summons the Veteran. Back on the route 16 Nov 2026 now that Gary got 92100."
     },
     "93567": {
       "drop": true,
@@ -140,6 +138,19 @@
         null
       ],
       "note": "Same Moonglade placeholder spot as Ketharas; ForeverChanges files his Forever quests (The Pact) under Mount Hyjal but has no position. 15 Nov 2026."
+    },
+    "Veteran of the Third War": {
+      "from": [
+        2482,
+        20.4,
+        59.4
+      ],
+      "to": [
+        2482,
+        24.1,
+        55.0
+      ],
+      "note": "He stands at Mourning's Rest ~24.1,55.0 (Gary got Anywhere But Here from him, 16 Nov 2026); nobody at 20.4,59.4. Only the 20.4,59.4 spot moves; his other spots (8.8,46.5 scabbard, 27.5,50.9) stay."
     }
   }
 }
