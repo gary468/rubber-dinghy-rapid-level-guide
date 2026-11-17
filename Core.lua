@@ -758,7 +758,91 @@ end
 -- Foodstuffs at 69,37 and Research Equipment at 38,66 were one stop pinned at 38,66, so he walked past
 -- the crate). Returns { {loc=, only={objective name=true}|nil} }.
 local SPLIT = 15   -- map %: objectives further apart than this are separate stops
+
+-- One objective whose spawns sit in groups with open ground between them: a place per group. Gary
+-- 17 Nov: Feathers in Flight's owls are in the west of Mount Hyjal (18-38) and round Ketharas
+-- (50-85); one stop pinned to the bigger western group showed nothing where he was killing owls.
+local GAP = 8          -- map %: spawns with no other spawn within this are in different groups
+local MIN_GROUP = 3    -- smaller groups join the nearest bigger one
+local splitCache = setmetatable({}, { __mode = "k" })
+local function SplitLoc(loc)
+  local pp = loc and loc[6]
+  if not pp or #pp < 2 * 2 * MIN_GROUP then return { loc } end
+  local hit = splitCache[loc]
+  if hit then return hit end
+  local n = math.floor(#pp / 2)
+  local parent = {}
+  for i = 1, n do parent[i] = i end
+  local function find(i) while parent[i] ~= i do parent[i] = parent[parent[i]]; i = parent[i] end return i end
+  for i = 1, n do
+    local xi, yi = pp[2 * i - 1], pp[2 * i]
+    for j = i + 1, n do
+      local dx, dy = xi - pp[2 * j - 1], yi - pp[2 * j]
+      if dx * dx + dy * dy <= GAP * GAP then
+        local a, b = find(i), find(j)
+        if a ~= b then parent[a] = b end
+      end
+    end
+  end
+  local groups, byRoot = {}, {}
+  for i = 1, n do
+    local rt = find(i)
+    if not byRoot[rt] then byRoot[rt] = { idx = {} }; groups[#groups + 1] = byRoot[rt] end
+    table.insert(byRoot[rt].idx, i)
+  end
+  local out
+  if #groups < 2 then
+    out = { loc }
+  else
+    local big, small = {}, {}
+    for _, g in ipairs(groups) do
+      if #g.idx >= MIN_GROUP then big[#big + 1] = g else small[#small + 1] = g end
+    end
+    if #big < 2 then
+      out = { loc }
+    else
+      local function centre(g)
+        local sx, sy = 0, 0
+        for _, i in ipairs(g.idx) do sx, sy = sx + pp[2 * i - 1], sy + pp[2 * i] end
+        return sx / #g.idx, sy / #g.idx
+      end
+      for _, g in ipairs(small) do
+        local gx, gy = centre(g)
+        local best, bd
+        for _, b in ipairs(big) do
+          local bx, by = centre(b)
+          local d = (bx - gx) ^ 2 + (by - gy) ^ 2
+          if not bd or d < bd then best, bd = b, d end
+        end
+        for _, i in ipairs(g.idx) do table.insert(best.idx, i) end
+      end
+      out = {}
+      for _, g in ipairs(big) do
+        local cx, cy = centre(g)
+        local pts, rr = {}, 0
+        for _, i in ipairs(g.idx) do
+          local x, y = pp[2 * i - 1], pp[2 * i]
+          pts[#pts + 1], pts[#pts + 2] = x, y
+          rr = math.max(rr, math.sqrt((x - cx) ^ 2 + (y - cy) ^ 2))
+        end
+        out[#out + 1] = { loc[1], loc[2], cx, cy, math.max(2, math.min(rr, loc[5] or rr)), pts }
+      end
+    end
+  end
+  splitCache[loc] = out
+  return out
+end
+
+local Places0
 local function Places(r, o)
+  local out = {}
+  for _, p in ipairs(Places0(r, o)) do
+    local parts = p.spot and { p.loc } or SplitLoc(p.loc)
+    for _, l in ipairs(parts) do out[#out + 1] = { loc = l, only = p.only, spot = p.spot } end
+  end
+  return out
+end
+Places0 = function(r, o)
   local left = LeftGroups(r)
   if not left then return { { loc = o } } end
   local clusters = {}

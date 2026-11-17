@@ -3,6 +3,9 @@
 ## Unreleased
 - **The minimap shows the same hover info as the world map.** Mouse over a quest area on the
   minimap to see the quest, whether it's on your route, and your progress.
+- **Mobs in two places are two stops.** When an objective's mobs live in separate groups (Feathers
+  in Flight's owls in the west of Mount Hyjal and round Ketharas), each group is its own stop with
+  its own area, so the one you're at shows on the map. Once the objective is done, the other drops.
 - **A hand-in never jumps ahead of the stop you're on.** Finishing a quest used to put its hand-in
   first and send you back across the valley with work still left around you.
 - **Mount Hyjal fixes from playing it:**
