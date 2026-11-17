@@ -330,6 +330,72 @@
           ]
         ]
       }
+    },
+    "96959": {
+      "spots": [
+        [
+          2482,
+          49.2,
+          36.0
+        ],
+        [
+          2482,
+          49.3,
+          36.0
+        ],
+        [
+          2482,
+          49.2,
+          36.1
+        ],
+        [
+          2482,
+          54.9,
+          39.8
+        ],
+        [
+          2482,
+          55.0,
+          39.8
+        ],
+        [
+          2482,
+          54.9,
+          39.9
+        ]
+      ],
+      "groups": {
+        "South Bonfire": [
+          [
+            49.2,
+            36.0
+          ],
+          [
+            49.3,
+            36.0
+          ],
+          [
+            49.2,
+            36.1
+          ]
+        ],
+        "Southeast Bonfire": [
+          [
+            54.9,
+            39.8
+          ],
+          [
+            55.0,
+            39.8
+          ],
+          [
+            54.9,
+            39.9
+          ]
+        ]
+      },
+      "tip": "Southeast Bonfire is in the Defiling Hound camp (54.9,39.8) - light it while you kill the hounds. South Bonfire is at 49.2,36, just south of Yashiro.",
+      "note": "Blademaster's Bonfires (Yashiro): two bonfire objects, South 656668 at 49.2,36 and Southeast 656669 at 54.9,39.8 (Wowhead Forever, 17 Nov 2026). No objective location in QuestieDB, so the plan accepted and handed in with nothing between."
     }
   },
   "npcs": {
