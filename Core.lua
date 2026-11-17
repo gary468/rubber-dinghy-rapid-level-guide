@@ -1645,6 +1645,13 @@ function ns.StopTooltip(owner, s, anchor)
   GameTooltip:AddLine(("%s %.1f, %.1f"):format(ns.MapName(s.map) or "?", s.x, s.y), 0.8, 0.8, 0.8)
   for _, a in ipairs(s.actions) do
     GameTooltip:AddLine(ns.ActionText(a) .. " |cff999999[" .. a.row.q.l .. "]|r", 1, 1, 1)
+    -- your progress, as the world map's area tooltip shows it (Gary 17 Nov: the minimap pin said
+    -- "Kill/loot: Rustleaf Fox" but not 6/9 Rustleaf Fox Tail)
+    if a.kind == "do" or a.kind == "go" then
+      for _, o in ipairs(ns.Objectives(a.row.id)) do
+        if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. ns.ObjText(o), 1, 1, 1) end
+      end
+    end
   end
   -- other quests at the same spot (their map icon would sit under this stop's number)
   if s.alsoHere and #s.alsoHere > 0 then
