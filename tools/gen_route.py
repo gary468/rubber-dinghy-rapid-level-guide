@@ -5,7 +5,7 @@ Needs data.json from decode.py in the tools dir (quest fields + zone names + bla
 Character progress is NOT baked in: the addon checks completion, race and class live in game.
 To change the route (zones, order, levels), edit STEPS below and re-run both steps.
 """
-import base64, json, math, re, struct, sys
+import base64, json, math, os, re, struct, sys
 
 HERE, WOW, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 TOC = WOW + r"\Interface\AddOns\QuestieDB\QuestieDB_Forever.toc"
@@ -116,12 +116,32 @@ with open(TOC, encoding="utf-8", errors="replace") as fh:
             meta[k] = v
 
 
+# Objective objects QuestieDB has wrong (tools/overrides.json quests {qid: {"objObject": {"from": to}}}):
+# Fetid Corruption (96296) lists the quest-start Corrupted Growth (651409, one spot) as its objective;
+# Wowhead Forever has the real one, 651430, at 14 spots around it.
+OBJ_SWAP = {}
+try:
+    for _k, _v in (json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "overrides.json"),
+                                encoding="utf-8")).get("quests") or {}).items():
+        if _v.get("objObject"): OBJ_SWAP[int(_k)] = {int(a): int(b) for a, b in _v["objObject"].items()}
+except FileNotFoundError:
+    pass
+
+
 def get(k):
     v = meta.get(k)
     if v is None: return None
     m = re.fullmatch(r"~(\d+)~", v)
     if m: v = "".join(meta[f"{k}-{n}"] for n in range(1, int(m.group(1)) + 1))
-    return cbor(base64.b64decode(v))[0]
+    v = cbor(base64.b64decode(v))[0]
+    m = re.fullmatch(r"X-Quest-(\d+)-10", k)
+    if m and int(m.group(1)) in OBJ_SWAP and isinstance(v, (list, dict)):
+        swap = OBJ_SWAP[int(m.group(1))]
+        objs = pos(v, 2)
+        if isinstance(objs, list):
+            for o in objs:
+                if isinstance(o, list) and o and o[0] in swap: o[0] = swap[o[0]]
+    return v
 
 
 def pos(v, k):

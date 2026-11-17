@@ -3158,7 +3158,7 @@ ns.quests = {
   [96255]={n="Amalgamated Marrow", l=58, r=54, g={"Bone Pile",2482,40.8,80.2}, t={"Felflick",2482,48.6,73.5}, o={"Awakened Fel Ash Slime",2482,40.7,78.8,5.5,{39,76,40,79,43,79,46,81,47,85}}, ob=true, ps={96435}},
   [96262]={n="Prickly Pinecones", l=57, r=54, g={"Curious Crow",2482,48.3,85.7}, t={"Curious Crow",2482,48.3,85.7}, o={"Prickly Pinecone",2482,49.2,86.3,5.0,{42,87,45,90,48,88,48,89,50,82,51,87,51,84,52,85}}, ob=true, it={273304}, ps={95317}, dr={{"Prickly Pinecone","on the ground"}}},
   [96264]={n="Elemental Aid", l=33, r=30, g={"Veyric Thunderhame",1417,59.8,27.6}, t={"Veyric Thunderhame",1417,59.8,27.6}, ot="Defeat Charlga Razorflank in Razorfen Kraul and collect information on the quilboar's plans.", ob=true, it={274463}, ra=77, cl=64, ps={94789}, dr={{"Tattered Note","drops from Charlga Razorflank"}}},
-  [96296]={n="Fetid Corruption", l=58, r=55, g={"Corrupted Growth",2482,48.5,56.4}, t={"Phoebe Highfeather",2482,54.5,63.9}, o={"Corrupted Growth",2482,48.5,56.4,2.0,{49,56}}, ob=true},
+  [96296]={n="Fetid Corruption", l=58, r=55, g={"Corrupted Growth",2482,48.5,56.4}, t={"Phoebe Highfeather",2482,54.5,63.9}, o={"Corrupted Growth",2482,50.2,58.1,3.5,{48,59,48,56,49,56,49,59,52,60}}, ob=true},
   [96301]={n="Power Wash", l=60, r=58, g={"Marn Euhorn",2482,68.3,46.7}, t={"Marn Euhorn",2482,68.3,46.7}},
   [96302]={n="Arch Absolution", l=60, r=58, g={"Marn Euhorn",2482,68.3,46.7}, t={"Marn Euhorn",2482,68.3,46.7}, ps={92017}},
   [96303]={n="Memory Mist", l=60, r=54, g={"Thisalee Crow",2482,69.0,50.0}, t={"Thisalee Crow",2482,69.0,50.0}, ps={93584}},

@@ -943,6 +943,37 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
       local st = byKey[k] and table.remove(byKey[k], 1)
       if st then out[#out + 1] = st; placed[st] = true else changed = true end
     end
+    -- New stops where you're standing go first: you do what's in front of you. Gary 17 Nov at the
+    -- Skylord: three harpy quests and Fetid Corruption all around him, but cheapest insertion put
+    -- them on a long leg at stops 15-17, after the whole north of the zone. Nearest-first from you,
+    -- then from each one taken, while the next is within its own area (or a short walk) of you.
+    if inZone then
+      local here, qx, qy = {}, hx, hy
+      while true do
+        local best, bd
+        for _, st in ipairs(ranked) do
+          if not placed[st] then
+            local px0, py0 = P(st)
+            if px0 then
+              local d = D(qx, qy, px0, py0)
+              -- near its centre, or near any of its spawns (a merged stop's area is wider than its r)
+              local near = d <= math.max(st.r or 0, 3) + 3
+              if not near and st.pts then
+                for k = 1, #st.pts - 1, 2 do
+                  if D(qx, qy, st.pts[k], st.pts[k + 1]) <= 5 then near = true; break end
+                end
+              end
+              if near and (not bd or d < bd) then best, bd = st, d end
+            end
+          end
+        end
+        if not best then break end
+        here[#here + 1] = best
+        placed[best], changed = true, true
+        qx, qy = P(best)
+      end
+      for i = #here, 1, -1 do table.insert(out, 1, here[i]) end
+    end
     -- every stop not in the kept order (new, or renamed) slots in where it adds the least
     for _, st in ipairs(ranked) do
       if not placed[st] then

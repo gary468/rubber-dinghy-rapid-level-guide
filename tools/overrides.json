@@ -109,6 +109,12 @@
         91697
       ],
       "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
+    },
+    "96296": {
+      "objObject": {
+        "651409": 651430
+      },
+      "note": "Fetid Corruption: QuestieDB gives the quest-start Corrupted Growth (651409, one spot) as the objective. The ones to loot are Corrupted Growth 651430, 14 spots around 47-53, 55-61 (Wowhead Forever). Gary, 17 Nov 2026: 'no fetid corruption'."
     }
   },
   "npcs": {
