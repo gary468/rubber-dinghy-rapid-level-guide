@@ -396,6 +396,10 @@
       },
       "tip": "Southeast Bonfire is in the Defiling Hound camp (54.9,39.8) - light it while you kill the hounds. South Bonfire is at 49.2,36, just south of Yashiro.",
       "note": "Blademaster's Bonfires (Yashiro): two bonfire objects, South 656668 at 49.2,36 and Southeast 656669 at 54.9,39.8 (Wowhead Forever, 17 Nov 2026). No objective location in QuestieDB, so the plan accepted and handed in with nothing between."
+    },
+    "96931": {
+      "tip": "Jereman only appears when you touch the Crow Effigy: a tiny golden square floating just above the left rail at the start of the bridge (41.4,45). Zoom the camera all the way in to see it.",
+      "note": "Heading Up the Mountain: Jereman is summoned from a pixel-sized effigy on the bridge (Wowhead Forever comments, 17 Nov 2026)."
     }
   },
   "npcs": {

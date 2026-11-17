@@ -3223,7 +3223,7 @@ ns.quests = {
   [96833]={n="Venom Maws", l=56, r=54, g={"Quintus Wainworth",2482,79.8,70.7}, t={"Ketharas",2482,73.3,81.9}, ra=77},
   [96912]={n="Field of Honor: Week 1", l=60, r=58, g={"Wizzik Dustfizz",1446,51.9,27.2}, t=nil},
   [96930]={n="The Capricious Corvid", l=58, r=56, g={"Ketharas",2482,73.3,81.9}, t={"Curious Crow",2482,48.3,85.7}, ps={93773}},
-  [96931]={n="Heading Up the Mountain", l=58, r=54, g={"Curious Crow",2482,48.3,85.7}, t={"Jereman",2482,41.3,45.3}, ps={96930}},
+  [96931]={n="Heading Up the Mountain", l=58, r=54, g={"Curious Crow",2482,48.3,85.7}, t={"Jereman",2482,41.3,45.3}, ps={96930}, tip="Jereman only appears when you touch the Crow Effigy: a tiny golden square floating just above the left rail at the start of the bridge (41.4,45). Zoom the camera all the way in to see it."},
   [96939]={n="The Balance of Life and Death", l=58, r=56, g={"Jereman",2482,41.3,45.3}, t={"Marrosis",2482,27.1,50.0}, ps={96931}},
   [96957]={n="Bone Sweet Bone", l=58, r=56, g={"Marrosis",2482,27.1,50.0}, t={"Marrosis",2482,27.1,50.0}, ot="Collect 20 Sun-Bleached Bones.", ob=true, it={275927}, ps={96939}},
   [96959]={n="Blademaster's Bonfires", l=59, r=56, g={"Yashiro",2482,49.3,32.6}, t={"Yashiro",2482,49.3,32.6}, o={"Blademaster's Bonfires",2482,52.1,37.9,3.5,{49,36,49,36,49,36,55,40,55,40,55,40}}, om={{"South Bonfire",{49,36,49,36,49,36}},{"Southeast Bonfire",{55,40,55,40,55,40}}}, ob=true, tip="Southeast Bonfire is in the Defiling Hound camp (54.9,39.8) - light it while you kill the hounds. South Bonfire is at 49.2,36, just south of Yashiro."},
