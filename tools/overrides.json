@@ -84,19 +84,22 @@
       "preQuestSingle": [
         91697
       ],
-      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
+      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred).",
+      "keep": true
     },
     "93830": {
       "preQuestSingle": [
         91697
       ],
-      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
+      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred).",
+      "keep": true
     },
     "93833": {
       "preQuestSingle": [
         91697
       ],
-      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
+      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred).",
+      "keep": true
     },
     "93834": {
       "preQuestSingle": [
@@ -108,7 +111,8 @@
       "preQuestSingle": [
         91697
       ],
-      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
+      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred).",
+      "keep": true
     },
     "96296": {
       "objObject": {
@@ -145,6 +149,55 @@
         ]
       ],
       "note": "Rites of Respect: bury the remains at Ketharas' shrine ('to the west ... a simple pair of standing stones'). No database places it; a Wowhead Forever comment (13 Nov 2026) gives 66, 84, the Druidic Shrine 'Standing Stones' (object 581744). Added 17 Nov 2026 when Gary took the quest. Confirmed by Gary 17 Nov 2026: buried at 66.6, 84.2."
+    },
+    "93831": {
+      "keep": true,
+      "note": "Barkskin furbolg chain: kept on the route (Gary 16-17 Nov 2026: 'STILL dont have furbolg quests PLEASE'; every re-plan dropped it)."
+    },
+    "91697": {
+      "keep": true,
+      "note": "Barkskin furbolg chain: kept on the route (Gary 16-17 Nov 2026: 'STILL dont have furbolg quests PLEASE'; every re-plan dropped it)."
+    },
+    "93825": {
+      "keep": true,
+      "note": "Barkskin furbolg chain: kept on the route (Gary 16-17 Nov 2026: 'STILL dont have furbolg quests PLEASE'; every re-plan dropped it)."
+    },
+    "93826": {
+      "keep": true,
+      "note": "Barkskin furbolg chain: kept on the route (Gary 16-17 Nov 2026: 'STILL dont have furbolg quests PLEASE'; every re-plan dropped it)."
+    },
+    "91696": {
+      "keep": true,
+      "note": "Barkskin furbolg chain: kept on the route (Gary 16-17 Nov 2026: 'STILL dont have furbolg quests PLEASE'; every re-plan dropped it)."
+    },
+    "91698": {
+      "keep": true,
+      "note": "Barkskin furbolg chain: kept on the route (Gary 16-17 Nov 2026: 'STILL dont have furbolg quests PLEASE'; every re-plan dropped it)."
+    },
+    "95316": {
+      "spots": [
+        [
+          2482,
+          46.0,
+          69.7
+        ],
+        [
+          2482,
+          46.5,
+          67.3
+        ],
+        [
+          2482,
+          44.3,
+          68.3
+        ],
+        [
+          2482,
+          42.9,
+          71.9
+        ]
+      ],
+      "note": "The Experimental Method: the four Ashen Reign workstations (no database has them). Gary 17 Nov 2026: Vessel ~46,69.7, Disease 46.5,67.3, Alchemy 44.3,68.3, Slime 42.9,71.9 - the warlock camp the Curious Crow means. One area for all four."
     }
   },
   "npcs": {

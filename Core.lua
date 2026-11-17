@@ -1533,8 +1533,36 @@ function ActionTextPlain(a)
   return C.SOON .. nm .. " (level " .. (q.r or "?") .. ")|r"
 end
 
+--- What you do at an area stop, from its quests' objectives: "Kill" when they say slain/killed,
+--- "Kill/loot" for drops, "Collect" for things on the ground, else "Go to" (Gary 17 Nov: "Kill/loot:
+--- Fraxinus" for Bark Bite, where you put a poultice on a friendly treant).
+local function AreaVerb(s)
+  local kill, loot, ground, other = false, false, false, false
+  for _, a in ipairs(s.actions or {}) do
+    local q = a.kind == "do" and a.row and a.row.q
+    if q then
+      for _, d in ipairs(q.dr or {}) do
+        local how = tostring(d[2] or "")
+        if how:find("drops from", 1, true) then loot = true elseif how:find("on the ground", 1, true) then ground = true end
+      end
+      for _, o in ipairs(ns.RawObjectives(a.row.id)) do
+        if not o.done then
+          local t = o.text:lower()
+          if t:find("slain") or t:find("killed") then kill = true
+          elseif not (t:find("^%d+/%d+") and (loot or ground)) then other = true end
+        end
+      end
+    end
+  end
+  if kill and not loot and not ground then return "Kill" end
+  if kill or loot then return "Kill/loot" end
+  if ground then return "Collect" end
+  if other then return "Go to" end
+  return "Kill/loot"
+end
+
 function ns.StopTitle(s)
-  if s.area then return "Kill/loot: " .. (s.name or "?") end
+  if s.area then return AreaVerb(s) .. ": " .. (s.name or "?") end
   return s.name or "?"
 end
 

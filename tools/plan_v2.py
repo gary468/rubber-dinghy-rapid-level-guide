@@ -67,6 +67,77 @@ for qid, q in quests.items():
     if o: O[qid] = o
 POOL = set(G)
 
+# ---- Objectives split into spawn groups, as the addon does (Core.lua SplitLoc). Gary 17 Nov: The
+# Bounty of Nature's stags and tubers are all round Ketharas, but the objective's one spot was the
+# centre of every stag on the map, in the north-west - so the planner thought it was a long trip.
+# Each objective group's spawns are split where there's open ground between them; the group nearest
+# the giver and hand-in is the one you'd use. Several groups close together: their middle.
+SPLIT_GAP, SPLIT_MIN, SPLIT_FAR = 8.0, 3, 15.0
+
+
+def _groups(pts):
+    n = len(pts) // 2
+    if n < 2 * SPLIT_MIN: return [(sum(pts[0::2]) / max(n, 1), sum(pts[1::2]) / max(n, 1), n)] if n else []
+    parent = list(range(n))
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]; i = parent[i]
+        return i
+    for i in range(n):
+        for j in range(i + 1, n):
+            if (pts[2 * i] - pts[2 * j]) ** 2 + (pts[2 * i + 1] - pts[2 * j + 1]) ** 2 <= SPLIT_GAP ** 2:
+                parent[find(i)] = find(j)
+    by = {}
+    for i in range(n): by.setdefault(find(i), []).append(i)
+    big = [ix for ix in by.values() if len(ix) >= SPLIT_MIN] or list(by.values())
+    return [(sum(pts[2 * i] for i in ix) / len(ix), sum(pts[2 * i + 1] for i in ix) / len(ix), len(ix)) for ix in big]
+
+
+def _obj_place(q, o):
+    Q = quests[q]
+    gs = [g[1] for g in (Q.get("om") or []) if isinstance(g, (list, tuple)) and len(g) > 1 and g[1]]
+    if not gs:
+        raw = Q.get("o")
+        if raw and len(raw) > 5 and raw[5]: gs = [raw[5]]
+    if not gs: return o
+    g0, e0 = G[q], E[q]
+    picks = []
+    for pts in gs:
+        cs = _groups(list(pts))
+        if not cs: continue
+        def cost(c):
+            d = 0.0
+            for p in (g0, e0):
+                d += math.hypot(c[0] - p[1], c[1] - p[2]) if p[0] == o[0] else 50.0
+            return d
+        picks.append(min(cs, key=cost))
+    if not picks: return o
+    if max(math.hypot(a[0] - b[0], a[1] - b[1]) for a in picks for b in picks) > SPLIT_FAR: return o
+    w = sum(c[2] for c in picks)
+    return (o[0], sum(c[0] * c[2] for c in picks) / w, sum(c[1] * c[2] for c in picks) / w)
+
+
+for _q, _o in list(O.items()):
+    O[_q] = _obj_place(_q, _o)
+
+# ---- Quests the route keeps (tools/overrides.json quests {id: {"keep": true}}): the search never
+# drops them, and a chain's earlier quests are kept with them. Gary 16-17 Nov: "STILL dont have
+# furbolg quests PLEASE" - every re-plan dropped the Barkskin furbolg chain.
+KEEP = set()
+try:
+    _ov = json.load(open(os.path.join(os.path.dirname(os.path.abspath(QMETA)), "overrides.json"), encoding="utf-8"))
+    KEEP = {int(k) for k, v in (_ov.get("quests") or {}).items() if isinstance(v, dict) and v.get("keep")}
+except FileNotFoundError:
+    pass
+_todo = list(KEEP)
+while _todo:
+    _q = _todo.pop()
+    _Q = quests.get(_q) or {}
+    for _p in [p for p in (_Q.get("pg") or []) if p > 0] + [p for p in (_Q.get("ps") or []) if p > 0][:1]:
+        if _p not in KEEP and _p in POOL:
+            KEEP.add(_p); _todo.append(_p)
+KEEP &= POOL
+
 _tc = {}
 def travel(a, b, lv):
     if a is None or a == b: return 0.0
@@ -254,6 +325,7 @@ def search(seq, minutes, rng):
         elif r < 0.85 and cand and not MAPS:                    # drop a quest (never in a starting zone:
             # you do its quests - nothing else on the route would - so only their order is planned)
             q = rng.choice(cand)[1]
+            if q in KEEP: continue                              # overrides.json "keep"
             cand = [a for a in cand if a[1] != q]
         else:                                                   # add a quest at its cheapest spots
             near = [q for q in POOL - in_seq]
@@ -383,6 +455,20 @@ if __name__ == "__main__":
         seed = nearest_order(acts, G[qs[0]] if qs else None, set())
     else:
         seed = build_seed()
+    # quests that have gained an objective place since the starting route was made (Bear Berries,
+    # 16 Nov): their objective goes in between pick-up and hand-in, or the hand-in never counts and
+    # the whole chain after it falls out (Sweetpaw Jam took the Barkskin furbolg chain with it).
+    acts = {}
+    for a in seed: acts.setdefault(a[1], set()).add(a[0])
+    for q, ks in acts.items():
+        if q in O and "obj" not in ks and "acc" in ks and "ret" in ks:
+            insert_cheapest(seed, ("obj", q))
+    # quests to keep that the starting route doesn't have: in at their cheapest spots, chain order
+    have = {a[1] for a in seed}
+    for q in sorted(KEEP - have, key=lambda q: (quests[q].get("l") or 0, q)):
+        for a in [("acc", q)] + ([("obj", q)] if q in O else []) + [("ret", q)]:
+            insert_cheapest(seed, a)
+    if KEEP: print(f"keep: {len(KEEP)} quests ({len(KEEP - have)} added to the start)", flush=True)
     h0, _ = simulate(seed)
     best, seq = search(seed, MINUTES, rng)
     best, seq = polish(seq)
