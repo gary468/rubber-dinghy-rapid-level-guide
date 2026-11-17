@@ -1,9 +1,16 @@
 # Changelog
 
-## Unreleased
+## v1.0.50
 - **Pick up before you kill.** A quest that needs the same mobs as an earlier stop is picked up
   first, so one pass does both. Kindling, Kinda (15 Tainted Shrubbery) used to come after Leaves to
   Ligatures (leaves from the same Tainted Shrubbery), so you cleared them twice.
+- **Mount Hyjal: the way north is by road.** The valley map now joins Mourning's Rest to the Cradle
+  of Tranquility, so the south and west reach Dae'gun and the Summit by the winding Cradle road
+  instead of a line over the mountains. Hyjal routes rebuild once to use it.
+- **The arrow says what to do.** "Kill:" for slain quests, "Kill/loot:" for drops, "Collect:" for
+  things on the ground and "Go to:" for the rest - no more "Kill/loot: Fraxinus" for a poultice.
+- **Mount Hyjal places no database had:** The Experimental Method's four Ashen Reign workstations
+  (around 45,69).
 
 ## v1.0.49
 - **The minimap shows the same hover info as the world map.** Mouse over a quest area on the
