@@ -1475,7 +1475,11 @@ local function MiniHover()
   local ptX = (w and w > 0) and AREA_YD / w * 100 or HOVER_PT
   local ptY = (h and h > 0) and AREA_YD / h * 100 or HOVER_PT
   local hits, key = AreaHits(miniHoverAreas, zx * 100, zy * 100, ptX, ptY)
-  if #hits == 0 then return MiniHoverOff(("no area at %.1f, %.1f"):format(zx * 100, zy * 100)) end
+  if #hits == 0 then
+    local _, mx, my = ns.PlayerPos()
+    return MiniHoverOff(("no area at %.1f, %.1f (you're at %.1f, %.1f; minimap %.0f yd across, %.0f px)"):format(
+      zx * 100, zy * 100, mx or 0, my or 0, R * 2, hw * 2))
+  end
   if key == miniHoverKey and now - miniHoverAt < 1 then return end
   miniHoverKey, miniHoverAt = key, now
   AreaTip(MiniTipOwner(), hits)
