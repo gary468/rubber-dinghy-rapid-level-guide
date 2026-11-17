@@ -1,10 +1,13 @@
 # Changelog
 
-## Unreleased
+## v1.0.52
+- **Minimap hover works, square minimaps included.** Hover a gold dot or area on the minimap to see each
+  quest there with your progress, like the world map. It used to show nothing with Leatrix's square
+  minimap. The numbered stop pins also show your progress now.
 - **A quest skipped as "not offered" comes back when you take it.** Deal Dread to Deadwood stayed under
   Other Quests after it was accepted.
-- **Kits and Cats: all three cats placed,** each its own stop, with a tip (Solstice hides on the bottom
-  rock of the Cradle waterfall).
+- **Kits and Cats: one stop per cat,** with a tip (Solstice hides on the bottom rock of the Cradle
+  waterfall), and a found cat's stop drops off.
 
 ## v1.0.51
 - **Mount Hyjal quests corrected from playing it:** Contents Under Pressure is done at the Personal
