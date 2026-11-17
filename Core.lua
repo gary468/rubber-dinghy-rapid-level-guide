@@ -729,10 +729,14 @@ local function LeftGroups(r)
   local left = {}
   for _, g in ipairs(om) do
     local label = g[1]:lower()
-    local hit
+    -- an exact match wins; otherwise the longest name containing the other ("Frenzied Pterrordax"
+    -- contains "Pterrordax": it must take the Frenzied line, not the first one that fits)
+    local hit, hitLen
     for _, l in ipairs(logs) do
-      if label == l.key or label == l.core or (#l.core >= 4 and label:find(l.core, 1, true))
-        or (#label >= 4 and l.core:find(label, 1, true)) then hit = l; break end
+      if label == l.key or label == l.core then hit, hitLen = l, math.huge; break end
+      if (#l.core >= 4 and label:find(l.core, 1, true)) or (#label >= 4 and l.core:find(label, 1, true)) then
+        if not hitLen or #l.core > hitLen then hit, hitLen = l, #l.core end
+      end
     end
     if not hit then return nil end          -- can't tell which objective this is: keep it all
     if not hit.done then left[#left + 1] = { g[1], g[2], key = hit.key } end
@@ -838,7 +842,10 @@ local function Places(r, o)
   local out = {}
   for _, p in ipairs(Places0(r, o)) do
     local parts = p.spot and { p.loc } or SplitLoc(p.loc)
-    for _, l in ipairs(parts) do out[#out + 1] = { loc = l, only = p.only, spot = p.spot } end
+    for k, l in ipairs(parts) do
+      -- part: which group of a split objective, so each keeps its own place in the kept order
+      out[#out + 1] = { loc = l, only = p.only, spot = p.spot, part = (#parts > 1) and k or nil }
+    end
   end
   return out
 end
@@ -924,7 +931,10 @@ end
 --- if that is at least 20% shorter. Returns the order and the point it starts from.
 local function StopKey(st)
   local t = {}
-  for _, a in ipairs(st.actions) do t[#t + 1] = (a.kind or "?") .. tostring(a.row.id) end
+  -- a split objective's groups (Feathers in Flight: west and east owls) are told apart by part, or
+  -- the old single stop's slot went to whichever group came first and the one you stood in was
+  -- never "new" (Gary 17 Nov: sent across the zone to the western owls)
+  for _, a in ipairs(st.actions) do t[#t + 1] = (a.kind or "?") .. tostring(a.row.id) .. (a.part and ("#" .. a.part) or "") end
   table.sort(t)
   -- a quest split over two places is two stops with the same actions: the name tells them apart
   return (st.name or "") .. "|" .. table.concat(t, ",")
@@ -1096,6 +1106,25 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
   local keys = {}
   for i, st in ipairs(out) do keys[i] = StopKey(st) end
   db.tour = { step = stepKey, keys = keys, v = tv }
+  -- Stops right where you stand come first, nearest first - shown that way, not saved, so walking
+  -- past one you don't do never sends you back to it. Gary 17 Nov, next to Ketharas with two
+  -- hand-ins for him: the kept order went to Thylaen across the valley first.
+  if inZone and #out > 1 then
+    local near, rest = {}, {}
+    for _, st in ipairs(out) do
+      local px0, py0 = P(st)
+      local d = px0 and D(hx, hy, px0, py0)
+      local lim = st.area and (math.max(st.r or 0, 3) + 2) or 5
+      if d and d <= lim then near[#near + 1] = { st = st, d = d } else rest[#rest + 1] = st end
+    end
+    if #near > 0 and near[1].st ~= out[1] or #near > 1 then
+      table.sort(near, function(a, b) return a.d < b.d end)
+      local shown = {}
+      for _, e in ipairs(near) do shown[#shown + 1] = e.st end
+      for _, st in ipairs(rest) do shown[#shown + 1] = st end
+      out = shown
+    end
+  end
   return out, sx, sy
 end
 
@@ -1130,7 +1159,7 @@ local function BuildStops(rows, stepMap, current)
           for k = 1, #loc[6] do found.pts[#found.pts + 1] = loc[6][k] end
         end
       end
-      found.actions[#found.actions + 1] = { kind = kind, row = r, only = pl.only, spot = pl.spot }
+      found.actions[#found.actions + 1] = { kind = kind, row = r, only = pl.only, spot = pl.spot, part = pl.part }
     else
       loose[#loose + 1] = { kind = kind, row = r }
     end

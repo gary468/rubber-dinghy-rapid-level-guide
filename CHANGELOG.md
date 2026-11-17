@@ -6,6 +6,12 @@
 - **Mobs in two places are two stops.** When an objective's mobs live in separate groups (Feathers
   in Flight's owls in the west of Mount Hyjal and round Ketharas), each group is its own stop with
   its own area, so the one you're at shows on the map. Once the objective is done, the other drops.
+- **Stops right where you are come first.** Standing next to a stop (or in its area) shows it first,
+  nearest first, instead of sending you across the zone and back. The saved order underneath
+  doesn't change, so walking past a stop you don't do never sends you back to it.
+- **A finished objective's group drops off properly.** With Frenzied Pterrordax done, their spots
+  stayed on the route, because "Frenzied Pterrordax" contains "Pterrordax" and matched the wrong
+  quest-log line.
 - **A hand-in never jumps ahead of the stop you're on.** Finishing a quest used to put its hand-in
   first and send you back across the valley with work still left around you.
 - **Mount Hyjal fixes from playing it:**
