@@ -67,8 +67,10 @@
       "note": "Soldier's Solace: from the Veteran of the Third War spirit (27.5,50.9); off the route like Ends Meet."
     },
     "96674": {
-      "drop": true,
-      "note": "Ewe Wandered Off: Mirt (Elderwild 15.9,52.7) stands there but offers nothing to Gary (level 56), 16 Nov 2026. ForeverChanges has no page for it."
+      "preQuestSingle": [
+        92591
+      ],
+      "note": "Ewe Wandered Off (Mirt, Elderwild 15.9,52.7): not offered at 56 (16 Nov 2026, was dropped); offered straight after Final Death (92591) was handed in (Gary 17 Nov 2026) - back on, after Final Death."
     },
     "95753": {
       "requiredClasses": 64,
