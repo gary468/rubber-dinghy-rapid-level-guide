@@ -1416,9 +1416,32 @@ local function MiniHoverOff(why)
   end
 end
 local function MiniHover()
-  if ns.db.noMap or ns.db.noMiniPins or not HBD or not (Minimap and Minimap:IsMouseOver()) then return MiniHoverOff("not over the minimap (or map/minimap pins off)") end
+  if ns.db.noMap or ns.db.noMiniPins or not HBD or not Minimap then return MiniHoverOff("map or minimap pins are off") end
+  -- Over the minimap: the cursor inside its rectangle on screen. Minimap:IsMouseOver() said no for
+  -- Gary's square minimap (another addon's frame on top), so measure it ourselves.
+  local over = Minimap:IsMouseOver()
+  if not over then
+    local l, r, t, b = Minimap:GetLeft(), Minimap:GetRight(), Minimap:GetTop(), Minimap:GetBottom()
+    if l and r and t and b then
+      local cx0, cy0 = GetCursorPosition()
+      local es = Minimap:GetEffectiveScale()
+      cx0, cy0 = cx0 / es, cy0 / es
+      over = cx0 >= l and cx0 <= r and cy0 >= b and cy0 <= t
+      if not over then
+        return MiniHoverOff(("not over the minimap (cursor %.0f,%.0f; minimap %.0f-%.0f, %.0f-%.0f)"):format(cx0, cy0, l, r, b, t))
+      end
+    end
+  end
+  if not over then return MiniHoverOff("not over the minimap") end
   local focus = MouseFocus()
-  if focus and focus ~= Minimap and focus.GetObjectType and focus:GetObjectType() == "Button" then return MiniHoverOff("over a button: " .. tostring(focus.GetName and focus:GetName() or "?")) end
+  -- a pin or icon (small button) has its own tooltip; a minimap-sized frame on top (another addon's
+  -- square minimap) doesn't count
+  if focus and focus ~= Minimap and focus.GetObjectType and focus:GetObjectType() == "Button" then
+    local fw = focus.GetWidth and focus:GetWidth() or 0
+    if fw < (Minimap:GetWidth() or 0) / 2 then
+      return MiniHoverOff("over a button: " .. tostring(focus.GetName and focus:GetName() or "?"))
+    end
+  end
   local px, py = HBD:GetPlayerWorldPosition()
   local map = HBD.GetPlayerZone and HBD:GetPlayerZone()
   if not (px and map) then return MiniHoverOff("no player position") end
