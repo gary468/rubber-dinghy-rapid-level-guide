@@ -99,11 +99,127 @@ def same_continent_s(ca, wa, wb, level):
 
 UNKNOWN_HOP_S = 600     # a place not on either continent's map (e.g. an island zone): a flat guess
 
+# ---- Mountains (TerrainData.lua, as the addon uses them): walking inside a zone with a grid follows
+# the valley floor round ridges; valleys the grid doesn't join cost the straight line plus CROSS_PCT
+# of the map (the same rule as Terrain.lua), so a flight can win. Gary 17 Nov, Mount Hyjal: "the
+# mountains block the quests".
+TERRAIN_DETOUR = 1.1    # the grid already walks round the ridges; a little for the rest
+CROSS_PCT = 30
+_grids = {}
+
+
+def _load_terrain():
+    import re
+    p = os.path.join(HERE, "..", "TerrainData.lua")
+    if not os.path.exists(p): return
+    src = open(p, encoding="utf-8").read()
+    for m in re.finditer(r"\[(\d+)\]\s*=\s*\{\s*n\s*=\s*(\d+),\s*rows\s*=\s*\{([^}]*)\}", src):
+        rows = re.findall(r'"([01]+)"', m.group(3))
+        n = int(m.group(2))
+        walk = {(i, j) for j, r in enumerate(rows) for i, c in enumerate(r) if c == "1"}
+        comp = {}
+        cid = 0
+        for c0 in walk:
+            if c0 in comp: continue
+            cid += 1
+            comp[c0] = cid
+            st = [c0]
+            while st:
+                i, j = st.pop()
+                for di in (-1, 0, 1):
+                    for dj in (-1, 0, 1):
+                        k = (i + di, j + dj)
+                        if k in walk and k not in comp:
+                            comp[k] = cid
+                            st.append(k)
+        _grids[int(m.group(1))] = {"n": n, "walk": walk, "comp": comp, "paths": {}}
+
+
+def _snap(g, x, y):
+    n = g["n"]
+    ci, cj = min(n - 1, max(0, int(x / 100 * n))), min(n - 1, max(0, int(y / 100 * n)))
+    for r in range(0, 5):
+        best = None
+        for j in range(cj - r, cj + r + 1):
+            for i in range(ci - r, ci + r + 1):
+                if (i, j) in g["walk"]:
+                    d = (i - ci) ** 2 + (j - cj) ** 2
+                    if best is None or d < best[0]: best = (d, (i, j))
+        if best: return best[1]
+
+
+def _paths(g, src):
+    hit = g["paths"].get(src)
+    if hit is not None: return hit
+    import heapq
+    dist, pq = {src: 0.0}, [(0.0, src)]
+    while pq:
+        d, (i, j) = heapq.heappop(pq)
+        if d > dist[(i, j)]: continue
+        for di in (-1, 0, 1):
+            for dj in (-1, 0, 1):
+                if not di and not dj: continue
+                k = (i + di, j + dj)
+                if k in g["walk"]:
+                    nd = d + (1.4142135623730951 if di and dj else 1.0)
+                    if nd < dist.get(k, 1e18):
+                        dist[k] = nd
+                        heapq.heappush(pq, (nd, k))
+    g["paths"][src] = dist
+    return dist
+
+
+def terrain_pct(m, a, b):
+    """Map-% walking distance between (x, y) points a and b on map m, or None without a grid."""
+    g = _grids.get(m)
+    if not g: return None
+    straight = math.hypot(a[0] - b[0], a[1] - b[1])
+    sa, sb = _snap(g, *a), _snap(g, *b)
+    if not sa or not sb: return straight
+    if g["comp"][sa] != g["comp"][sb]: return straight + CROSS_PCT
+    d = _paths(g, sa).get(sb)
+    if d is None: return straight + CROSS_PCT
+    return max(straight, d * 100.0 / g["n"])
+
+
+def _terrain_walk_s(m, a, b, level):
+    import routelib as R
+    speed = MOUNT_YDS if level >= MOUNT_LEVEL else RUN_YDS
+    straight_pct = math.hypot(a[0] - b[0], a[1] - b[1])
+    if straight_pct < 1e-9: return 0.0
+    yd = R.yards(m, a, b) * terrain_pct(m, a, b) / straight_pct
+    return yd * TERRAIN_DETOUR / speed
+
+
+def _zone_pct(m, w):
+    """World (wx, wy) -> (x, y) map % on map m, or None when outside it."""
+    r = _geo["maps"].get(m)
+    if not r or r["x2"] == r["x1"] or r["y2"] == r["y1"]: return None
+    y = (w[0] - r["x1"]) / (r["x2"] - r["x1"]) * 100.0
+    x = (w[1] - r["y1"]) / (r["y2"] - r["y1"]) * 100.0
+    if 0 <= x <= 100 and 0 <= y <= 100: return x, y
+
 
 def travel_s(a, b, level=60):
     """Seconds from place a to place b (each (map, x, y))."""
     if a is None or b is None: return 0.0
     if a[0] == b[0] and abs(a[1] - b[1]) < 1e-9 and abs(a[2] - b[2]) < 1e-9: return 0.0
+    if not _grids and _geo is not None: _load_terrain()
+    if a[0] == b[0] and a[0] in _grids:
+        # inside a zone with mountains: the valley-floor walk, or fly between its flight masters
+        m = a[0]
+        best = _terrain_walk_s(m, a[1:], b[1:], level)
+        A, B = world(a), world(b)
+        if A and B:
+            def leg(p, fm):
+                fp = _zone_pct(m, fm["w"])
+                if fp: return _terrain_walk_s(m, p[1:], fp, level)
+                return ground_s(world(p)[1:], fm["w"], level)
+            for fa in _nearest_fm(A[0], A[1:], 3):
+                for fb in _nearest_fm(B[0], B[1:], 3):
+                    if fa["name"] == fb["name"]: continue
+                    best = min(best, leg(a, fa) + FM_OVERHEAD_S + flight_s(fa, fb) + leg(b, fb))
+        return best
     A, B = world(a), world(b)
     if not A or not B:
         # a zone not on either continent's map (an island like Zephras Isle): inside it, straight
