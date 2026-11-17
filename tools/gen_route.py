@@ -748,12 +748,32 @@ def with_learned(qid, kind, loc):
 # "groups": {"objective name": [[x, y], ...]} - which spots are which quest-log line, so a finished
 # one drops off its stop (Gary 17 Nov, Kits and Cats: Brie's stop stayed after he found her).
 SPOT_GROUPS = {}
+# "box": [x1, y1, x2, y2] - keep only the objective spawns inside this box. For drop/kill quests whose
+# mobs live all over a zone: every cluster became its own stop and the tour zig-zagged between them
+# (Gary 17 Nov, Cleansing Winds: six Mountain Squallclimber stops across Mount Hyjal).
+OBJ_BOX = {}
 try:
     for _k, _v in (json.load(open(HERE + r"\overrides.json", encoding="utf-8")).get("quests") or {}).items():
         if _v.get("spots") and int(_k) not in LEARNED_SPOTS: LEARNED_SPOTS[int(_k)] = _v["spots"]
         if _v.get("groups"): SPOT_GROUPS[int(_k)] = _v["groups"]
+        if _v.get("box"): OBJ_BOX[int(_k)] = _v["box"]
 except FileNotFoundError:
     pass
+
+
+def boxed(qid, o, om):
+    """The objective area (and its per-objective groups) cut down to the quest's override box."""
+    b = OBJ_BOX.get(qid)
+    if not b or not o: return o, om
+    x1, y1, x2, y2 = b
+    inb = lambda u, v: x1 <= u <= x2 and y1 <= v <= y2
+    pts_ = [(u, v) for u, v in (o.get("pts") or []) if inb(u, v)]
+    if pts_:
+        cx = sum(u for u, _ in pts_) / len(pts_); cy = sum(v for _, v in pts_) / len(pts_)
+        rad = max(2.0, min(10.0, max(math.hypot(u - cx, v - cy) for u, v in pts_)))
+        o = dict(o, pts=pts_, x=cx, y=cy, r=rad)
+    om = [(lbl, [(u, v) for u, v in sp if inb(u, v)]) for lbl, sp in (om or [])]
+    return o, [g for g in om if g[1]]
 
 def spots_loc(spots, name):
     from collections import Counter
@@ -826,9 +846,10 @@ for qid in sorted(set(used) | set(track)):
         if si:
             parts.append("si=" + si)
             for n in si_npcs: tip_drop.setdefault(n, set()).add(qid)
+    om = objective_groups(qid, o["area"]) if o and o.get("area") is not None else []
+    o, om = boxed(qid, o, om)
     if o: parts.append(f"o={lloc(o, True)}")
     if o and o.get("area") is not None:
-        om = objective_groups(qid, o["area"])
         if om:
             parts.append("om={" + ",".join("{" + lstr(lbl) + ",{" + ",".join(f"{u:.0f},{v:.0f}" for u, v in sp) + "}}" for lbl, sp in om) + "}")
     elif LEARNED_SPOTS.get(qid):

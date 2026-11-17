@@ -676,6 +676,37 @@
     "97010": {
       "tip": "Climb the Horde Mage Tower in Dae'gun to the very top, stand on the little axe on the ledge and throw the Explosive Runeshard at the ground below. Keep throwing; after a demon hunter's talk it counts.",
       "note": "Blind Vengeance: tower position not in any database yet; tip from Wowhead Forever comments (17 Nov 2026)."
+    },
+    "92017": {
+      "box": [
+        66,
+        20,
+        84,
+        48
+      ],
+      "tip": "Squallclimbers and Chimaeroks roam all of Hyjal; both are thick in the northeast around the Blackthorne camps (69-83, 22-46), so fill both here while you do the Blackthorne quests.",
+      "note": "Cleansing Winds: both mobs spawn zone-wide, which made six stops across Mount Hyjal (Gary 17 Nov). Boxed to the northeast, where both are dense and the Blackthorne quests are."
+    },
+    "92959": {
+      "spots": [
+        [
+          2482,
+          63.2,
+          74.1
+        ],
+        [
+          2482,
+          63.3,
+          74.1
+        ],
+        [
+          2482,
+          63.2,
+          74.2
+        ]
+      ],
+      "tip": "Click the Corrupted Tree at 63.2,74.1 to summon Sunderbark (elite 56, can be feared and stunned). Kill him, then use his corpse to plant the seed.",
+      "note": "The Dying Ancients: Corrupted Tree object 659742 at 63.2,74.1 summons Sunderbark 248709 (Wowhead Forever comments, 17 Nov 2026)."
     }
   },
   "npcs": {
