@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.53
+- **Blademaster's Bonfires is on the route.** It had no objective location, so the route took it and
+  handed it straight back in. The Southeast Bonfire is now lit at the Defiling Hound stop and the
+  South Bonfire next to Yashiro. Each bonfire drops off once it's lit, and the quest is handed in
+  before Yashiro's Windwalk, which needs it.
+
 ## v1.0.52
 - **Minimap hover works, square minimaps included.** Hover a gold dot or area on the minimap to see each
   quest there with your progress, like the world map. It used to show nothing with Leatrix's square
