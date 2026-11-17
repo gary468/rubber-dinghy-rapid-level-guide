@@ -857,11 +857,15 @@ end
 --- Nearest stop first from (x, y), then 2-opt (reverse a stretch whenever that's shorter). The last
 --- stop stays last: it's where the plan ends the zone (the hub you hand in at before leaving), so a
 --- tour never sends you there first (Gary 14 Nov: "you're telling me to hand this in straight away").
-local function Tour(list, x, y, P, D)
-  local last = list[#list]
-  local ex, ey = P(last)
+--- openEnd (zones with a terrain grid): no stop is held for last. In Mount Hyjal the plan's last stop
+--- (Barkskin Matriarch) is on the Shrine of Aviana plateau, so holding it for last sent Gary down the
+--- cliff and round the whole zone before the quests in front of him (17 Nov).
+local function Tour(list, x, y, P, D, openEnd)
+  local last = not openEnd and list[#list] or nil
+  local ex, ey
+  if last then ex, ey = P(last) end
   local left, out = {}, {}
-  for i = 1, #list - 1 do left[i] = list[i] end
+  for i = 1, #list - (last and 1 or 0) do left[i] = list[i] end
   local qx, qy = x, y
   while #left > 0 do
     local bi, bd = 1, math.huge
@@ -924,11 +928,13 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
   local sx, sy = ax, ay
   if inZone then sx, sy = hx, hy end
   local tour = db.tour
-  if tour and tour.step ~= stepKey then tour = nil end
+  -- a tour kept from straight-line distances is rebuilt once the zone has a terrain grid
+  local tv = (ns.Terrain and ns.Terrain.Has(stepMap)) and 2 or nil
+  if tour and (tour.step ~= stepKey or tour.v ~= tv) then tour = nil end
   local out
   if not tour then
     out = ranked
-    local fresh = Tour(ranked, sx, sy, P, D)
+    local fresh = Tour(ranked, sx, sy, P, D, tv ~= nil)
     if PathCost(fresh, sx, sy, P, D) < 0.85 * PathCost(ranked, sx, sy, P, D) then out = fresh end
   else
     local byKey = {}
@@ -996,13 +1002,13 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
       end
     end
     if changed and inZone then
-      local fresh = Tour(out, hx, hy, P, D)
+      local fresh = Tour(out, hx, hy, P, D, tv ~= nil)
       if PathCost(fresh, hx, hy, P, D) < 0.8 * PathCost(out, hx, hy, P, D) then out = fresh end
     end
   end
   local keys = {}
   for i, st in ipairs(out) do keys[i] = StopKey(st) end
-  db.tour = { step = stepKey, keys = keys }
+  db.tour = { step = stepKey, keys = keys, v = tv }
   return out, sx, sy
 end
 
@@ -1257,7 +1263,13 @@ local function BuildStops(rows, stepMap, current)
       end
     end
     local function P(st) return st.cx or st.x, st.cy or st.y end
-    local function D(x1, y1, x2, y2) return math.sqrt((x1 - x2) ^ 2 + (y1 - y2) ^ 2) end
+    -- Walking distance round mountains where the zone has a terrain grid (Terrain.lua: Mount Hyjal),
+    -- the straight line everywhere else.
+    local TD = ns.Terrain and ns.Terrain.Dist(stepMap)
+    local function D(x1, y1, x2, y2)
+      if TD then return TD(x1, y1, x2, y2) end
+      return math.sqrt((x1 - x2) ^ 2 + (y1 - y2) ^ 2)
+    end
     table.sort(loose2, function(a, b)
       local x1, y1 = P(a); local x2, y2 = P(b)
       return D(ax, ay, x1, y1) < D(ax, ay, x2, y2)

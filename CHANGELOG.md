@@ -1,6 +1,15 @@
 # Changelog
 
 ## Unreleased
+- **Mount Hyjal: the route sees the mountains.** It used to measure every stop in a straight line,
+  so it sent you from the Shrine of Aviana straight to Kaylaena, down a cliff you can only take with
+  Slow Fall. Hyjal now has a map of its valley floors: distances follow the valleys round the
+  ridges, and moving to another valley costs extra, so the route finishes the valley you're in
+  first. The zone's last planned stop no longer has to come last there.
+- **New quests where you're standing come first.** Picking up quests right next to their mobs or
+  objects (the Skylord's harpy quests) used to slot them in on a long leg at the far end of the zone.
+- **Fetid Corruption has its real Corrupted Growths:** 14 spots around 47-53, 55-61, not just the
+  one you take the quest from.
 - **Quest items you're too low for say "keep it".** An item that starts a quest above your level
   (Head of Rend Blackhand from Upper Blackrock Spire: Requires Level 60) used to say "right-click
   it in your bags" right away. Now the tracker shows "Starts a quest at level 60: ... - keep it",
