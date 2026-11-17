@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+- **Tips under a stop where the quest text isn't enough.** Final Death: light the bone pile first, or the
+  Scourge Reanimator never comes. Also Contents Under Pressure, Eyes of the Watchers, Bark Bite,
+  Violence Into Verdure, The Experimental Method and Rites of Respect.
 - **Minimap hover info now stays up.** Blizzard's minimap rewrote and hid any tooltip it owned every
   frame, so the quest info vanished at once. `/rdr hover` says why nothing shows, if it ever doesn't.
 - **Barkskin furbolg chain in the right order.** Wicked Wisdom, Burrow Bonding, Herbs of the Hollow and

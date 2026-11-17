@@ -407,11 +407,13 @@ black = set(d["blacklist"])
 # Corrections from what players see in Forever (tools/overrides.json): quests that aren't in the game,
 # and chain links QuestieDB is missing.
 NO_ACCEPT = {}
+TIPS = {}      # quest -> a line of how-to shown under its stop (overrides.json "tip")
 try:
     for _k, _v in (json.load(open(HERE + r"\overrides.json", encoding="utf-8")).get("quests") or {}).items():
         _q = Q.get(int(_k))
         if _v.get("drop"): black.add(int(_k))
         if _v.get("noAccept"): NO_ACCEPT[int(_k)] = _v["noAccept"]
+        if _v.get("tip"): TIPS[int(_k)] = _v["tip"]
         if _q is not None:
             for _f in ("preQuestGroup", "preQuestSingle", "requiredLevel", "requiredClasses"):
                 if _f in _v: _q[_f] = _v[_f]
@@ -900,6 +902,7 @@ for qid in sorted(set(used) | set(track)):
             src = None
         if src: drops.append("{" + lstr(iname) + "," + lstr(src) + "}")
     if drops: parts.append("dr={" + ",".join(drops) + "}")
+    if TIPS.get(qid): parts.append("tip=" + lstr(TIPS[qid]))
     if tid: tip_end.setdefault(tid, set()).add(qid)
     out.append(f"  [{qid}]={{{', '.join(parts)}}},")
     # Objective types for the planner's time model (QuestieDB has no counts, only what kind).

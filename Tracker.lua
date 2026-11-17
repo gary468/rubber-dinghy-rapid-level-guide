@@ -410,6 +410,12 @@ local function Render(r)
             end
           end
         end
+        -- how to do it, where the quest text isn't enough (overrides.json "tip"; Gary 17 Nov, Final
+        -- Death: the Scourge Reanimator only comes once you light its bone pile)
+        local qtip = a.row.q and a.row.q.tip
+        if qtip and (a.kind == "do" or a.kind == "go") then
+          Add("|cff66ccffTip:|r " .. qtip, { indent = 30, font = SMALL_FONT, color = { 0.75, 0.9, 1 }, stop = s, nowrap = true, tip = qtip })
+        end
       end
       y = y + 7   -- room between stops
     end

@@ -138,7 +138,8 @@
           66.2,
           79.1
         ]
-      ]
+      ],
+      "tip": "Use the Bag of Enchanted Seeds standing right against each Ruined War Machinery wreck."
     },
     "95611": {
       "spots": [
@@ -148,7 +149,8 @@
           84.2
         ]
       ],
-      "note": "Rites of Respect: bury the remains at Ketharas' shrine ('to the west ... a simple pair of standing stones'). No database places it; a Wowhead Forever comment (13 Nov 2026) gives 66, 84, the Druidic Shrine 'Standing Stones' (object 581744). Added 17 Nov 2026 when Gary took the quest. Confirmed by Gary 17 Nov 2026: buried at 66.6, 84.2."
+      "note": "Rites of Respect: bury the remains at Ketharas' shrine ('to the west ... a simple pair of standing stones'). No database places it; a Wowhead Forever comment (13 Nov 2026) gives 66, 84, the Druidic Shrine 'Standing Stones' (object 581744). Added 17 Nov 2026 when Gary took the quest. Confirmed by Gary 17 Nov 2026: buried at 66.6, 84.2.",
+      "tip": "Use the Sacred Stag Bundle at the two standing stones."
     },
     "93831": {
       "keep": true,
@@ -197,7 +199,8 @@
           71.9
         ]
       ],
-      "note": "The Experimental Method: the four Ashen Reign workstations (no database has them). Gary 17 Nov 2026: Vessel ~46,69.7, Disease 46.5,67.3, Alchemy 44.3,68.3, Slime 42.9,71.9 - the warlock camp the Curious Crow means. One area for all four."
+      "note": "The Experimental Method: the four Ashen Reign workstations (no database has them). Gary 17 Nov 2026: Vessel ~46,69.7, Disease 46.5,67.3, Alchemy 44.3,68.3, Slime 42.9,71.9 - the warlock camp the Curious Crow means. One area for all four.",
+      "tip": "Use the pinecones on the four Ashen Reign workstations in the warlock camp."
     },
     "93383": {
       "spots": [
@@ -207,13 +210,21 @@
           74.6
         ]
       ],
-      "note": "Contents Under Pressure: done at the Personal Survival Pack itself - stand by it through the radio's 30-second countdown and fight off what it attracts (Wowhead Forever objectives; Gary 17 Nov 2026)."
+      "note": "Contents Under Pressure: done at the Personal Survival Pack itself - stand by it through the radio's 30-second countdown and fight off what it attracts (Wowhead Forever objectives; Gary 17 Nov 2026).",
+      "tip": "Stay by the pack through the radio's 30-second countdown and kill what it brings."
     },
     "90865": {
       "preQuestSingle": [
         91881
       ],
-      "note": "Eyes of the Watchers (Eluneth): not offered until The Western Post (91881) is handed in to Sefira - Gary 17 Nov 2026 confirmed. Tip (Wowhead comment): the watchers are the gargoyles (Eternal Sentry), stand near them to pull; 2 eyes each, 8 needed."
+      "note": "Eyes of the Watchers (Eluneth): not offered until The Western Post (91881) is handed in to Sefira - Gary 17 Nov 2026 confirmed. Tip (Wowhead comment): the watchers are the gargoyles (Eternal Sentry), stand near them to pull; 2 eyes each, 8 needed.",
+      "tip": "The watchers are the gargoyles: stand near one to pull it. 2 eyes each."
+    },
+    "92591": {
+      "tip": "Light the bone pile at 27,57 with Sefira's torch - the Scourge Reanimator only comes then."
+    },
+    "91770": {
+      "tip": "Use the Herbal Soil Poultice on Fraxinus - he's friendly, don't attack him."
     }
   },
   "npcs": {
