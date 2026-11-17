@@ -1390,28 +1390,47 @@ Map.MiniDraw = MiniDraw
 -- minimap doesnt show info like map ... i want map and minimap to be in sync"). The cursor is turned
 -- back into map % with the same maths the minimap is drawn with.
 local miniHoverKey, miniHoverAt, miniHoverMap, miniHoverAreas, miniHoverBuilt = nil, 0, nil, {}, 0
-local function MiniHoverOff()
+-- The tooltip's owner is a frame of our own, not the Minimap: Blizzard's Minimap OnUpdate rewrites
+-- a tooltip the Minimap owns with its tracking text every frame, and hides it when that's empty, so
+-- ours vanished at once (Gary 17 Nov: "mouseover info on minimap still not working").
+local miniTipOwner
+local function MiniTipOwner()
+  if not miniTipOwner then
+    miniTipOwner = CreateFrame("Frame", nil, UIParent)
+    miniTipOwner:SetSize(1, 1)
+    miniTipOwner:SetPoint("CENTER", Minimap, "CENTER")
+  end
+  return miniTipOwner
+end
+Map.MiniTipOwner = MiniTipOwner
+-- /rdr hover: say why the minimap hover shows nothing (once a second while it's on)
+local hoverDebugAt = 0
+local function MiniHoverOff(why)
+  if Map.debugHover and why and GetTime() - hoverDebugAt > 1 then
+    hoverDebugAt = GetTime()
+    ns.Print("minimap hover: " .. why)
+  end
   if miniHoverKey then
     miniHoverKey = nil
-    if GameTooltip:GetOwner() == Minimap then GameTooltip:Hide() end
+    if miniTipOwner and GameTooltip:GetOwner() == miniTipOwner then GameTooltip:Hide() end
   end
 end
 local function MiniHover()
-  if ns.db.noMap or ns.db.noMiniPins or not HBD or not (Minimap and Minimap:IsMouseOver()) then return MiniHoverOff() end
+  if ns.db.noMap or ns.db.noMiniPins or not HBD or not (Minimap and Minimap:IsMouseOver()) then return MiniHoverOff("not over the minimap (or map/minimap pins off)") end
   local focus = MouseFocus()
-  if focus and focus ~= Minimap and focus.GetObjectType and focus:GetObjectType() == "Button" then return MiniHoverOff() end
+  if focus and focus ~= Minimap and focus.GetObjectType and focus:GetObjectType() == "Button" then return MiniHoverOff("over a button: " .. tostring(focus.GetName and focus:GetName() or "?")) end
   local px, py = HBD:GetPlayerWorldPosition()
   local map = HBD.GetPlayerZone and HBD:GetPlayerZone()
-  if not (px and map) then return MiniHoverOff() end
+  if not (px and map) then return MiniHoverOff("no player position") end
   local now = GetTime()
   if map ~= miniHoverMap or now - miniHoverBuilt > 1 then
     miniHoverMap, miniHoverBuilt, miniHoverAreas = map, now, AreasOn(map)
   end
-  if #miniHoverAreas == 0 then return MiniHoverOff() end
+  if #miniHoverAreas == 0 then return MiniHoverOff("no quest areas on map " .. tostring(map)) end
   local R = MiniRadius()
   local hw, hh = Minimap:GetWidth() / 2, Minimap:GetHeight() / 2
   local mcx, mcy = Minimap:GetCenter()
-  if not (R and R > 0 and hw > 0 and mcx) then return MiniHoverOff() end
+  if not (R and R > 0 and hw > 0 and mcx) then return MiniHoverOff("no minimap size") end
   local cx, cy = GetCursorPosition()
   local sc = Minimap:GetEffectiveScale()
   local xp, yp = cx / sc - mcx, cy / sc - mcy        -- pixels from the minimap centre
@@ -1420,24 +1439,28 @@ local function MiniHover()
   local dx, dy = rx, ry
   if GetCVar and GetCVar("rotateMinimap") == "1" then
     local f = GetPlayerFacing and GetPlayerFacing()
-    if not f then return MiniHoverOff() end
+    if not f then return MiniHoverOff("no facing") end
     local s, c = math.sin(f), math.cos(f)
     dx, dy = rx * c + ry * s, -rx * s + ry * c
   end
   local zx, zy = HBD:GetZoneCoordinatesFromWorld(px - dx, py - dy, map, true)
-  if not zx then return MiniHoverOff() end
+  if not zx then return MiniHoverOff("cursor not on a zone") end
   -- "near a spawn" = inside the disc drawn round it (AREA_YD), in this zone's map %
   local w, h
   if HBD.GetZoneSize then w, h = HBD:GetZoneSize(map) end
   local ptX = (w and w > 0) and AREA_YD / w * 100 or HOVER_PT
   local ptY = (h and h > 0) and AREA_YD / h * 100 or HOVER_PT
   local hits, key = AreaHits(miniHoverAreas, zx * 100, zy * 100, ptX, ptY)
-  if #hits == 0 then return MiniHoverOff() end
+  if #hits == 0 then return MiniHoverOff(("no area at %.1f, %.1f"):format(zx * 100, zy * 100)) end
   if key == miniHoverKey and now - miniHoverAt < 1 then return end
   miniHoverKey, miniHoverAt = key, now
-  AreaTip(Minimap, hits)
+  AreaTip(MiniTipOwner(), hits)
 end
 Map.MiniHover = MiniHover
+ns.commands.hover = function()
+  Map.debugHover = not Map.debugHover or nil
+  ns.Print("minimap hover check " .. (Map.debugHover and "on: point at a gold area on the minimap" or "off"))
+end
 
 do
   local f = CreateFrame("Frame")

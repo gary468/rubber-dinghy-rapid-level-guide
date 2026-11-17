@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- **Minimap hover info now stays up.** Blizzard's minimap rewrote and hid any tooltip it owned every
+  frame, so the quest info vanished at once. `/rdr hover` says why nothing shows, if it ever doesn't.
 - **Barkskin furbolg chain in the right order.** Wicked Wisdom, Burrow Bonding, Herbs of the Hollow and
   Water of Hyjal come after Deal Dread to Deadwood, as the elders only offer them then.
 - **No false "doesn't offer" right after a hand-in.** For a few seconds after you hand a quest in,
