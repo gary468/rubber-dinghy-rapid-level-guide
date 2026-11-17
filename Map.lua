@@ -1477,8 +1477,16 @@ local function MiniHover()
   local hits, key = AreaHits(miniHoverAreas, zx * 100, zy * 100, ptX, ptY)
   if #hits == 0 then
     local _, mx, my = ns.PlayerPos()
-    return MiniHoverOff(("no area at %.1f, %.1f (you're at %.1f, %.1f; minimap %.0f yd across, %.0f px)"):format(
-      zx * 100, zy * 100, mx or 0, my or 0, R * 2, hw * 2))
+    -- the nearest spot of any area, to see how far off the pointing is
+    local nx, ny, nd
+    for _, a in ipairs(miniHoverAreas) do
+      for k = 1, #(a.pts or {}) - 1, 2 do
+        local d = (a.pts[k] - zx * 100) ^ 2 + (a.pts[k + 1] - zy * 100) ^ 2
+        if not nd or d < nd then nx, ny, nd = a.pts[k], a.pts[k + 1], d end
+      end
+    end
+    return MiniHoverOff(("no area at %.1f, %.1f (you're at %.1f, %.1f; cursor %.0f px right, %.0f px up of you; nearest spot %s; minimap %.0f yd across, %.0f px)"):format(
+      zx * 100, zy * 100, mx or 0, my or 0, xp, yp, nx and ("%d, %d"):format(nx, ny) or "none", R * 2, hw * 2))
   end
   if key == miniHoverKey and now - miniHoverAt < 1 then return end
   miniHoverKey, miniHoverAt = key, now
