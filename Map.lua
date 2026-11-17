@@ -1514,8 +1514,15 @@ local function MiniHover()
         if not nd or d < nd then nx, ny, nd = a.pts[k], a.pts[k + 1], d end
       end
     end
-    return MiniHoverOff(("no area at %.1f, %.1f (you're at %.1f, %.1f; cursor %.0f px right, %.0f px up of you; nearest spot %s; minimap %.0f yd across, %.0f px)"):format(
-      zx * 100, zy * 100, mx or 0, my or 0, xp, yp, nx and ("%d, %d"):format(nx, ny) or "none", R * 2, hw * 2))
+    local dn, dd = 0, nil
+    for _, d in ipairs(Map.miniDrawn or {}) do
+      dn = dn + 1
+      local q = math.sqrt((xp - d.x) ^ 2 + (yp - d.y) ^ 2)
+      if not dd or q < dd then dd = q end
+    end
+    return MiniHoverOff(("no area at %.1f, %.1f (you're at %.1f, %.1f; cursor %.0f px right, %.0f px up of you; nearest spot %s; drawn %d shapes, nearest %s px; minimap %.0f yd across, %.0f px)"):format(
+      zx * 100, zy * 100, mx or 0, my or 0, xp, yp, nx and ("%d, %d"):format(nx, ny) or "none",
+      dn, dd and ("%.0f"):format(dd) or "-", R * 2, hw * 2))
   end
   if key == miniHoverKey and now - miniHoverAt < 1 then return end
   miniHoverKey, miniHoverAt = key, now
