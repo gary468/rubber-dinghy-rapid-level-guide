@@ -1013,6 +1013,22 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
         if o == st.attach then table.insert(out, i + 1, st); break end
       end
     end
+    -- ...unless it's right where you stand: then it's first, like any stop in front of you (Gary 17
+    -- Nov: Eluneth's hand-in, two steps away, sat at 2 behind Barkskin Matriarch across the valley)
+    local pm, hx, hy = ns.HerePos()
+    if pm == stepMap and hx then
+      local near = {}
+      for _, st in ipairs(attached) do
+        local x0, y0 = P(st)
+        local d = x0 and D(hx, hy, x0, y0)
+        if d and d <= 5 then near[#near + 1] = { st = st, d = d } end
+      end
+      table.sort(near, function(a, b) return a.d > b.d end)   -- nearest ends up first
+      for _, e in ipairs(near) do
+        for i, o in ipairs(out) do if o == e.st then table.remove(out, i); break end end
+        table.insert(out, 1, e.st)
+      end
+    end
     return out, sx, sy
   end
   if #ranked < 2 then return ranked, ax, ay end

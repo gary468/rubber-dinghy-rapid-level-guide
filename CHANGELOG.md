@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- **A hand-in right where you stand is stop 1,** even for a quest the route didn't plan (Eluneth's hand-in,
+  two steps away, sat at 2 behind a stop across the valley).
 - **Tips under a stop where the quest text isn't enough.** Final Death: light the bone pile first, or the
   Scourge Reanimator never comes. Also Contents Under Pressure, Eyes of the Watchers, Bark Bite,
   Violence Into Verdure, The Experimental Method and Rites of Respect.
