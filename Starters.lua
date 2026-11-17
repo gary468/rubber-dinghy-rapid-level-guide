@@ -7,8 +7,28 @@ local ADDON, ns = ...
 local S = {}
 ns.Starters = S
 
-local list = {}          -- { {bag, slot, itemID, item, questID, quest} }
-local told = {}          -- questID -> true (chat note once per session)
+local list = {}          -- { {bag, slot, itemID, item, questID, quest, need} }
+local told = {}          -- questID -> "locked" / "open" (chat note once per state per session)
+local needInfo = false   -- an item's info wasn't cached yet: rescan when it arrives
+
+-- The level the item (or its quest) needs, when it's above yours: nil when you can take it now.
+-- Gary 17 Nov: Forever's Head of Rend Blackhand (227911) drops at 57 but "Requires Level 60".
+local function NeedLevel(itemID, questID)
+  local need = 0
+  if itemID then
+    local getInfo = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+    local ok, name, _, _, _, minLevel = pcall(getInfo, itemID)
+    if ok and name then
+      need = tonumber(minLevel) or 0
+    else
+      needInfo = true
+    end
+  end
+  local q = ns.quests and ns.quests[questID]
+  if q and tonumber(q.r) and q.r > need then need = q.r end
+  local level = UnitLevel("player") or 1
+  if need > level then return need end
+end
 
 local function QuestInfo(bag, slot)
   if C_Container and C_Container.GetContainerItemQuestInfo then
@@ -37,6 +57,7 @@ end
 
 function S.Scan()
   local out = {}
+  needInfo = false
   if not (C_Container and C_Container.GetContainerNumSlots) then list = out; return out end
   for bag = 0, 4 do
     for slot = 1, (C_Container.GetContainerNumSlots(bag) or 0) do
@@ -45,11 +66,20 @@ function S.Scan()
         and not (ns.db and ns.db.skip and ns.db.skip[questID]) then
         local info = C_Container.GetContainerItemInfo and C_Container.GetContainerItemInfo(bag, slot)
         local name = info and (info.itemName or (info.hyperlink and info.hyperlink:match("%[(.-)%]"))) or "an item"
-        out[#out + 1] = { bag = bag, slot = slot, itemID = info and info.itemID, item = name,
-                          questID = questID, quest = QuestName(questID) }
-        if not told[questID] then
-          told[questID] = true
-          ns.Print(("%s starts a quest: %s. Right-click it in your bags."):format(name, QuestName(questID)))
+        local itemID = info and info.itemID
+        local need = NeedLevel(itemID, questID)
+        out[#out + 1] = { bag = bag, slot = slot, itemID = itemID, item = name,
+                          questID = questID, quest = QuestName(questID), need = need }
+        local state = need and "locked" or "open"
+        if told[questID] ~= state then
+          if need then
+            ns.Print(("%s starts a quest at level %d: %s. Keep it until then."):format(name, need, QuestName(questID)))
+          elseif told[questID] == "locked" then
+            ns.Print(("%s: you can take %s now. Right-click it in your bags."):format(name, QuestName(questID)))
+          else
+            ns.Print(("%s starts a quest: %s. Right-click it in your bags."):format(name, QuestName(questID)))
+          end
+          told[questID] = state
         end
       end
     end
@@ -112,20 +142,29 @@ end
 
 local f = CreateFrame("Frame")
 local pending = false
-f:SetScript("OnEvent", function()
+-- What the tracker shows, so a change in lock state redraws it too, not only a change in count.
+local function Signature()
+  local parts = {}
+  for _, it in ipairs(list) do parts[#parts + 1] = it.questID .. ":" .. (it.need or 0) end
+  return table.concat(parts, ",")
+end
+
+f:SetScript("OnEvent", function(_, event)
+  if event == "GET_ITEM_INFO_RECEIVED" and not needInfo then return end
   if pending then return end
   pending = true
   C_Timer.After(0.5, function()
     pending = false
     if not ns.db or ns.disabled then return end
-    local before = #list
+    local before = Signature()
     ns.Safe("Starters", S.Scan)
-    if #list ~= before then ns.Queue() end
+    if Signature() ~= before then ns.Queue() end
   end)
 end)
 
 ns.inits.Starters = function()
-  for _, e in ipairs({ "BAG_UPDATE_DELAYED", "QUEST_ACCEPTED", "QUEST_REMOVED", "QUEST_TURNED_IN" }) do
+  for _, e in ipairs({ "BAG_UPDATE_DELAYED", "QUEST_ACCEPTED", "QUEST_REMOVED", "QUEST_TURNED_IN",
+                       "PLAYER_LEVEL_UP", "GET_ITEM_INFO_RECEIVED" }) do
     pcall(f.RegisterEvent, f, e)
   end
   ns.Safe("Starters", S.Scan)

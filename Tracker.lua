@@ -305,9 +305,16 @@ local function Render(r)
   end
   -- Items in your bags that start a quest (looted or picked up: A Mangled Journal, Message in a Bottle)
   for _, it in ipairs(ns.Starters and ns.Starters.List() or {}) do
-    Add(("|cffffd100Starts a quest:|r %s - right-click it in your bags"):format(it.item), {
-      font = SMALL_FONT, color = WHITE, indent = 4, nowrap = true,
-      tip = ("%s starts %s. Right-click it in your bags to read it and take the quest."):format(it.item, it.quest) })
+    if it.need then
+      -- Level-locked (Head of Rend Blackhand: Requires Level 60): keep it, don't open it yet.
+      Add(("|cffffd100Starts a quest at level %d:|r %s - keep it"):format(it.need, it.item), {
+        font = SMALL_FONT, color = GREY, indent = 4, nowrap = true,
+        tip = ("%s starts %s, but only from level %d. Keep it in your bags until then."):format(it.item, it.quest, it.need) })
+    else
+      Add(("|cffffd100Starts a quest:|r %s - right-click it in your bags"):format(it.item), {
+        font = SMALL_FONT, color = WHITE, indent = 4, nowrap = true,
+        tip = ("%s starts %s. Right-click it in your bags to read it and take the quest."):format(it.item, it.quest) })
+    end
   end
   local goTo = (r.inZone or step.dungeon or step.grind) and "" or ("Go to " .. step.name .. ". ")
   local note = step.note

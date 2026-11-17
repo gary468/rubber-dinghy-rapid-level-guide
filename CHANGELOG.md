@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+- **Quest items you're too low for say "keep it".** An item that starts a quest above your level
+  (Head of Rend Blackhand from Upper Blackrock Spire: Requires Level 60) used to say "right-click
+  it in your bags" right away. Now the tracker shows "Starts a quest at level 60: ... - keep it",
+  and chat tells you again when you reach the level and can take it.
+
 ## v1.0.47
 - **Stop order that doesn't zig-zag.** The route used to follow the plan's order even after you'd
   done a zone your own way, which sent you back and forth (about 390 map-% across Mount Hyjal).
