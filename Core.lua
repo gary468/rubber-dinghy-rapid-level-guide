@@ -986,7 +986,10 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
         placed[st], changed = true, true
         local px0, py0 = P(st)
         local bestK, bestC = #out + 1, math.huge
-        for i = 1, #out + 1 do
+        -- never in front of the stop you're on: a new stop that isn't where you stand (it would have
+        -- gone first above) waits its turn. Gary 17 Nov: finishing Rub Some Dirt In It put its
+        -- hand-in first and sent him back across the valley with work still left around him.
+        for i = (#out >= 1 and 2 or 1), #out + 1 do
           local px, py = sx, sy
           if i > 1 then px, py = P(out[i - 1]) end
           local c
