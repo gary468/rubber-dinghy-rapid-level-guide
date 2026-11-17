@@ -82,7 +82,7 @@ function N.Expected(name)
   return out
 end
 
-local lastUI = 0
+local lastUI, lastTurnIn = 0, -100
 function N.Check(event)
   local now = GetTime()
   local prev = lastUI
@@ -108,7 +108,9 @@ function N.Check(event)
     ns.Print(("%s offers %s now: it's back on the route."):format(name, ns.quests[id].n))
   end
 
-  if db.noGiverSkip or o.pending then
+  -- just handed something in: its follow-up may not be on offer for a moment yet (Gary 17 Nov:
+  -- "Elder Mistpaw doesn't offer Deal Dread to Deadwood" a second before he took it)
+  if db.noGiverSkip or o.pending or now - lastTurnIn < 5 then
     if #back > 0 then ns.Recompute() end
     return
   end
@@ -138,6 +140,6 @@ for _, e in ipairs({ "GOSSIP_SHOW", "QUEST_GREETING", "QUEST_DETAIL", "QUEST_PRO
   f:RegisterEvent(e)
 end
 f:SetScript("OnEvent", function(_, event)
-  if event == "QUEST_COMPLETE" then lastUI = GetTime(); return end
+  if event == "QUEST_COMPLETE" then lastUI = GetTime(); lastTurnIn = GetTime(); return end
   ns.Safe("NotOffered", N.Check, event)
 end)
