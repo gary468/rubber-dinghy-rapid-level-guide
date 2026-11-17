@@ -931,20 +931,21 @@ local function AreaHits(areas, cx, cy, ptX, ptY)
 end
 
 -- The tooltip both maps show for an area: the quest, whether it's on the route, your progress.
-local function AreaTip(owner, hits)
-  GameTooltip:SetOwner(owner, "ANCHOR_CURSOR")
+local function AreaTip(owner, hits, tip)
+  tip = tip or GameTooltip
+  tip:SetOwner(owner, "ANCHOR_CURSOR")
   for i, a in ipairs(hits) do
-    if i > 4 then GameTooltip:AddLine(("+ %d more"):format(#hits - 4), 0.6, 0.6, 0.6); break end
+    if i > 4 then tip:AddLine(("+ %d more"):format(#hits - 4), 0.6, 0.6, 0.6); break end
     local q = ns.quests[a.id]
-    GameTooltip:AddLine(("%s |cff999999[%s]|r"):format(q.n or a.title or "?", q.l or "?"), 1, 0.82, 0)
-    GameTooltip:AddLine(routeSet[a.id] and "On your route" or "Not on the route", 0.6, 0.6, 0.6)
+    tip:AddLine(("%s |cff999999[%s]|r"):format(q.n or a.title or "?", q.l or "?"), 1, 0.82, 0)
+    tip:AddLine(routeSet[a.id] and "On your route" or "Not on the route", 0.6, 0.6, 0.6)
     local objs = ns.Objectives(a.id)
-    if #objs == 0 and q.o[1] then GameTooltip:AddLine(q.o[1], 1, 1, 1) end
+    if #objs == 0 and q.o and q.o[1] then tip:AddLine(q.o[1], 1, 1, 1) end
     for _, o in ipairs(objs) do
-      if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. ns.ObjText(o), 1, 1, 1) end
+      if o.done then tip:AddLine("  " .. o.text, 0.4, 1, 0.4) else tip:AddLine("  " .. ns.ObjText(o), 1, 1, 1) end
     end
   end
-  GameTooltip:Show()
+  tip:Show()
 end
 
 local function HoverOff()
@@ -1403,7 +1404,7 @@ local miniHoverKey, miniHoverAt, miniHoverMap, miniHoverAreas, miniHoverBuilt = 
 -- The tooltip's owner is a frame of our own, not the Minimap: Blizzard's Minimap OnUpdate rewrites
 -- a tooltip the Minimap owns with its tracking text every frame, and hides it when that's empty, so
 -- ours vanished at once (Gary 17 Nov: "mouseover info on minimap still not working").
-local miniTipOwner
+local miniTipOwner, miniTip
 local function MiniTipOwner()
   if not miniTipOwner then
     miniTipOwner = CreateFrame("Frame", nil, UIParent)
@@ -1413,6 +1414,18 @@ local function MiniTipOwner()
   return miniTipOwner
 end
 Map.MiniTipOwner = MiniTipOwner
+-- Our own tooltip window for the minimap hover: the shared GameTooltip is written to and hidden by
+-- Blizzard's minimap and other addons every frame; this one only we touch (Gary 17 Nov: "still not
+-- working" with the hover finding the dots).
+local function MiniTip()
+  if not miniTip then
+    local ok, t = pcall(CreateFrame, "GameTooltip", "RubberDinghyMinimapTip", UIParent, "GameTooltipTemplate")
+    miniTip = (ok and t and t.SetOwner and t.AddLine and t.Show) and t or GameTooltip
+    if miniTip.SetFrameStrata then miniTip:SetFrameStrata("TOOLTIP") end
+  end
+  return miniTip
+end
+Map.MiniTip = MiniTip
 -- /rdr hover: say why the minimap hover shows nothing (once a second while it's on)
 local hoverDebugAt = 0
 local function MiniHoverOff(why)
@@ -1422,7 +1435,8 @@ local function MiniHoverOff(why)
   end
   if miniHoverKey then
     miniHoverKey = nil
-    if miniTipOwner and GameTooltip:GetOwner() == miniTipOwner then GameTooltip:Hide() end
+    if miniTip and miniTip ~= GameTooltip then miniTip:Hide()
+    elseif miniTipOwner and GameTooltip:GetOwner() == miniTipOwner then GameTooltip:Hide() end
   end
 end
 local function MiniHover()
@@ -1484,7 +1498,8 @@ local function MiniHover()
       for _, a in ipairs(near) do key = key .. a.id .. "," end
       if key == miniHoverKey and now - miniHoverAt < 1 then return end
       miniHoverKey, miniHoverAt = key, now
-      AreaTip(MiniTipOwner(), near)
+      AreaTip(MiniTipOwner(), near, MiniTip())
+      if ns.db and ns.db.debugHover then ns.Print(("minimap hover: showing %d quest(s), first %s"):format(#near, tostring(ns.quests[near[1].id].n))) end
       return
     end
   end
@@ -1527,7 +1542,7 @@ local function MiniHover()
   end
   if key == miniHoverKey and now - miniHoverAt < 1 then return end
   miniHoverKey, miniHoverAt = key, now
-  AreaTip(MiniTipOwner(), hits)
+  AreaTip(MiniTipOwner(), hits, MiniTip())
 end
 Map.MiniHover = MiniHover
 ns.commands.hover = function()
