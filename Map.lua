@@ -1471,7 +1471,8 @@ local function MiniHover()
   do
     local seen, near = {}, {}
     for _, d in ipairs(Map.miniDrawn or {}) do
-      local rr = math.max(d.r or 0, 4) + 6
+      -- generous: Gary's /rdr hover on a dot he was pointing at said the nearest was 21 px away
+      local rr = math.max(d.r or 0, 4) + 14
       if (xp - d.x) ^ 2 + (yp - d.y) ^ 2 <= rr * rr then
         for _, id in ipairs(d.qids) do
           if not seen[id] and ns.quests[id] then seen[id] = true; near[#near + 1] = { id = id } end
