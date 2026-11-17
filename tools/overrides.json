@@ -115,6 +115,16 @@
         "651409": 651430
       },
       "note": "Fetid Corruption: QuestieDB gives the quest-start Corrupted Growth (651409, one spot) as the objective. The ones to loot are Corrupted Growth 651430, 14 spots around 47-53, 55-61 (Wowhead Forever). Gary, 17 Nov 2026: 'no fetid corruption'."
+    },
+    "93747": {
+      "spots": [
+        [
+          2482,
+          62.8,
+          83.0
+        ]
+      ],
+      "note": "Violence Into Verdure: the three wrecks (Ruined Ballista/Catapult/Flying Machine, 'Ruined War Machinery' objects 642327/642498/642501) have no spawns anywhere. Gary got the Ruined Catapult at 62.8,83.0 on 17 Nov 2026; ballista and flying machine still unplaced - add them here when found."
     }
   },
   "npcs": {
