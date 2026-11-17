@@ -103,9 +103,9 @@
     },
     "93834": {
       "preQuestSingle": [
-        91697
+        93826
       ],
-      "note": "Barkskin Burrow camp (Mount Hyjal ~21,79) is hostile until the Barkskin reputation chain: Brerufa's Balance Through Strength -> Of Friend and Fur -> Osi Mistpaw's Sweetpaw Jam -> Meet the Elders. Barkskin Beginnings is 'raise your reputation with the Barkskin Burrow to Neutral'. QuestieDB links none of these quests to the chain, so the route sent Gary into the red camp first (16 Nov 2026). Placed after Meet the Elders (inferred)."
+      "note": "Burrow Beetles (Dala Fairmaw): offered nothing after Meet the Elders (Gary 17 Nov 2026), like the elders' other follow-ups, so it waits for Deal Dread to Deadwood too. Inferred, not confirmed."
     },
     "96666": {
       "preQuestSingle": [
