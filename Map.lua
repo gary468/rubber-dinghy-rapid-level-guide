@@ -896,14 +896,54 @@ local function SafeDraw() ns.Safe("Map", Draw) end
 ---------------------------------------------------------------------------
 local hoverAreas, hoverKey, hoverAt = {}, nil, 0
 local HOVER_PT = 3.0     -- map % around a spawn point
-BuildHoverAreas = function(cur)
-  hoverAreas = {}
+-- The quests in your log with an area on this map (not yet finished).
+local function AreasOn(map)
+  local out = {}
   for _, e in ipairs(ns.QuestLog()) do
     local q = ns.quests[e.id]
-    if q and q.o and q.o[2] == cur and not ns.IsReady(e.id) then
-      hoverAreas[#hoverAreas + 1] = { id = e.id, x = q.o[3], y = q.o[4], r = q.o[5], pts = q.o[6], title = e.title }
+    if q and q.o and q.o[2] == map and not ns.IsReady(e.id) then
+      out[#out + 1] = { id = e.id, x = q.o[3], y = q.o[4], r = q.o[5], pts = q.o[6], title = e.title }
     end
   end
+  return out
+end
+BuildHoverAreas = function(cur) hoverAreas = AreasOn(cur) end
+
+-- The areas under a point (map %): within an area's radius, or near one of its spawns
+-- (ptX/ptY: how near, in map %). Returns the hits and a key naming them.
+local function AreaHits(areas, cx, cy, ptX, ptY)
+  local hits, key = {}, ""
+  for _, a in ipairs(areas) do
+    local hit = false
+    if a.x and a.y then
+      local rr = math.max(a.r or 0, 2)
+      hit = (cx - a.x) ^ 2 + (cy - a.y) ^ 2 <= rr * rr
+    end
+    if not hit and a.pts then
+      for k = 1, #a.pts - 1, 2 do
+        if math.abs(a.pts[k] - cx) < ptX and math.abs(a.pts[k + 1] - cy) < ptY then hit = true; break end
+      end
+    end
+    if hit then hits[#hits + 1] = a; key = key .. a.id .. "," end
+  end
+  return hits, key
+end
+
+-- The tooltip both maps show for an area: the quest, whether it's on the route, your progress.
+local function AreaTip(owner, hits)
+  GameTooltip:SetOwner(owner, "ANCHOR_CURSOR")
+  for i, a in ipairs(hits) do
+    if i > 4 then GameTooltip:AddLine(("+ %d more"):format(#hits - 4), 0.6, 0.6, 0.6); break end
+    local q = ns.quests[a.id]
+    GameTooltip:AddLine(("%s |cff999999[%s]|r"):format(q.n or a.title or "?", q.l or "?"), 1, 0.82, 0)
+    GameTooltip:AddLine(routeSet[a.id] and "On your route" or "Not on the route", 0.6, 0.6, 0.6)
+    local objs = ns.Objectives(a.id)
+    if #objs == 0 and q.o[1] then GameTooltip:AddLine(q.o[1], 1, 1, 1) end
+    for _, o in ipairs(objs) do
+      if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. ns.ObjText(o), 1, 1, 1) end
+    end
+  end
+  GameTooltip:Show()
 end
 
 local function HoverOff()
@@ -927,38 +967,13 @@ local function AreaHover()
   local cx, cy = sc:GetNormalizedCursorPosition()
   if not cx then return HoverOff() end
   cx, cy = cx * 100, cy * 100
-  local hits, key = {}, ""
-  for _, a in ipairs(hoverAreas) do
-    local hit = false
-    if a.x and a.y then
-      local rr = math.max(a.r or 0, 2)
-      hit = (cx - a.x) ^ 2 + (cy - a.y) ^ 2 <= rr * rr
-    end
-    if not hit and a.pts then
-      for k = 1, #a.pts - 1, 2 do
-        if math.abs(a.pts[k] - cx) < HOVER_PT and math.abs(a.pts[k + 1] - cy) < HOVER_PT then hit = true; break end
-      end
-    end
-    if hit then hits[#hits + 1] = a; key = key .. a.id .. "," end
-  end
+  local hits, key = AreaHits(hoverAreas, cx, cy, HOVER_PT, HOVER_PT)
   if #hits == 0 then return HoverOff() end
   -- same quests as last time: refresh the progress once a second, not every frame
   local now = GetTime()
   if key == hoverKey and now - hoverAt < 1 then return end
   hoverKey, hoverAt = key, now
-  GameTooltip:SetOwner(sc, "ANCHOR_CURSOR")
-  for i, a in ipairs(hits) do
-    if i > 4 then GameTooltip:AddLine(("+ %d more"):format(#hits - 4), 0.6, 0.6, 0.6); break end
-    local q = ns.quests[a.id]
-    GameTooltip:AddLine(("%s |cff999999[%s]|r"):format(q.n or a.title or "?", q.l or "?"), 1, 0.82, 0)
-    GameTooltip:AddLine(routeSet[a.id] and "On your route" or "Not on the route", 0.6, 0.6, 0.6)
-    local objs = ns.Objectives(a.id)
-    if #objs == 0 and q.o[1] then GameTooltip:AddLine(q.o[1], 1, 1, 1) end
-    for _, o in ipairs(objs) do
-      if o.done then GameTooltip:AddLine("  " .. o.text, 0.4, 1, 0.4) else GameTooltip:AddLine("  " .. ns.ObjText(o), 1, 1, 1) end
-    end
-  end
-  GameTooltip:Show()
+  AreaTip(sc, hits)
 end
 
 -- Like Questie: while the map is open, redraw when the zone, canvas size or zoom changes.
@@ -1371,6 +1386,59 @@ local function MiniDraw()
 end
 Map.MiniDraw = MiniDraw
 
+-- Hovering an area on the minimap: the same tooltip as the world map (Gary 17 Nov: "mousing over
+-- minimap doesnt show info like map ... i want map and minimap to be in sync"). The cursor is turned
+-- back into map % with the same maths the minimap is drawn with.
+local miniHoverKey, miniHoverAt, miniHoverMap, miniHoverAreas, miniHoverBuilt = nil, 0, nil, {}, 0
+local function MiniHoverOff()
+  if miniHoverKey then
+    miniHoverKey = nil
+    if GameTooltip:GetOwner() == Minimap then GameTooltip:Hide() end
+  end
+end
+local function MiniHover()
+  if ns.db.noMap or ns.db.noMiniPins or not HBD or not (Minimap and Minimap:IsMouseOver()) then return MiniHoverOff() end
+  local focus = MouseFocus()
+  if focus and focus ~= Minimap and focus.GetObjectType and focus:GetObjectType() == "Button" then return MiniHoverOff() end
+  local px, py = HBD:GetPlayerWorldPosition()
+  local map = HBD.GetPlayerZone and HBD:GetPlayerZone()
+  if not (px and map) then return MiniHoverOff() end
+  local now = GetTime()
+  if map ~= miniHoverMap or now - miniHoverBuilt > 1 then
+    miniHoverMap, miniHoverBuilt, miniHoverAreas = map, now, AreasOn(map)
+  end
+  if #miniHoverAreas == 0 then return MiniHoverOff() end
+  local R = MiniRadius()
+  local hw, hh = Minimap:GetWidth() / 2, Minimap:GetHeight() / 2
+  local mcx, mcy = Minimap:GetCenter()
+  if not (R and R > 0 and hw > 0 and mcx) then return MiniHoverOff() end
+  local cx, cy = GetCursorPosition()
+  local sc = Minimap:GetEffectiveScale()
+  local xp, yp = cx / sc - mcx, cy / sc - mcy        -- pixels from the minimap centre
+  -- undo MiniDraw's XY: x = dx / R * hw, y = -dy / R * hh, after turning (dx, dy) with the facing
+  local rx, ry = xp * R / hw, -yp * R / hh
+  local dx, dy = rx, ry
+  if GetCVar and GetCVar("rotateMinimap") == "1" then
+    local f = GetPlayerFacing and GetPlayerFacing()
+    if not f then return MiniHoverOff() end
+    local s, c = math.sin(f), math.cos(f)
+    dx, dy = rx * c + ry * s, -rx * s + ry * c
+  end
+  local zx, zy = HBD:GetZoneCoordinatesFromWorld(px - dx, py - dy, map, true)
+  if not zx then return MiniHoverOff() end
+  -- "near a spawn" = inside the disc drawn round it (AREA_YD), in this zone's map %
+  local w, h
+  if HBD.GetZoneSize then w, h = HBD:GetZoneSize(map) end
+  local ptX = (w and w > 0) and AREA_YD / w * 100 or HOVER_PT
+  local ptY = (h and h > 0) and AREA_YD / h * 100 or HOVER_PT
+  local hits, key = AreaHits(miniHoverAreas, zx * 100, zy * 100, ptX, ptY)
+  if #hits == 0 then return MiniHoverOff() end
+  if key == miniHoverKey and now - miniHoverAt < 1 then return end
+  miniHoverKey, miniHoverAt = key, now
+  AreaTip(Minimap, hits)
+end
+Map.MiniHover = MiniHover
+
 do
   local f = CreateFrame("Frame")
   local t = 0
@@ -1378,7 +1446,10 @@ do
     t = t + (e or 0)
     if t < 0.05 then return end
     t = 0
-    if ns.db and not ns.disabled then ns.Safe("MinimapRoute", MiniDraw) end
+    if ns.db and not ns.disabled then
+      ns.Safe("MinimapRoute", MiniDraw)
+      ns.Safe("MinimapHover", MiniHover)
+    end
   end)
 end
 

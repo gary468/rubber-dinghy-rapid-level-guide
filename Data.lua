@@ -2512,7 +2512,7 @@ ns.quests = {
   [91881]={n="The Western Post", l=57, r=54, g={"Curious Crow",2482,48.3,85.7}, t={"Sefira Everbright",2482,15.7,54.7}, ra=77, ps={95316}},
   [91882]={n="The Grand Alliance", l=55, r=55, g={"Ambassador Ardalan",1419,67.6,19.3}, t={"Sefira Everbright",2482,15.7,54.7}},
   [91883]={n="Spear of the Skylord", l=59, r=55, g={"Skylord Omnuron",2482,54.3,64.0}, t={"Skylord Omnuron",2482,54.3,64.0}, o={"Zarrat Wormwing",2482,50.8,57.7,5.2,{46,58,47,55,48,59,49,55,49,60,49,58,51,56,52,59,52,56,54,58,54,59,54,61}}, ob=true, it={268998}, dr={{"Omnuron's Spear","drops from Zarrat Wormwing, Searshrike Wormwing"}}},
-  [91923]={n="Celastrus the Bitter", l=57, r=54, g={"Thylaen",2482,54.8,84.6}, t={"Thylaen",2482,54.8,84.6}, o={"Celastrus the Bitter",2482,65.5,71.5,8.2,{61,71,62,69,64,74,64,70,64,80,66,72,66,68,66,72,66,70,66,75,69,71,70,72}}, ob=true, it={282028}, dr={{"Broken Frond of Celastrus","drops from Celastrus the Bitter"}}},
+  [91923]={n="Celastrus the Bitter", l=57, r=54, g={"Thylaen",2482,54.8,84.6}, t={"Thylaen",2482,54.8,84.6}, o={"Celastrus the Bitter",2482,65.8,72.8,2.0,{65,74,66,73,66,71}}, ob=true, it={282028}, dr={{"Broken Frond of Celastrus","drops from Celastrus the Bitter"}}},
   [91952]={n="The Source of the Corruption", l=55, r=55, g={"Greta Mosshoof",1448,51.2,82.1}, t={"Ketharas",2482,73.3,81.9}},
   [92008]={n="Premiere Parts", l=56, r=54, g={"Kaylaena Springwhisper",2482,60.1,61.2}, t={"Nami",1452,61.3,36.9}},
   [92009]={n="Crate Expectations", l=56, r=54, g={"Nami",1452,61.3,36.9}, t={"Kaylaena Springwhisper",2482,60.1,61.2}, ps={92008}},

@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+- **The minimap shows the same hover info as the world map.** Mouse over a quest area on the
+  minimap to see the quest, whether it's on your route, and your progress.
+- **A hand-in never jumps ahead of the stop you're on.** Finishing a quest used to put its hand-in
+  first and send you back across the valley with work still left around you.
+- **Mount Hyjal fixes from playing it:**
+  - Violence Into Verdure has its three wrecks (Ruined Catapult, Flying Machine and Ballista,
+    around 65,82). No database had them.
+  - Celastrus the Bitter is one small area (66,72), not 12 dots across the Tainted Foothills.
+  - The Bounty of Nature shows its Scarlet Dart Tubers around Ketharas.
+  - Aid from Moonglade and The Pact hand in to Dendrite Starblaze in Moonglade, where he is (the
+    druid class quests that use him are fixed too).
+
 ## v1.0.48
 - **Mount Hyjal: the route sees the mountains.** It used to measure every stop in a straight line,
   so it sent you from the Shrine of Aviana straight to Kaylaena, down a cliff you can only take with

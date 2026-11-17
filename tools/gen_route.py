@@ -168,7 +168,7 @@ try:
     _wh = json.load(open(HERE + r"\wowhead_spawns.json", encoding="utf-8"))
     for _k in ("npc", "object"):
         for _i, _v in (_wh.get(_k) or {}).items():
-            WH_SPAWNS[_k][int(_i)] = {"name": _v.get("name"),
+            WH_SPAWNS[_k][int(_i)] = {"name": _v.get("name"), "replace": bool(_v.get("replace")),
                                       "spawns": {int(a): c for a, c in (_v.get("spawns") or {}).items()}}
 except FileNotFoundError:
     pass
@@ -184,7 +184,9 @@ def ent(kind, i):
         e = dict(name=pos(row, 1), zone=pos(row, 5), fac=None, spawns=sp if isinstance(sp, dict) else {})
     # Spawns QuestieDB doesn't have yet (new in Forever), from Wowhead's Forever database.
     wh = WH_SPAWNS["npc" if kind == "npc" else "object"].get(i)
-    if wh and not e["spawns"]:
+    # "replace": QuestieDB has spawns but they're wrong (Celastrus the Bitter: 31 spots across the
+    # foothills where he stands in one place, Gary 17 Nov); Wowhead's win.
+    if wh and (not e["spawns"] or wh.get("replace")):
         e["spawns"] = wh["spawns"]
         e["name"] = e["name"] or wh["name"]
     _cache[(kind, i)] = e
