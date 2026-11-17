@@ -745,9 +745,13 @@ def with_learned(qid, kind, loc):
     if not loc or loc.get("x") is not None or not v or v[0] not in _AREA_OF_MAP: return loc
     return dict(loc, area=_AREA_OF_MAP[v[0]], x=v[1], y=v[2])
 # Spots players told us about (tools/overrides.json "spots"), for objectives no database places.
+# "groups": {"objective name": [[x, y], ...]} - which spots are which quest-log line, so a finished
+# one drops off its stop (Gary 17 Nov, Kits and Cats: Brie's stop stayed after he found her).
+SPOT_GROUPS = {}
 try:
     for _k, _v in (json.load(open(HERE + r"\overrides.json", encoding="utf-8")).get("quests") or {}).items():
         if _v.get("spots") and int(_k) not in LEARNED_SPOTS: LEARNED_SPOTS[int(_k)] = _v["spots"]
+        if _v.get("groups"): SPOT_GROUPS[int(_k)] = _v["groups"]
 except FileNotFoundError:
     pass
 
@@ -830,6 +834,9 @@ for qid in sorted(set(used) | set(track)):
     elif LEARNED_SPOTS.get(qid):
         # no location in any database, but players' recorded where its progress went up (Learn.lua)
         parts.append("o=" + spots_loc(LEARNED_SPOTS[qid], q.get("name") or "Objective"))
+        if SPOT_GROUPS.get(qid):
+            parts.append("om={" + ",".join("{" + lstr(lbl) + ",{" + ",".join(f"{x:.0f},{y:.0f}" for x, y in pts) + "}}"
+                                           for lbl, pts in SPOT_GROUPS[qid].items()) + "}")
     elif (FC_OBJ.get(str(qid)) or {}).get("dots") and FC_OBJ[str(qid)].get("map"):
         # ForeverChanges' quest map: dots where the objectives are (Forever-only objects no database has)
         rec = FC_OBJ[str(qid)]

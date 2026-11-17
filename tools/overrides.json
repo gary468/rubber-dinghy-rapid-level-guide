@@ -285,7 +285,51 @@
         ]
       ],
       "tip": "Brie: chasing butterflies at 41.7,36.6. Solstice: stealthed on the bottom rock of the Cradle waterfall, 38.4,47.2. Whisperfur: broken wall under the small bridge by Tyrus Blackhorn, 27,62.",
-      "note": "Kits and Cats (Shalla'kal): three cats far apart - Brie 41.6,36.4, Solstice 38.4,47.2, Whisperfur 27,62 (Wowhead Forever + a player comment, 17 Nov 2026). Three spots each so the addon makes a stop per cat."
+      "note": "Kits and Cats (Shalla'kal): three cats far apart - Brie 41.6,36.4, Solstice 38.4,47.2, Whisperfur 27,62 (Wowhead Forever + a player comment, 17 Nov 2026). Three spots each so the addon makes a stop per cat.",
+      "groups": {
+        "Brie": [
+          [
+            41.6,
+            36.4
+          ],
+          [
+            41.4,
+            35.2
+          ],
+          [
+            42.0,
+            37.6
+          ]
+        ],
+        "Solstice": [
+          [
+            38.4,
+            47.2
+          ],
+          [
+            38.4,
+            47.6
+          ],
+          [
+            38.6,
+            47.2
+          ]
+        ],
+        "Whisperfur": [
+          [
+            27.0,
+            62.0
+          ],
+          [
+            27.1,
+            62.0
+          ],
+          [
+            27.0,
+            62.1
+          ]
+        ]
+      }
     }
   },
   "npcs": {
