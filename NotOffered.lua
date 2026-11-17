@@ -135,11 +135,33 @@ function N.Check(event)
   if #skipped > 0 or #back > 0 then ns.Recompute() end
 end
 
+-- You took a quest the route had skipped as "not offered": it's offered after all, so it's back
+-- (Gary 17 Nov: Deal Dread to Deadwood stayed skipped under Other Quests after he accepted it).
+function N.Accepted()
+  local db = ns.db
+  if not (db and db.notOffered) then return end
+  local back = {}
+  for id in pairs(db.notOffered) do
+    if InLog(id) then back[#back + 1] = id end
+  end
+  for _, id in ipairs(back) do
+    db.notOffered[id] = nil
+    if db.skip then db.skip[id] = nil end
+  end
+  if #back > 0 then ns.Recompute() end
+end
+
 local f = CreateFrame("Frame")
-for _, e in ipairs({ "GOSSIP_SHOW", "QUEST_GREETING", "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE" }) do
+for _, e in ipairs({ "GOSSIP_SHOW", "QUEST_GREETING", "QUEST_DETAIL", "QUEST_PROGRESS", "QUEST_COMPLETE", "QUEST_ACCEPTED" }) do
   f:RegisterEvent(e)
 end
 f:SetScript("OnEvent", function(_, event)
+  if event == "QUEST_ACCEPTED" then
+    -- the log has the quest a moment later
+    if C_Timer and C_Timer.After then C_Timer.After(0.5, function() ns.Safe("NotOffered", N.Accepted) end)
+    else ns.Safe("NotOffered", N.Accepted) end
+    return
+  end
   if event == "QUEST_COMPLETE" then lastUI = GetTime(); lastTurnIn = GetTime(); return end
   ns.Safe("NotOffered", N.Check, event)
 end)

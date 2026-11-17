@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+- **A quest skipped as "not offered" comes back when you take it.** Deal Dread to Deadwood stayed under
+  Other Quests after it was accepted.
+- **Kits and Cats: all three cats placed,** each its own stop, with a tip (Solstice hides on the bottom
+  rock of the Cradle waterfall).
+
 ## v1.0.51
 - **Mount Hyjal quests corrected from playing it:** Contents Under Pressure is done at the Personal
   Survival Pack; Eyes of the Watchers waits for The Western Post; Ewe Wandered Off is back (Mirt offers
