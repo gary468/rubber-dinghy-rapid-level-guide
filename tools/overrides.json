@@ -672,6 +672,10 @@
     "96003": {
       "tip": "Use the Eye of Endless Influence on each elite first (it becomes \"the Feeble\" / \"the Weak\"); killed at full power it gives no credit. Mazzogore 50.5,39.5, Bethra'zel 58.5,32.5.",
       "note": "Drawing Down the Malevolent: weaken Bethra'zel and Mazzogore with the quest item or no credit (Wowhead Forever comment, 17 Nov 2026)."
+    },
+    "97010": {
+      "tip": "Climb the Horde Mage Tower in Dae'gun to the very top, stand on the little axe on the ledge and throw the Explosive Runeshard at the ground below. Keep throwing; after a demon hunter's talk it counts.",
+      "note": "Blind Vengeance: tower position not in any database yet; tip from Wowhead Forever comments (17 Nov 2026)."
     }
   },
   "npcs": {
