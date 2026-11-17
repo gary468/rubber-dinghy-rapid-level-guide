@@ -317,6 +317,7 @@ end
 --- A numbered POI-style pin. Used on the world map and (smaller) on the minimap.
 local function NewPin(parent, size)
   local p = CreateFrame("Button", nil, parent)
+  p.rdPin = true   -- ours, with its own tooltip (the minimap area hover leaves it alone)
   p:SetSize(size, size)
   p.glow = p:CreateTexture(nil, "BACKGROUND", nil, -2)
   p.glow:SetPoint("CENTER")
@@ -1060,6 +1061,7 @@ local function MiniIcon(i)
   local p = miniIcons[i]
   if p then return p end
   p = CreateFrame("Button", nil, Minimap)
+  p.rdPin = true
   p.tex = p:CreateTexture(nil, "ARTWORK"); p.tex:SetAllPoints()
   p.outline = {}
   for k, o in ipairs(OUTLINE) do
@@ -1436,11 +1438,10 @@ local function MiniHover()
   local focus = MouseFocus()
   -- a pin or icon (small button) has its own tooltip; a minimap-sized frame on top (another addon's
   -- square minimap) doesn't count
-  if focus and focus ~= Minimap and focus.GetObjectType and focus:GetObjectType() == "Button" then
-    local fw = focus.GetWidth and focus:GetWidth() or 0
-    if fw < (Minimap:GetWidth() or 0) / 2 then
-      return MiniHoverOff("over a button: " .. tostring(focus.GetName and focus:GetName() or "?"))
-    end
+  -- only our own pins have a tooltip of their own; other addons' minimap icons on the same spots
+  -- (Questie's, unnamed: Gary's /rdr hover said "over a button: ?" on every gold dot) don't stop it
+  if focus and focus ~= Minimap and focus.rdPin then
+    return MiniHoverOff("over one of the route's pins (it has its own tooltip)")
   end
   local px, py = HBD:GetPlayerWorldPosition()
   local map = HBD.GetPlayerZone and HBD:GetPlayerZone()
