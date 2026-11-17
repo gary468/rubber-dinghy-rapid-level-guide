@@ -1103,6 +1103,51 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
       if PathCost(fresh, hx, hy, P, D) < 0.8 * PathCost(out, hx, hy, P, D) then out = fresh end
     end
   end
+  -- Pick up before you kill: a pick-up whose quest needs the same mobs or objects as an earlier
+  -- stop moves in front of it, so one pass does both. Gary 17 Nov: Leaves to Ligatures (Verdant
+  -- Leaves from Tainted Shrubbery) came before Kaylaena, whose Kindling, Kinda is 15 Tainted
+  -- Shrubbery - he had to clear them twice.
+  local function MobNames(s)
+    local set = {}
+    for n in (s or ""):gmatch("[^,]+") do
+      n = n:match("^%s*(.-)%s*$"):lower()
+      if #n >= 4 then set[n] = true end
+    end
+    return set
+  end
+  local function PickupsFirst(out)
+    local moved = true
+    local guard = 0
+    while moved and guard < 20 do
+      moved, guard = false, guard + 1
+      for gi = 2, #out do
+        local g = out[gi]
+        local needs = {}
+        for _, a in ipairs(g.actions or {}) do
+          local q = a.kind == "get" and a.row and a.row.q
+          if q and q.o and q.o[1] then for n in pairs(MobNames(q.o[1])) do needs[n] = true end end
+        end
+        if next(needs) then
+          for di = 1, gi - 1 do
+            local d = out[di]
+            if d.area then
+              local hit = false
+              for n in pairs(MobNames(d.name)) do if needs[n] then hit = true; break end end
+              if hit then
+                table.remove(out, gi)
+                table.insert(out, di, g)
+                moved = true
+                break
+              end
+            end
+          end
+        end
+        if moved then break end
+      end
+    end
+    return out
+  end
+  out = PickupsFirst(out)
   local keys = {}
   for i, st in ipairs(out) do keys[i] = StopKey(st) end
   db.tour = { step = stepKey, keys = keys, v = tv }
@@ -1122,7 +1167,7 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
       local shown = {}
       for _, e in ipairs(near) do shown[#shown + 1] = e.st end
       for _, st in ipairs(rest) do shown[#shown + 1] = st end
-      out = shown
+      out = PickupsFirst(shown)
     end
   end
   return out, sx, sy

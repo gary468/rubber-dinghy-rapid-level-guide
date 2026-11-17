@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+- **Pick up before you kill.** A quest that needs the same mobs as an earlier stop is picked up
+  first, so one pass does both. Kindling, Kinda (15 Tainted Shrubbery) used to come after Leaves to
+  Ligatures (leaves from the same Tainted Shrubbery), so you cleared them twice.
+
 ## v1.0.49
 - **The minimap shows the same hover info as the world map.** Mouse over a quest area on the
   minimap to see the quest, whether it's on your route, and your progress.
