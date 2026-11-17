@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## v1.0.51
+- **Mount Hyjal quests corrected from playing it:** Contents Under Pressure is done at the Personal
+  Survival Pack; Eyes of the Watchers waits for The Western Post; Ewe Wandered Off is back (Mirt offers
+  it after Final Death) with a herding tip; the Barkskin Matriarch's quests wait for Deal Dread to
+  Deadwood; Open Season has an escort tip. Tips now show on pick-up stops too.
 - **A hand-in right where you stand is stop 1,** even for a quest the route didn't plan (Eluneth's hand-in,
   two steps away, sat at 2 behind a stop across the valley).
 - **Tips under a stop where the quest text isn't enough.** Final Death: light the bone pile first, or the
