@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.0.48
 - **Mount Hyjal: the route sees the mountains.** It used to measure every stop in a straight line,
   so it sent you from the Shrine of Aviana straight to Kaylaena, down a cliff you can only take with
   Slow Fall. Hyjal now has a map of its valley floors: distances follow the valleys round the
