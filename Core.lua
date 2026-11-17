@@ -1023,9 +1023,10 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
   if inZone then sx, sy = hx, hy end
   local tour = db.tour
   -- a tour kept from straight-line distances is rebuilt once the zone has a terrain grid
-  local tv = (ns.Terrain and ns.Terrain.Has(stepMap)) and 3 or nil   -- 3: Mourning's Rest joins the Cradle (17 Nov)
+  local tv = (ns.Terrain and ns.Terrain.Has(stepMap)) and 4 or nil   -- 4: stops moved to their cheapest place (17 Nov)
   if tour and (tour.step ~= stepKey or tour.v ~= tv) then tour = nil end
   local out
+  local rebuilt = not tour
   if not tour then
     out = ranked
     local fresh = Tour(ranked, sx, sy, P, D, tv ~= nil)
@@ -1101,6 +1102,44 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
     if changed and inZone then
       local fresh = Tour(out, hx, hy, P, D, tv ~= nil)
       if PathCost(fresh, hx, hy, P, D) < 0.8 * PathCost(out, hx, hy, P, D) then out = fresh end
+    end
+    rebuilt = changed
+  end
+  -- One stop at a time to where it adds the least walking, until nothing gains (only when the order
+  -- is built or its stops change, never as you walk). Gary 17 Nov, Mount Hyjal: the Supply Drop
+  -- hand-in sat at stop 15, a few steps from stop 1, because the plan does it at the end of the zone
+  -- and a whole new tour wasn't 15% shorter.
+  if rebuilt and #out > 2 then
+    local fixedLast = (tv == nil)          -- zones without a terrain grid keep their last stop last
+    for _ = 1, 6 do
+      local improved = false
+      for i = 1, #out - (fixedLast and 1 or 0) do
+        local st = out[i]
+        local x0, y0 = P(st)
+        local px, py = sx, sy
+        if i > 1 then px, py = P(out[i - 1]) end
+        local nx, ny
+        if out[i + 1] then nx, ny = P(out[i + 1]) end
+        local here = (px and D(px, py, x0, y0) or 0)
+        if nx then here = here + D(x0, y0, nx, ny) - (px and D(px, py, nx, ny) or 0) end
+        table.remove(out, i)
+        local bestK, bestC = i, here
+        local lastK = #out + 1
+        if fixedLast then lastK = #out end
+        for k = 1, lastK do
+          local ax2, ay2 = sx, sy
+          if k > 1 then ax2, ay2 = P(out[k - 1]) end
+          local c = ax2 and D(ax2, ay2, x0, y0) or 0
+          if out[k] then
+            local bx, by = P(out[k])
+            c = c + D(x0, y0, bx, by) - (ax2 and D(ax2, ay2, bx, by) or 0)
+          end
+          if c < bestC - 0.5 then bestC, bestK = c, k end
+        end
+        table.insert(out, bestK, st)
+        if bestK ~= i then improved = true end
+      end
+      if not improved then break end
     end
   end
   -- Pick up before you kill: a pick-up whose quest needs the same mobs or objects as an earlier

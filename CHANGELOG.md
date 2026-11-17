@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+- **No stop left at the end when it's on your way.** After the order is built, each stop moves to
+  wherever it adds the least walking. The Supply Drop hand-in in Mount Hyjal sat at stop 15, a few
+  steps from stop 1, because the plan does it at the end of the zone.
+
 ## v1.0.50
 - **Pick up before you kill.** A quest that needs the same mobs as an earlier stop is picked up
   first, so one pass does both. Kindling, Kinda (15 Tainted Shrubbery) used to come after Leaves to
