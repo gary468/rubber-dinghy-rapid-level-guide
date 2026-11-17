@@ -1023,7 +1023,7 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
   if inZone then sx, sy = hx, hy end
   local tour = db.tour
   -- a tour kept from straight-line distances is rebuilt once the zone has a terrain grid
-  local tv = (ns.Terrain and ns.Terrain.Has(stepMap)) and 2 or nil
+  local tv = (ns.Terrain and ns.Terrain.Has(stepMap)) and 3 or nil   -- 3: Mourning's Rest joins the Cradle (17 Nov)
   if tour and (tour.step ~= stepKey or tour.v ~= tv) then tour = nil end
   local out
   if not tour then
