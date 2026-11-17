@@ -1242,7 +1242,10 @@ MiniStops = function()
     if i > MINI_MAX then break end
     local wx, wy, inst = HBD:GetWorldCoordinatesFromZone(s.x / 100, s.y / 100, s.map)
     if wx then
-      local st = { wx = wx, wy = wy, inst = inst, map = s.map, faint = (s ~= current) }
+      local st = { wx = wx, wy = wy, inst = inst, map = s.map, faint = (s ~= current), qids = {} }
+      for _, a in ipairs(s.actions or {}) do
+        if a.kind == "do" and a.row then st.qids[#st.qids + 1] = a.row.id end
+      end
       if s == current then   -- the same gold dots as the world map
         st.dots = {}
         for _, q in ipairs(Map.NearSpawns(s)) do
@@ -1294,6 +1297,7 @@ end
 
 local function MiniDraw()
   MiniHide()
+  Map.miniDrawn = nil
   if not HBD or #miniStops == 0 or ns.db.noMap or ns.db.noMiniPins then
     return
   end
@@ -1317,6 +1321,7 @@ local function MiniDraw()
   end
   local alphaArea = (ns.db.areaAlpha or 0.2) * 1.2
   local nl, na, nd = 0, 0, 0
+  local drawn = {}   -- { x, y, r (px from the minimap centre), qids } for the hover
   local lx, ly = 0, 0   -- the line starts at you (the minimap centre)
   for _, st in ipairs(miniStops) do
     if st.inst ~= pinst then break end
@@ -1345,6 +1350,7 @@ local function MiniDraw()
       a:SetSize(rp * 2, rp * 2)
       a:ClearAllPoints()
       a:SetPoint("CENTER", box, "CENTER", cx, cy)
+      if #st.qids > 0 then drawn[#drawn + 1] = { x = cx, y = cy, r = rp, qids = st.qids } end
       a:SetVertexColor(1, 0.78, 0.16, DISC_A * (st.faint and FAINT or 1))
       a:Show()
     end
@@ -1378,11 +1384,13 @@ local function MiniDraw()
         end
         t:ClearAllPoints()
         t:SetPoint("CENTER", box, "CENTER", dx, dy)
+        if #st.qids > 0 then drawn[#drawn + 1] = { x = dx, y = dy, r = 3, qids = st.qids } end
         t:Show()
       end
     end
     lx, ly = x, y
   end
+  Map.miniDrawn = drawn
   Map.miniAreasShown = na
   Map.miniDotsShown = nd
 end
@@ -1408,7 +1416,7 @@ Map.MiniTipOwner = MiniTipOwner
 -- /rdr hover: say why the minimap hover shows nothing (once a second while it's on)
 local hoverDebugAt = 0
 local function MiniHoverOff(why)
-  if Map.debugHover and why and GetTime() - hoverDebugAt > 1 then
+  if ns.db and ns.db.debugHover and why and GetTime() - hoverDebugAt > 1 then
     hoverDebugAt = GetTime()
     ns.Print("minimap hover: " .. why)
   end
@@ -1458,6 +1466,27 @@ local function MiniHover()
   local cx, cy = GetCursorPosition()
   local sc = Minimap:GetEffectiveScale()
   local xp, yp = cx / sc - mcx, cy / sc - mcy        -- pixels from the minimap centre
+  -- First: the shapes exactly as drawn this frame (gold dots and areas), with a little slack - it can't
+  -- disagree with what's on screen, whatever the minimap's shape or scale (Gary 17 Nov, square minimap).
+  do
+    local seen, near = {}, {}
+    for _, d in ipairs(Map.miniDrawn or {}) do
+      local rr = math.max(d.r or 0, 4) + 6
+      if (xp - d.x) ^ 2 + (yp - d.y) ^ 2 <= rr * rr then
+        for _, id in ipairs(d.qids) do
+          if not seen[id] and ns.quests[id] then seen[id] = true; near[#near + 1] = { id = id } end
+        end
+      end
+    end
+    if #near > 0 then
+      local key = ""
+      for _, a in ipairs(near) do key = key .. a.id .. "," end
+      if key == miniHoverKey and now - miniHoverAt < 1 then return end
+      miniHoverKey, miniHoverAt = key, now
+      AreaTip(MiniTipOwner(), near)
+      return
+    end
+  end
   -- undo MiniDraw's XY: x = dx / R * hw, y = -dy / R * hh, after turning (dx, dy) with the facing
   local rx, ry = xp * R / hw, -yp * R / hh
   local dx, dy = rx, ry
@@ -1494,8 +1523,8 @@ local function MiniHover()
 end
 Map.MiniHover = MiniHover
 ns.commands.hover = function()
-  Map.debugHover = not Map.debugHover or nil
-  ns.Print("minimap hover check " .. (Map.debugHover and "on: point at a gold area on the minimap" or "off"))
+  ns.db.debugHover = not ns.db.debugHover or nil
+  ns.Print("minimap hover check " .. (ns.db.debugHover and "on (stays on after /reload): point at a gold area on the minimap" or "off"))
 end
 
 do
