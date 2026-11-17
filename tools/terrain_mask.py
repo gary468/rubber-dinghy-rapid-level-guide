@@ -22,8 +22,10 @@ LINKS = {
     2482: [
         # the winding road from Dae'gun down to the Cradle of Tranquility
         [43, 33, 40.5, 35.5, 39.7, 39, 40, 43, 41, 46, 41.5, 50],
-        # Mourning's Rest to the Cradle: open ground north of the road loop
-        [25.5, 46, 27.5, 45.5, 29.5, 46.5],
+        # Mourning's Rest to the Cradle: open ground north of the road loop. Starts in Mourning's
+        # Rest itself (22.5, 47): from 25.5 it missed the one-cell gap at 24, 46 and the west stayed
+        # cut off from the north (Gary 17 Nov: route drew a line over the ridge from Kaylaena).
+        [22.5, 47.5, 24.5, 46.5, 25.5, 46, 27.5, 45.5, 29.5, 46.5],
         # the southern valley floor runs on into Felblood Scar
         [36, 82, 38, 82.5, 40.5, 82],
     ],
