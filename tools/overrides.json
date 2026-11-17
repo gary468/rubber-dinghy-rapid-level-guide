@@ -135,6 +135,16 @@
           79.1
         ]
       ]
+    },
+    "95611": {
+      "spots": [
+        [
+          2482,
+          66.0,
+          84.0
+        ]
+      ],
+      "note": "Rites of Respect: bury the remains at Ketharas' shrine ('to the west ... a simple pair of standing stones'). No database places it; a Wowhead Forever comment (13 Nov 2026) gives 66, 84, the Druidic Shrine 'Standing Stones' (object 581744). Added 17 Nov 2026 when Gary took the quest."
     }
   },
   "npcs": {
