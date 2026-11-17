@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.0.49
 - **The minimap shows the same hover info as the world map.** Mouse over a quest area on the
   minimap to see the quest, whether it's on your route, and your progress.
 - **Mobs in two places are two stops.** When an objective's mobs live in separate groups (Feathers
