@@ -750,7 +750,99 @@
         93407,
         93584
       ],
-      "note": "Summit Sentries: QuestieDB gives no prerequisite. Gary 18 Nov 2026, level 59 at Tiala with A Thorn in the Paw and Cult Closure (both hers) still open: not offered. Inferred: needs both handed in first."
+      "note": "Summit Sentries: objectives had no location, so no stop (Gary 18 Nov 2026). Stone objects 651987/651979/651986 from the Wowhead Forever map. Three spots each so the addon makes a stop per stone.",
+      "spots": [
+        [
+          2482,
+          82.9,
+          26.5
+        ],
+        [
+          2482,
+          83.0,
+          26.5
+        ],
+        [
+          2482,
+          82.9,
+          26.6
+        ],
+        [
+          2482,
+          68.5,
+          27.4
+        ],
+        [
+          2482,
+          68.6,
+          27.4
+        ],
+        [
+          2482,
+          68.5,
+          27.5
+        ],
+        [
+          2482,
+          84.6,
+          36.6
+        ],
+        [
+          2482,
+          84.7,
+          36.6
+        ],
+        [
+          2482,
+          84.6,
+          36.7
+        ]
+      ],
+      "groups": {
+        "Northern Sentinel Stone": [
+          [
+            82.9,
+            26.5
+          ],
+          [
+            83.0,
+            26.5
+          ],
+          [
+            82.9,
+            26.6
+          ]
+        ],
+        "Western Sentinel Stone": [
+          [
+            68.5,
+            27.4
+          ],
+          [
+            68.6,
+            27.4
+          ],
+          [
+            68.5,
+            27.5
+          ]
+        ],
+        "Southern Sentinel Stone": [
+          [
+            84.6,
+            36.6
+          ],
+          [
+            84.7,
+            36.6
+          ],
+          [
+            84.6,
+            36.7
+          ]
+        ]
+      },
+      "tip": "Walk up to each drained stone and it wakes up: Western 68.5,27.4, Northern 82.9,26.5, Southern 84.6,36.6. Blackthorne patrols on the paths."
     },
     "93422": {
       "preQuestSingle": [
@@ -765,6 +857,105 @@
     "96302": {
       "drop": true,
       "note": "Arch Absolution: needs Cleansing Winds (92017), dropped 18 Nov 2026, so it can't be picked up either."
+    },
+    "93547": {
+      "spots": [
+        [
+          2482,
+          71.0,
+          48.8
+        ],
+        [
+          2482,
+          71.1,
+          48.8
+        ],
+        [
+          2482,
+          71.0,
+          48.9
+        ],
+        [
+          2482,
+          69.4,
+          45.8
+        ],
+        [
+          2482,
+          69.5,
+          45.8
+        ],
+        [
+          2482,
+          69.4,
+          45.9
+        ],
+        [
+          2482,
+          70.1,
+          48.4
+        ],
+        [
+          2482,
+          70.2,
+          48.4
+        ],
+        [
+          2482,
+          70.1,
+          48.5
+        ]
+      ],
+      "groups": {
+        "near inn": [
+          [
+            71.0,
+            48.8
+          ],
+          [
+            71.1,
+            48.8
+          ],
+          [
+            71.0,
+            48.9
+          ]
+        ],
+        "storage tower": [
+          [
+            69.4,
+            45.8
+          ],
+          [
+            69.5,
+            45.8
+          ],
+          [
+            69.4,
+            45.9
+          ]
+        ],
+        "group of trees": [
+          [
+            70.1,
+            48.4
+          ],
+          [
+            70.2,
+            48.4
+          ],
+          [
+            70.1,
+            48.5
+          ]
+        ]
+      },
+      "tip": "Plant a seed on each tiny dirt pile (Ashen Soil): inn 71.0,48.8, storage tower 69.4,45.8, trees 70.1,48.4. Easy to miss.",
+      "note": "A Thorny Solution: objectives had no location (Gary 18 Nov 2026). Ashen Soil objects 613773/659199/659200 from the Wowhead Forever map; 'tiny dirt piles in town' (comment 14 Nov 2026)."
+    },
+    "96303": {
+      "tip": "Use the branch on the wisps flying in the air in the root canopy over the well at Nordrassil - not the ones circling on the water. Other players' wisps count.",
+      "note": "Memory Mist: no location in any database (Wowhead Forever 'missing'). Tip from a Wowhead Forever comment 15 Nov 2026. Add spots once Gary gives coordinates."
     }
   },
   "npcs": {
