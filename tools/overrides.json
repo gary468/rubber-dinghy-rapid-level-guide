@@ -750,6 +750,19 @@
     },
     "96979": {
       "tip": "Fill the gourd at the falls up the climb from Galvinquam (32.9,54.4), then come back to him."
+    },
+    "93127": {
+      "preQuestGroup": [
+        93407,
+        93584
+      ],
+      "note": "Summit Sentries: QuestieDB gives no prerequisite. Gary 18 Nov 2026, level 59 at Tiala with A Thorn in the Paw and Cult Closure (both hers) still open: not offered. Inferred: needs both handed in first."
+    },
+    "93422": {
+      "preQuestSingle": [
+        93127
+      ],
+      "note": "Blackthorne Blackout: QuestieDB gives no prerequisite. Gary 18 Nov 2026: not offered by Rhylin. A Wowhead Forever comment (17 Nov) says it comes after 'the previous ones' and takes a rod they gave - inferred: Summit Sentries (sentinel stones) first."
     }
   },
   "npcs": {
