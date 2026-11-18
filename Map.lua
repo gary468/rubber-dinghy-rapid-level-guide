@@ -1046,6 +1046,18 @@ local function SetQuestPOI(hide)
     ns.db.prevQuestPOI = nil
   end
 end
+-- The game saves settings at logout. Put your value back then (every logout and /reload), so the
+-- saved setting is always yours: disable the addon and Blizzard's quest areas come back, instead of
+-- staying off with nothing left to turn them on (Gary 18 Nov: addon off, no Blizzard quest map at
+-- all). prevQuestPOI is kept, and the next load hides them again.
+function Map.OnLogout()
+  if ns.db and ns.db.prevQuestPOI and SetCVar then pcall(SetCVar, "questPOI", ns.db.prevQuestPOI) end
+end
+if CreateFrame then
+  local bye = CreateFrame("Frame")
+  bye:RegisterEvent("PLAYER_LOGOUT")
+  bye:SetScript("OnEvent", function() Map.OnLogout() end)
+end
 local function SuppressMinimap()
   if not Minimap then return end
   if ns.db.noMap or ns.db.keepBlizzMap or ns.db.noMiniPins then SetQuestPOI(false); return end
