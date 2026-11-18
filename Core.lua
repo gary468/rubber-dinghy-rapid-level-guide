@@ -1039,7 +1039,7 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
   if inZone then sx, sy = hx, hy end
   local tour = db.tour
   -- a tour kept from straight-line distances is rebuilt once the zone has a terrain grid
-  local tv = (ns.Terrain and ns.Terrain.Has(stepMap)) and 6 or nil   -- 4: stops moved to their cheapest place (17 Nov); 5: Cleansing Winds one area + Jereman chain (17 Nov); 6: Barkskin Breakout (18 Nov)
+  local tv = (ns.Terrain and ns.Terrain.Has(stepMap)) and 7 or nil   -- 4: stops moved to their cheapest place (17 Nov); 5: Cleansing Winds one area + Jereman chain (17 Nov); 6: Barkskin Breakout (18 Nov); 7: Matriarch quests dropped (18 Nov)
   if tour and (tour.step ~= stepKey or tour.v ~= tv) then tour = nil end
   local out
   local rebuilt = not tour
