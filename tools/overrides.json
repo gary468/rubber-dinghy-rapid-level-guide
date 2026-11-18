@@ -697,14 +697,8 @@
       "note": "Blind Vengeance: tower position not in any database yet; tip from Wowhead Forever comments (17 Nov 2026)."
     },
     "92017": {
-      "box": [
-        66,
-        20,
-        84,
-        48
-      ],
-      "tip": "Squallclimbers and Chimaeroks roam all of Hyjal; both are thick in the northeast around the Blackthorne camps (69-83, 22-46), so fill both here while you do the Blackthorne quests.",
-      "note": "Cleansing Winds: both mobs spawn zone-wide, which made six stops across Mount Hyjal (Gary 17 Nov). Boxed to the northeast, where both are dense and the Blackthorne quests are."
+      "note": "Cleansing Winds: dropped (Gary 18 Nov 2026, 'it's terrible'). Feathers and hair drop slowly from mobs spread over the zone. Its follow-ups Rootwork (92016) and Arch Absolution (96302) need it, so they go too.",
+      "drop": true
     },
     "92959": {
       "spots": [
@@ -763,6 +757,14 @@
         93127
       ],
       "note": "Blackthorne Blackout: QuestieDB gives no prerequisite. Gary 18 Nov 2026: not offered by Rhylin. A Wowhead Forever comment (17 Nov) says it comes after 'the previous ones' and takes a rod they gave - inferred: Summit Sentries (sentinel stones) first."
+    },
+    "92016": {
+      "drop": true,
+      "note": "Rootwork: needs Cleansing Winds (92017), dropped 18 Nov 2026, so it can't be picked up either."
+    },
+    "96302": {
+      "drop": true,
+      "note": "Arch Absolution: needs Cleansing Winds (92017), dropped 18 Nov 2026, so it can't be picked up either."
     }
   },
   "npcs": {
