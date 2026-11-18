@@ -173,10 +173,10 @@
     },
     "91696": {
       "keep": true,
-      "note": "Barkskin furbolg chain: kept on the route (Gary 16-17 Nov 2026: 'STILL dont have furbolg quests PLEASE'; every re-plan dropped it). Gary 17 Nov 2026: the Barkskin Matriarch wasn't at her spot (30.8,58.4) on any layer while Deal Dread to Deadwood (93826) was still open - inferred to need it first.",
-      "tip": "Escort: she walks from 31.5,58.6 south-west to about 24,63. Not there? Someone's escorting her - wait for her to come back.",
+      "note": "Barkskin furbolg chain: kept on the route (Gary 16-17 Nov 2026: 'STILL dont have furbolg quests PLEASE'; every re-plan dropped it). Gary 17 Nov 2026: the Barkskin Matriarch wasn't at her spot (30.8,58.4) on any layer while Deal Dread to Deadwood (93826) was still open - inferred to need it first. Gary 18 Nov 2026: still not there with Deal Dread done. Wowhead Forever: she speaks 'from within the cage' in Barkskin Breakout (91698) - Open Season follows Breakout, and Breakout was not on the route.",
+      "tip": "Only after Barkskin Breakout: she's caged until then. Escort: she walks from 31.5,58.6 south-west to about 24,63. Not there? Someone's escorting her - wait for her to come back.",
       "preQuestSingle": [
-        93826
+        91698
       ]
     },
     "91698": {
@@ -184,7 +184,8 @@
       "note": "Barkskin furbolg chain: kept on the route (Gary 16-17 Nov 2026: 'STILL dont have furbolg quests PLEASE'; every re-plan dropped it). Gary 17 Nov 2026: the Barkskin Matriarch wasn't at her spot (30.8,58.4) on any layer while Deal Dread to Deadwood (93826) was still open - inferred to need it first.",
       "preQuestSingle": [
         93826
-      ]
+      ],
+      "tip": "She's in the cage at 31.5,58.6. Kill Deadwood Wardens around the den for the Deadwood Key, then open the cage."
     },
     "95316": {
       "spots": [
