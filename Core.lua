@@ -954,24 +954,8 @@ end
 --- openEnd (zones with a terrain grid): no stop is held for last. In Mount Hyjal the plan's last stop
 --- (Barkskin Matriarch) is on the Shrine of Aviana plateau, so holding it for last sent Gary down the
 --- cliff and round the whole zone before the quests in front of him (17 Nov).
-local function Tour(list, x, y, P, D, openEnd)
-  local last = not openEnd and list[#list] or nil
-  local ex, ey
-  if last then ex, ey = P(last) end
-  local left, out = {}, {}
-  for i = 1, #list - (last and 1 or 0) do left[i] = list[i] end
-  local qx, qy = x, y
-  while #left > 0 do
-    local bi, bd = 1, math.huge
-    for i, st in ipairs(left) do
-      local sx, sy = P(st)
-      local d = (qx and sx) and D(qx, qy, sx, sy) or 0
-      if d < bd then bi, bd = i, d end
-    end
-    local st = table.remove(left, bi)
-    out[#out + 1] = st
-    qx, qy = P(st)
-  end
+-- 2-opt on out (in place) from (x, y), ending at (ex, ey) when a stop is held for last.
+local function TwoOpt(out, x, y, P, D, ex, ey)
   local n, improved, pass = #out, true, 0
   while improved and pass < 25 do
     improved, pass = false, pass + 1
@@ -994,6 +978,41 @@ local function Tour(list, x, y, P, D, openEnd)
       end
     end
   end
+  return out
+end
+local function Tour(list, x, y, P, D, openEnd)
+  local last = not openEnd and list[#list] or nil
+  local ex, ey
+  if last then ex, ey = P(last) end
+  local left, out = {}, {}
+  for i = 1, #list - (last and 1 or 0) do left[i] = list[i] end
+  local qx, qy = x, y
+  while #left > 0 do
+    local bi, bd = 1, math.huge
+    for i, st in ipairs(left) do
+      local sx, sy = P(st)
+      local d = (qx and sx) and D(qx, qy, sx, sy) or 0
+      if d < bd then bi, bd = i, d end
+    end
+    local st = table.remove(left, bi)
+    out[#out + 1] = st
+    qx, qy = P(st)
+  end
+  TwoOpt(out, x, y, P, D, ex, ey)
+  out[#out + 1] = last
+  return out
+end
+-- The plan's order, tidied: 2-opt from (x, y) with the same last-stop rule as Tour. The plan is kept
+-- when a fresh tour isn't clearly shorter, but its order was never checked from where you stand -
+-- Gary 18 Nov at Barkskin Burrow: Renalard, then back south to the Skylord on his plateau, then up to
+-- Tiala (165 map-% for three stops; Skylord first is 98).
+local function TidyPlan(list, x, y, P, D, openEnd)
+  local last = not openEnd and list[#list] or nil
+  local ex, ey
+  if last then ex, ey = P(last) end
+  local out = {}
+  for i = 1, #list - (last and 1 or 0) do out[i] = list[i] end
+  TwoOpt(out, x, y, P, D, ex, ey)
   out[#out + 1] = last
   return out
 end
@@ -1003,8 +1022,18 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
   -- a finished quest carried in goes with the stop it was attached to (handed in as you pass)
   local inList, attached, rest = {}, {}, {}
   for _, st in ipairs(ranked) do inList[st] = true end
+  -- ...only when it's a short walk from that stop. "Nearest" was picked as the crow flies, and on a
+  -- terrain map that can be the far side of a cliff: Gary 18 Nov, Taking to New Heights (Skylord, on
+  -- the Shrine of Aviana plateau) was tied to Renalard - 15 map-% away in a line, 61 on foot - so it
+  -- always came right after him and the tour doubled back south and up again.
   for _, st in ipairs(ranked) do
-    if st.attach and inList[st.attach] then attached[#attached + 1] = st else rest[#rest + 1] = st end
+    local tie = st.attach and inList[st.attach]
+    if tie then
+      local x1, y1 = P(st)
+      local x2, y2 = P(st.attach)
+      if x1 and x2 and D(x1, y1, x2, y2) > 10 then tie = false end
+    end
+    if tie then attached[#attached + 1] = st else rest[#rest + 1] = st end
   end
   if #attached > 0 then
     local out, sx, sy = KeptTour(rest, stepMap, curStep, ax, ay, P, D)
@@ -1039,14 +1068,14 @@ local function KeptTour(ranked, stepMap, curStep, ax, ay, P, D)
   if inZone then sx, sy = hx, hy end
   local tour = db.tour
   -- a tour kept from straight-line distances is rebuilt once the zone has a terrain grid
-  local tv = (ns.Terrain and ns.Terrain.Has(stepMap)) and 7 or nil   -- 4: stops moved to their cheapest place (17 Nov); 5: Cleansing Winds one area + Jereman chain (17 Nov); 6: Barkskin Breakout (18 Nov); 7: Matriarch quests dropped (18 Nov)
+  local tv = (ns.Terrain and ns.Terrain.Has(stepMap)) and 8 or nil   -- 4: stops moved to their cheapest place (17 Nov); 5: Cleansing Winds one area + Jereman chain (17 Nov); 6: Barkskin Breakout (18 Nov); 7: Matriarch quests dropped (18 Nov); 8: Fitting End + Battle Recall placed (18 Nov)
   if tour and (tour.step ~= stepKey or tour.v ~= tv) then tour = nil end
   local out
   local rebuilt = not tour
   if not tour then
-    out = ranked
+    out = TidyPlan(ranked, sx, sy, P, D, tv ~= nil)
     local fresh = Tour(ranked, sx, sy, P, D, tv ~= nil)
-    if PathCost(fresh, sx, sy, P, D) < 0.85 * PathCost(ranked, sx, sy, P, D) then out = fresh end
+    if PathCost(fresh, sx, sy, P, D) < 0.85 * PathCost(out, sx, sy, P, D) then out = fresh end
   else
     local byKey = {}
     for _, st in ipairs(ranked) do

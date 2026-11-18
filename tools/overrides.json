@@ -56,7 +56,25 @@
       "note": "Anywhere But Here: the Veteran of the Third War isn't at 20.4,59.4 (Questie/ForeverChanges). He stands at Mourning's Rest, Mount Hyjal ~24.1,55.0, among the Forgotten Soldiers (Blight No More); Gary got the quest from him there, 16 Nov 2026. Giver moved (npcs). A Wowhead comment says the later chain is summoned with the Embroidered Scabbard at ~8,46 and can bug out."
     },
     "96550": {
-      "note": "Battle Recall: follows Anywhere But Here (92100); the scabbard at 8.8,46.5 summons the Veteran. Back on the route 16 Nov 2026 now that Gary got 92100."
+      "note": "Battle Recall: 'War Veteran's story told' had no location (Gary 18 Nov 2026). Use the scabbard at 8,46 and speak to the spirit (Wowhead Forever comment 13 Nov 2026; Veteran of the Third War 8.8,46.5).",
+      "spots": [
+        [
+          2482,
+          8.8,
+          46.5
+        ],
+        [
+          2482,
+          8.8,
+          46.4
+        ],
+        [
+          2482,
+          8.8,
+          46.6
+        ]
+      ],
+      "tip": "Right-click the Embroidered Scabbard in your bags at 8.8,46.5, then talk to the spirit that appears."
     },
     "93567": {
       "drop": true,
@@ -708,6 +726,30 @@
       ],
       "tip": "Click the Corrupted Tree at 63.2,74.1 to summon Sunderbark (elite 56, can be feared and stunned). Kill him, then use his corpse to plant the seed.",
       "note": "The Dying Ancients: Corrupted Tree object 659742 at 63.2,74.1 summons Sunderbark 248709 (Wowhead Forever comments, 17 Nov 2026)."
+    },
+    "96435": {
+      "spots": [
+        [
+          2482,
+          40.7,
+          80.2
+        ],
+        [
+          2482,
+          40.8,
+          80.2
+        ],
+        [
+          2482,
+          40.7,
+          80.3
+        ]
+      ],
+      "tip": "Throw the warlock bones on the Bone Pile at 40.7,80.2 (follow the road west from Felflick).",
+      "note": "A Fitting End: objective 'Warlock Bones Thrown on Slime Altar' had no location, so it was listed without a stop (Gary 18 Nov 2026). Bone Pile object 652449 at 40.7,80.2 (Wowhead Forever comments)."
+    },
+    "96979": {
+      "tip": "Fill the gourd at the falls up the climb from Galvinquam (32.9,54.4), then come back to him."
     }
   },
   "npcs": {
