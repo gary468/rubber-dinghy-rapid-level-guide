@@ -167,6 +167,9 @@ local function Build()
   journalB:SetPoint("LEFT", pickB, "RIGHT", 8, 0)
   journalB:SetShown(ns.Journal ~= nil)
   f:HookScript("OnShow", function() journalB:SetShown(ns.Journal ~= nil) end)
+  local reportB = Button(f, "Report a problem", 140, function() ns.commands.report() end,
+    "Route sends you somewhere wrong, a quest is missing, or something breaks? Opens a report to copy into the addon's GitHub page (/rdr report).")
+  reportB:SetPoint("TOPRIGHT", -PAD - 4, y)
   y = y - 32
   f.skipText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   f.skipText:SetPoint("TOPLEFT", PAD + 4, y - 5)

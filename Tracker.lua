@@ -623,7 +623,13 @@ local function Render(r)
         local id = e.id
         local show = function() if ns.ShowQuestOnMap then ns.ShowQuestOnMap(id) end end
         local tip = "Click: show it on the map (Blizzard's marker and area)."
-        Add(("[%s] %s"):format(e.level or "?", e.title or "?"), { font = TITLE_FONT, color = GOLD, indent = 4, onClick = show, tip = tip })
+        local lvl, me = tonumber(e.level), r.level or 0
+        local red = lvl and me > 0 and lvl > me + 4
+        if red then
+          tip = ("Red: level %d, 5+ above you. The route leaves it until level %d, then it comes back as a stop.\n%s"):format(lvl, lvl - 4, tip)
+        end
+        Add(("[%s] %s%s"):format(e.level or "?", e.title or "?", red and " |cffff4040(too high)|r" or ""),
+          { font = TITLE_FONT, color = GOLD, indent = 4, onClick = show, tip = tip })
         for _, o in ipairs(ns.Objectives(e.id)) do
           Add(ns.ObjText(o, true), { indent = 14, font = SMALL_FONT, color = o.done and GREY or WHITE, check = o.done, onClick = show, tip = tip })
         end

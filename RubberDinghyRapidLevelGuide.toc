@@ -38,3 +38,4 @@ Rares.lua
 RunLog.lua
 NotOffered.lua
 Automation.lua
+Report.lua

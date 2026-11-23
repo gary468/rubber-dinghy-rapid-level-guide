@@ -1,0 +1,35 @@
+name: Route problem
+description: The route sent you somewhere wrong, to a quest you can't get or that's too high, or missed a quest.
+title: "[Route] "
+labels: ["route"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! In game, type **/rdr report** (or Settings > **Report a problem**), press **Ctrl+C**, and paste it below.
+        It tells us your level, where you are, the step and stops you were given, and your quest log.
+  - type: textarea
+    id: report
+    attributes:
+      label: Report from /rdr report
+      description: Paste the whole thing, including the ``` lines.
+      placeholder: "```\nRubber Dinghy 1.0.54 | game build ...\n...\n```"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What went wrong?
+      description: Which stop or quest, and what happened in game (e.g. "stop 2 sent me to a red quest", "NPC doesn't offer this quest", "nothing at these coordinates").
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should it have done? (optional)
+      description: If you know - e.g. the quest needs another one first, or the mob is actually at 45,62.
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots (optional)
+      description: The map with the route and the tracker help a lot. Drag images in here.

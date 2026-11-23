@@ -72,9 +72,25 @@ Game Menu > Options > AddOns.
   Journal on the current dungeon step.
 - **Rare alerts:** `/rdr rares` turns them on or off, and `/rdr raretest` shows a sample. Bind a key
   to the Target button under Key Bindings > Rubber Dinghy.
-- **Problems:** `/rdr debug` shows any errors.
+- **Problems:** `/rdr debug` shows any errors. `/rdr report` opens a problem report (see below).
 
 `/dinghy` works too.
+
+## Reporting a problem
+Route sent you somewhere wrong, to a quest you can't get, or something broke?
+
+1. In game, type `/rdr report` (or Settings > **Report a problem**). The report is already
+   selected: press **Ctrl+C**.
+2. Open [the issue page](https://github.com/gary468/rubber-dinghy-rapid-level-guide/issues/new/choose),
+   pick **Route problem** or **Bug**, and paste it in.
+3. Say what went wrong, and add a screenshot of the map and tracker if you can.
+
+The report has your level, where you are, the step and stops you were given, your quest log and
+any errors - nothing else. Questions and ideas are welcome in the CurseForge comments.
+
+The route never sends you to a red quest (5 or more levels above you). If you have one in your
+log anyway, it waits under Other Quests marked "too high" and comes back as a stop once you're
+within 4 levels. Auto-accept leaves red quests for you to take yourself.
 
 ## Credits and licence
 - **Quest data** (quest givers, hand-ins, mob locations, prerequisites) is generated from

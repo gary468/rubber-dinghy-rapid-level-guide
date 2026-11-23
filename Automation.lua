@@ -18,7 +18,7 @@ ns.Automation = A
 -- key, saved "off" setting, Leatrix Plus setting, label, tooltip
 A.FEATURES = {
   { key = "quests", db = "noAutoQuests", lea = "AutomateQuests", label = "Accept and hand in quests",
-    tip = "Accepts quests, hands in finished ones (when there's a choice of reward the pick is yours) and picks them from a quest giver's list. Never a quest you skipped, or one that costs gold or reagents. Hold Shift to do it yourself." },
+    tip = "Accepts quests, hands in finished ones (when there's a choice of reward the pick is yours) and picks them from a quest giver's list. Never a quest you skipped, a red one (5+ levels above you), or one that costs gold or reagents. Hold Shift to do it yourself." },
   { key = "gossip", db = "noAutoGossip", lea = "AutomateGossip", label = "Skip gossip",
     tip = "Vendors, flight masters, trainers, bankers and stable masters with a single chat option open straight away. Any other NPC: hold Alt as you talk to them. Hold Shift to stop it." },
   { key = "summon", db = "noAutoSummon", lea = "AutoAcceptSummon", label = "Accept summons",
@@ -95,6 +95,27 @@ local function Skipped(id)
   return id and id ~= 0 and ns.db and ns.db.skip and ns.db.skip[id] or false
 end
 
+-- Red quests (5+ levels above you) are never taken for you: the route doesn't send you to them
+-- until you're within 4 levels, and auto-accepting every quest a giver offered put them in your log
+-- (Gary 23 Nov: players report the route sending them into red quests). gameLevel is what the
+-- game says (quest lists); otherwise the route's data. Returns the quest's level when it's red.
+local function RedLevel(id, gameLevel)
+  local lvl = tonumber(gameLevel)
+  if (not lvl or lvl <= 0) and id and ns.quests and ns.quests[id] then lvl = ns.quests[id].l end
+  local me = UnitLevel and UnitLevel("player") or 0
+  if lvl and me > 0 and lvl > me + 4 then return lvl end
+  return nil
+end
+A.RedLevel = RedLevel
+local toldRed = {}
+local function TellRed(name, lvl, key)
+  if toldRed[key] then return end
+  toldRed[key] = true
+  local me = UnitLevel("player") or 0
+  ns.Print(("Left %s for you: it's red (level %d, you're %d). The route comes back for it at level %d.")
+    :format(name or "this quest", lvl, me, lvl - 4))
+end
+
 local function LogFull()
   local max = (C_QuestLog and C_QuestLog.GetMaxNumQuestsCanAccept and C_QuestLog.GetMaxNumQuestsCanAccept()) or 40   -- Forever: 40
   local n
@@ -159,6 +180,11 @@ local function OnDetail()
   end
   -- "Only accept quests on the route" (settings): anything else stays open for you to decide
   if ns.db.routeQuestsOnly and id and id > 0 and not A.OnRoute(id) then return end
+  local red = RedLevel(id)
+  if red then
+    TellRed(q and q.n or (GetTitleText and GetTitleText()), red, id or "detail")
+    return
+  end
   if QuestGetAutoAccept and QuestGetAutoAccept() then
     CloseQuest()        -- the game already accepted it
   elseif not LogFull() then
@@ -217,7 +243,11 @@ local function OnGossipQuests()
   end
   if LogFull() then return end
   for _, q in ipairs(G.GetAvailableQuests and G.GetAvailableQuests() or {}) do
-    if q.questID and not picked[q.questID] and not Skipped(q.questID)
+    local red = q.questID and RedLevel(q.questID, q.questLevel)
+    if red and not picked[q.questID] then
+      picked[q.questID] = true
+      TellRed(q.title, red, q.questID)
+    elseif q.questID and not picked[q.questID] and not Skipped(q.questID)
       and not (ns.db.routeQuestsOnly and not A.OnRoute(q.questID))
       and not (ns.quests and ns.quests[q.questID] and ns.quests[q.questID].esc) then
       picked[q.questID] = true
@@ -240,9 +270,10 @@ local function OnGreeting()
   if LogFull() then return end
   for i = 1, (GetNumAvailableQuests and GetNumAvailableQuests() or 0) do
     local title = GetAvailableTitle(i)
+    local red = title and GetAvailableLevel and RedLevel(nil, GetAvailableLevel(i))
     if title and not picked["o" .. title] then
       picked["o" .. title] = true
-      return SelectAvailableQuest(i)
+      if red then TellRed(title, red, "o" .. title) else return SelectAvailableQuest(i) end
     end
   end
 end

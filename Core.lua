@@ -352,7 +352,15 @@ local function Status(id, level)
     return NA
   end
   if IsDone(id) then return DONE end
-  if index > 0 then return IsReady(id, index) and READY or LOG end
+  if index > 0 then
+    if IsReady(id, index) then return READY end
+    -- Red (5+ levels above you) but in your log anyway - shared by a party member, taken by hand, or
+    -- auto-accepted before 1.0.54: not a stop until you're within 4 levels, the same rule as quests
+    -- you haven't taken. It waits under Other Quests and comes back by itself as you level (Gary
+    -- 23 Nov: players report the route sending them into red quests).
+    if (q.l or 0) > level + 4 then return LATER end
+    return LOG
+  end
   -- A breadcrumb (a lead-in that sends you to another quest's giver) stops being offered once you
   -- have its target quest or have done it: then it's as good as done, never a stop.
   if q.bc and (IsDone(q.bc) or LogIndex(q.bc) > 0) then return DONE end
@@ -1960,6 +1968,7 @@ SlashCmdList.RUBBERDINGHY = function(msg)
       .. "/rdr reset - default places and sizes | /rdr next, prev, auto - change step | "
       .. "/rdr skip - skip stop 1 (or right-click a stop) | /rdr unskip - bring skipped quests back | "
       .. "/rdr map, arrow, tracker, minimap - show/hide | /rdr blizzard - Blizzard's tracker back | "
-      .. "/rdr rares - rare alerts on/off, /rdr raretest - sample alert | /rdr debug")
+      .. "/rdr rares - rare alerts on/off, /rdr raretest - sample alert | /rdr debug | "
+      .. "/rdr report - report a problem or a bad route")
   end
 end

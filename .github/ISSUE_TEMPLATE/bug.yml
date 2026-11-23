@@ -1,0 +1,41 @@
+name: Bug
+description: A Lua error, something not showing or not working (tracker, map, minimap, arrow, automation, settings).
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! In game, type **/rdr report** (or Settings > **Report a problem**), press **Ctrl+C**, and paste it below.
+        If you saw a Lua error pop-up, copy that too (BugSack makes it easy).
+  - type: textarea
+    id: report
+    attributes:
+      label: Report from /rdr report
+      description: Paste the whole thing, including the ``` lines.
+      placeholder: "```\nRubber Dinghy 1.0.54 | game build ...\n...\n```"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Lua error (optional)
+      description: The error text, if there was one.
+      render: text
+  - type: input
+    id: addons
+    attributes:
+      label: Other quest/map addons you use (optional)
+      placeholder: "Questie, Leatrix Plus, ..."
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots (optional)
+      description: Drag images in here.
