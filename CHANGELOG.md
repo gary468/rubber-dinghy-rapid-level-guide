@@ -1,5 +1,32 @@
 # Changelog
 
+## v1.0.54
+- **No more red quests on the route.** Auto-accept used to take every quest a giver offered, and a
+  quest in your log was routed whatever its level. A red quest (5 or more levels above you) now waits
+  under Other Quests marked "too high" and comes back as a stop once you're within 4 levels.
+  Auto-accept leaves red quests for you and says when the route will come back for them. Hand-ins are
+  always routed.
+- **Report a problem: `/rdr report`** (or Settings > Report a problem). It opens a report that's already
+  selected - press Ctrl+C and paste it into the GitHub page it links to, using the new Route problem
+  or Bug form. It holds your level, where you are, the step and stops you were given, your quest log
+  and any errors.
+- **Turning the addon off no longer hides Blizzard's quest markers.** The route switches the game's
+  quest areas off while it draws its own, and only put them back from its own settings. It now puts
+  your setting back every time you log out or reload.
+- **Mount Hyjal, from playing it through:**
+  - Jereman's chain is on the route (10 quests, the Moonglade part left out), with a tip for finding
+    the Crow Effigy that summons Jereman.
+  - These quests had no location and now have stops: Bone Sweet Bone, To Outfox a Demon, Ashes of
+    the Legion Ascent, The Dying Ancients (Sunderbark), A Fitting End, Battle Recall, Summit
+    Sentries (one stop per stone) and A Thorny Solution. Memory Mist, Sacred Refreshment, Drawing
+    Down the Malevolent and Blind Vengeance have tips.
+  - Summit Sentries and Blackthorne Blackout wait for the quests before them, instead of sending
+    you to Tiala and Rhylin for quests they don't offer yet.
+  - Dropped: the Barkskin Matriarch's quests (she never spawns), and Cleansing Winds with its two
+    follow-ups (slow drops spread over the whole zone).
+  - Better tours: a finished quest only joins a stop that's a short walk away, so the route no
+    longer doubles back across the zone for a hand-in.
+
 ## v1.0.53
 - **Blademaster's Bonfires is on the route.** It had no objective location, so the route took it and
   handed it straight back in. The Southeast Bonfire is now lit at the Defiling Hound stop and the
